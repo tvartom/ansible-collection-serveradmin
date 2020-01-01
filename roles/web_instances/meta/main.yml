@@ -1,6 +1,6 @@
 galaxy_info:
   author: tvartom
-  description: Some basic setup for CentOS 8 as an Ansible-role.
+  description: 
   company: Tvako AB
 
   # If the issue tracker for your role is not on github, uncomment the
@@ -10,7 +10,7 @@ galaxy_info:
   # Choose a valid license ID from https://spdx.org - some suggested licenses:
   license: CC-BY-4.0
 
-  min_ansible_version: 2.9
+  min_ansible_version: 2.4
 
   # If this a Container Enabled role, provide the minimum Ansible Container version.
   # min_ansible_container_version:
