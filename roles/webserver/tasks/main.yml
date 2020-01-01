@@ -1,0 +1,14 @@
+---
+
+- include: nginx.yml
+
+- include: php.yml
+
+- include: letsencrypt.yml
+  when: letsencrypt is not defined or not letsencrypt
+
+- include: sendmail.yml
+
+- include: sass.yml
+
+- include: redis.yml

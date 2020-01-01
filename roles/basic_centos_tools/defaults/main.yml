@@ -1,0 +1,10 @@
+---
+# defaults file for ansible-role-basic_centos_tools
+basic_default:
+  timezone: "Europe/Stockholm"
+  package_to_install:
+    - mc
+    #- net-tools #ifconfig finns i denna
+    #- rsync
+    #- unzip
+    #- bzip2

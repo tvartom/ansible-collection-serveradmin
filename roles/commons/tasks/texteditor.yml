@@ -1,0 +1,29 @@
+---
+#- name: Texteditor
+#  include_role:
+#    name: commons
+#    tasks_from: texteditor
+#  vars:
+#    texteditor:
+#      [caption: "du kan editera dessa textrader"]
+#      textlines:
+#        - text line 1
+#        - text line 2
+#      [max_iterations: 100]
+#
+# Editerade rader returneras i variablen: texteditor_result
+
+- set_fact:
+    menu_result:
+      action: start
+
+- name: Meny
+  include_role:
+    name: commons
+    tasks_from: texteditor_caller
+  loop: "{{ range(texteditor.max_iterations|default(max_iterations))|list }}"
+  loop_control:
+    index_var: iteration
+
+- set_fact:
+    texteditor_result: "{{ texteditor_result_extra.textlines }}"

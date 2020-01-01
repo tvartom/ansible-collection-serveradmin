@@ -1,0 +1,62 @@
+---
+# Cert files:
+# Account key:                       /opt/letsencrypt/account.key
+# Letsencrypt domain key:            "/etc/nginx/ssl/domain-{{ item.name }}.key"
+# subjectAltName for CSR:            "{{ item.path }}/letsencrypt/subjectaltname_domain-{{ item.name }}.txt"
+# Certificate Signing Request (CSR): "{{ item.path }}/letsencrypt/domain-{{ item.name }}.csr"
+# Letsencrypt-script:                "{{ item.path }}/letsencrypt/letsencrypt-renew-{{ item.name }}.sh"
+# Signed cert:                       "{{ item.path }}/letsencrypt/domain-{{ item.name }}-signed.crt"
+# Intermdiate certs:                 /opt/letsencrypt/intermediate.pem
+# Signed chainged cert:              "/etc/nginx/ssl/chained-{{ webinstance.name }}.pem"
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+
+- name: Meny
+  include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "Följande instanser finns på denna server"
+      question: "Välj instans"
+      options: |
+        {%- set output = [] -%}
+        {%- for instance in active_webinstances -%}
+        {{-   output.append({
+          'name': instance.name+yamlcolors.NC+' ('+instance.environment+')',
+          'value': instance
+        }) -}}
+        {%- endfor -%}
+        {{- output -}}
+
+- name: 
+  include_tasks: get_webinstance.yml
+  vars:
+     active_webinstance: "{{ menu_result }}"
+
+
+### Loop over repos ##################################################################
+- name: Samla data under körning i deploy_facts
+  set_fact:
+    deploy_facts: "{{ {} }}"
+
+- name: Repos
+  include_tasks: deploy_repo.yml
+  loop: "{{ webinstance.repos }}"
+  loop_control:
+    loop_var: repo
+    label: "{{ repo.name }}"
+
+### Starta om php-fpm ##################################################################
+# https://ma.ttias.be/how-to-clear-php-opcache/
+- name: "Reload php-fpm (För att tömma opcache)"
+  become: yes
+  service:
+    name: "{{ php_fpm_service }}"
+    state: reloaded
+  when: webinstance.enable_php
+    

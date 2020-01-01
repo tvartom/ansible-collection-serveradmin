@@ -1,0 +1,52 @@
+---
+# https://docs.nextcloud.com/server/15/admin_manual/configuration_server/caching_configuration.html
+- name: Install Redis-server (YUM)
+  become: yes
+  yum:
+    name:
+      - "redis"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Nginx (APT)
+  become: yes
+  apt:
+    name:
+      - redis
+#    update_cache: yes
+    state: present
+    install_recommends: yes
+    update_cache: yes
+    cache_valid_time: 600
+  when: ansible_os_family == "Debian"
+
+
+# Var webinstance har sin egen
+- name: "Disable Redis service huvud-service (skapas en för var webinstans istället)"
+  become: yes
+  service:
+    name: redis
+    enabled: no
+    state: stopped
+  when: ansible_os_family == "RedHat"
+
+
+#- name: Redis conf
+#  become: yes
+#  lineinfile:
+#    dest: "{{ item.0 }}"
+#    state: present
+#    regexp: "^#?\\s*{{ item.1 }}\\s*"
+#    line: "{{ item.1 }} {{ item.2 }}"
+#  loop:
+#    - ["/etc/redis.conf",port,0]
+#    - ["/etc/redis.conf",unixsocket,"/var/run/redis.sock"]
+#    - ["/etc/redis.conf",unixsocketperm,770]
+#    - ["/etc/redis.conf",daemonize,yes]
+#    - ["/etc/redis.conf",supervised,auto]
+#    - ["/etc/redis.conf",pidfile,/var/run/redis_unix.pid]
+#  notify: "Reload Redis"
+#  tags:
+#    - web
+#    - test
+#    - redis

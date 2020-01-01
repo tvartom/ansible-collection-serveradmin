@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Managed by Ansible!
+#
+
+# Se till att devops-repot alltid är uppdaterat:
+pull_devops
+
+
+# Exit on error:
+set -e
+source include_common.sh
+
+
+
+{% if item.meta.playbook_in_serveradmin_collection | default(false) %}
+  {% set playbook_to_run = 'temp_playbook_' ~ item.meta.ansible_playbook %}
+  echo "---" | sudo -u {{ serveradmin.process_user }} tee {{ serveradmin.path }}/workspace/serveradmin/{{ playbook_to_run }} > /dev/null
+  echo "- import_playbook: collections/ansible_collections/tvartom/serveradmin/playbooks/{{ item.meta.ansible_playbook }}" | sudo -u {{ serveradmin.process_user }} tee -a {{ serveradmin.path }}/workspace/serveradmin/{{ playbook_to_run }} > /dev/null
+{% else %}
+  {% set playbook_to_run = item.meta.ansible_playbook %}
+{% endif %}
+
+sudo -u {{ serveradmin.process_user }} -i ansiblerunner_helper.sh $(whoami) {{ playbook_to_run }}

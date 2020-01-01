@@ -1,0 +1,6 @@
+---
+# default
+
+java_version: 1.8.0
+# 11, latest
+maven_version: 3.6.2

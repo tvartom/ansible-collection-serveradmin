@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+{% set dumpfile = 'dumpfile.sql' %}
+{% set database_migration = item.meta %}
+
+ssh -t {{ database_migration.from_server }} "
+	mysqldump \
+		--events \
+		--routines \
+		--triggers \
+		`#--add-drop-database` \
+		--no-create-db \
+		`#--no-data` \
+		--skip-lock-tables \
+	'{{ database_migration.from_database }}'" > {{ dumpfile }}
+
+#	${DB_PORT:+"--protocol=TCP"} ${DB_PORT:+"--port=$DB_PORT"} \
+#	${DB_USER:+"--user=$DB_USER"} \
+#	${DB_PASS:+"--password=$DB_PASS"} \
+#	${NO_DATA_TABLES[@]/#/"--ignore-table=$DB_NAME."} \
+
+echo
+echo "Clean old db_name from dump-file..."
+# mysqldump lämnar några spår av databasnamnet, exempelvis i triggers, så byt ut dessa:
+sed -ri "s/\`{{ database_migration.from_database }}\`/\`{{ database_migration.to_database }}\`/g" {{ dumpfile }}
+
+{% if database_migration.scramble_emailaddresses %}
+echo "Add 'test' on all email-address to make them useless..."
+# -i == inplace (in och ut i samma fil)
+sed -i -r "s/'([^@'\ ]+@[^@'\ ]+)'/'\1test'/g" {{ dumpfile }}
+{% endif %}
+
+
+echo "Drop if exists...({{ database_migration.to_database }})"
+mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database_migration.to_database }}\`"
+echo "Create database..."
+mysql -NB -e "CREATE DATABASE \`{{ database_migration.to_database }}\` DEFAULT CHARACTER SET utf8"
+
+echo "Populate local database... (With data)"
+time mysql {{ database_migration.to_database }} < {{ dumpfile }}

@@ -1,0 +1,26 @@
+---
+#- name: Gör användare till sudoer utan lösenord
+#  include_role:
+#    name: main_users
+#    tasks_from: make_user_sudoer
+#  vars:
+#    user: "användarenamn" #Användarnamnet på användaren som ska bli sudoer utan lösenord
+
+
+- name: Lägg till grupper på användaren (Användaren skapas om den saknas)
+  become: yes
+  user:
+    name: "{{ user }}"
+    state: present
+    groups:
+      - wheel
+      - adm
+    append: yes
+
+- name: Make user sudoer without password
+  become: yes
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^{{ user }}"
+    line: "{{ user }} ALL=(ALL) NOPASSWD: ALL"

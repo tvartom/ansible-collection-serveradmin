@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Managed by Ansible!
+#
+
+# This must be ran as serveradmin!
+
+# Exit on error:
+set -e
+source include_common.sh
+
+cd {{ serveradmin.path }}/workspace/serveradmin
+ansible-playbook --extra-vars "target='ankeborg-copy' connection_type='local' ansible_started_by_user='$1'" $2

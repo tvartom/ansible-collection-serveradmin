@@ -1,0 +1,550 @@
+---
+# Cert files:
+# Account key:                       /opt/letsencrypt/account.key
+# Letsencrypt domain key:            "/etc/nginx/ssl/domain-{{ item.name }}.key"
+# subjectAltName for CSR:            "{{ item.path }}/letsencrypt/subjectaltname_domain-{{ item.name }}.txt"
+# Certificate Signing Request (CSR): "{{ item.path }}/letsencrypt/domain-{{ item.name }}.csr"
+# Letsencrypt-script:                "{{ item.path }}/letsencrypt/letsencrypt-renew-{{ item.name }}.sh"
+# Signed cert:                       "{{ item.path }}/letsencrypt/domain-{{ item.name }}-signed.crt"
+# Intermdiate certs:                 /opt/letsencrypt/intermediate.pem
+# Signed chainged cert:              "/etc/nginx/ssl/chained-{{ item.name }}.pem"
+#
+# För att jämföra nyckel signerat cert och domän-nyckeln:
+# $ openssl x509 -noout -modulus -in /etc/nginx/ssl/chained-{{ item.name }}.pem | openssl md5
+# $ openssl rsa -noout -modulus -in /etc/nginx/ssl/domain-{{ item.name }}.key" | openssl md5
+# 
+# För att titta på innehåll i signerat cert:
+# $ openssl x509 -noout -text -in /etc/nginx/ssl/chained-{{ item.name }}.pem
+
+# Nginx conf: /etc/nginx/web_instances.d/{{ item.name }}.conf
+
+
+### Samla information ####################### #########################################
+
+# Tar active_webinstance och returnerar webinstance med all fakta sammanslagen
+- include_tasks: get_webinstance.yml
+
+# Info om alla webinstanser i denna:
+- name: Webinstance_facts
+  set_fact:
+    webinstance_facts: "{{- webinstance_facts | combine({webinstance.fullname: webinstance}) -}}"
+#### Sätt upp miljön ###############################################################################################3
+
+- name: Create group for web_instance
+  become: yes
+  group:
+    name: "{{ webinstance.process_group }}"
+    system: yes
+
+
+- name: "Hämta info om användaren"
+  getent:
+    database: passwd
+    key: "{{ webinstance.process_user }}"
+    fail_key: false
+
+- name: Create users for web_instances
+  become: yes
+  user:
+    name: "{{ webinstance.process_user }}"
+    group: "{{ webinstance.process_group }}"
+    createhome: yes
+    move_home: no
+    append: yes
+    home: "/home/system/{{ webinstance.process_user }}"
+    system: yes
+  when: getent_passwd[webinstance.process_user] is none
+
+
+- name: Lägg unix användare för access till databas
+  include_role:
+    name: mariadb
+    tasks_from: create_user
+  vars:
+    user:
+      name: "{{ webinstance.process_user }}"
+      is_linux_user: true
+      databases:
+        - database: "{{ webinstance.database }}"
+  when: webinstance.database is defined
+
+- name: "Registrera nyckel för Google Cloud på webinstance-användare"
+  include_role:
+    name: google_cloud_sdk
+    tasks_from: gcloud_add_key
+  vars:
+    gcloud_linuxuser: "{{ webinstance.process_user }}"
+    gloud_key: "{{ serveradmin.gcloud_key }}"
+  when: serveradmin.use_gcloud
+
+- name: "Konfigurera git för webinstance-användaren"
+  include_role:
+    name: git
+    tasks_from: config_git_for_user
+  vars:
+    user:
+      name: "{{ webinstance.process_user }}"
+      #fullname: "hela namnet" #Optional: annars använs user.name
+      #email: "Epost" #Optional: annars används user.name @ inventory_hostname
+
+# https://www.getpagespeed.com/server-setup/nginx/nginx-selinux-configuration
+- name: "Create dir for web_instances"
+  become: yes
+  file:
+    path: "{{ webinstance.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( webinstance.process_user, true ) }}"
+    group: "{{ item.group | default( webinstance.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "u=rwx,g=rx,o=rx"
+  when: item.when | default(True)
+  loop:
+    - { path: "" }
+    - { path: "/log" }
+    - { path: "/log/nginx", owner: "{{ nginx_user }}", group: "{{ nginx_group }}", setype: "httpd_sys_rw_content_t" }
+    # För letsencrypt
+    - { path: "/letsencrypt",            when: webinstance.enable_https }
+    - { path: "/letsencrypt/challenges", when: webinstance.enable_https }
+    - { path: "/log/letsencrypt",        when: webinstance.enable_https }
+    # För PHP
+    - { path: "/log/php-fpm",       setype: "httpd_sys_rw_content_t", when: webinstance.enable_php }
+    - { path: "/php-fpm",                                             when: webinstance.enable_php }
+    - { path: "/php-fpm/session",   setype: "httpd_sys_rw_content_t", when: webinstance.enable_php }
+    - { path: "/php-fpm/wsdlcache", setype: "httpd_sys_rw_content_t", when: webinstance.enable_php }
+    # För deploy
+    - { path: "/repos"}
+    - { path: "/versions" }
+
+    - { path: "/deploy",             when: false }
+    - { path: "/deploy/script",      when: false }
+    - { path: "/log/deploy",         when: false }
+    # För Java
+    - { path: "/webapp",             when: false }
+    # För backup
+    - { path: "/backup",        when: webinstance.database is defined }
+    - { path: "/backup/script", when: webinstance.database is defined }
+    - { path: "/log/backup",    when: webinstance.database is defined }
+    
+
+- name: Skapa script som backupar databas 
+  become: yes
+  template:
+    src: backup_db.sh.j2
+    dest: "{{ webinstance.path }}/backup/script/backup_db.sh"
+    owner: root
+    group: root
+    mode: "u=rwx,g=r,o=r"
+  when: webinstance.database is defined
+
+
+# Fixa till ägare och selinux-type
+#- name: "Create/Modify root dir for web_instances"
+#  become: yes
+#  file:
+#    path: "{{ active_webinstances[webinstance.name].path }}/{{ webinstance.root_dir }}"
+#    state: directory
+#    owner: "{{ webinstance.process_user }}"
+#    group: "{{ webinstance.process_group }}"
+#    setype: httpd_sys_content_t
+#    mode: "u=rwX,g=rX,o=rX"
+#    recurse: yes
+#  when: webinstance.create_root_dir|default(False)
+
+
+- name: Create php-fpm-pool-conf
+  become: yes
+  template:
+    src: php-fpm-pool.conf.j2
+    dest: "{{ php_fpm_pool_path }}/{{ webinstance.fullname }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  when: webinstance.enable_php
+  notify: "Reload php-fpm"
+
+- name: Remove php-fpm-pool-conf for none php-sites
+  become: yes
+  file:
+    path: "{{ php_fpm_pool_path }}/{{ webinstance.fullname }}.conf"
+    state: absent
+  when: not webinstance.enable_php
+  notify: "Reload php-fpm"
+
+
+### Static files ###################################################################
+#- name: Sync files for web_instances
+#  become: yes
+#  synchronize:
+#    src: "{{ host_files }}/web_instances/{{ item.0.name}}/{{ item.1 }}"
+#    dest: "{{ item.0.path }}"
+#    archive: no
+#    links: yes
+#    times: yes
+#    recursive: yes
+#    delete: yes
+#  when: not item.0.repo_slug is defined
+#  with_subelements:
+#     - "{{ web_instances | selectattr('dirs_to_sync', 'defined') | list }}"
+#     - dirs_to_sync
+
+
+### Redis #######################################################################
+
+- name: Include Redis
+  include_tasks: redis.yml
+  when: webinstance.enable_redis
+
+### Lets encrypt #######################################################################
+
+#- name: Lets encrypt
+#  include_tasks: webinstance_letsencrypt.yml
+#  when: webinstance.enable_https and false
+
+- name: Include Letsencrypt
+  include_tasks: webinstance_letsencrypt_domaininstance.yml
+  loop: "{{ webinstance.domaininstances }}"
+  when: webinstance.enable_https
+  loop_control:
+    loop_var: domaininstance
+    label: "{{ domaininstance.fullname }}"
+
+- name: Force to reload nginx to prepare for letsencrypt
+  meta: flush_handlers
+
+- name: Include Letsencrypt (Sign certs)
+  include_tasks: webinstance_letsencrypt_domaininstance_sign.yml
+  loop: "{{ webinstance.domaininstances }}"
+  when: webinstance.enable_https
+  loop_control:
+    loop_var: domaininstance
+    label: "{{ domaininstance.fullname }}"
+
+### Nginx ##############################################################################
+
+- name: Create nginx conf
+  become: yes
+  template:
+    src: nginx_site.conf.j2
+    dest: /etc/nginx/web_instances.d/{{ domaininstance.fullname }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ webinstance.domaininstances }}"
+  loop_control:
+    loop_var: domaininstance
+  notify: "Reload nginx"
+
+- name: Debug
+  debug:
+    var: webinstance
+
+- name: Create nginx include site-conf
+  become: yes
+  template:
+    src: nginx_site.include.j2
+    dest: /etc/nginx/web_instances.d/{{ webinstance.fullname }}.include
+    owner: root
+    group: root
+    mode: 0644
+  notify: "Reload nginx"
+
+- name: Create empty include-file so nginx will start
+  become: yes
+  copy:
+    content: ""
+    dest: /etc/nginx/web_instances.d/{{ webinstance.nginx_include_file }}
+    owner: root
+    group: root
+    mode: 0644
+  when: webinstance.nginx_include_file is defined
+  notify: "Reload nginx"
+
+#- name: Remove site-conf for nginx if not used
+#  become: yes
+#  file:
+#    path: "/etc/nginx/web_instances.d/{{ item.name }}.conf"
+#    state: absent
+#  when: not item.generate_nginx_conf is defined or not item.generate_nginx_conf
+#  with_together:
+#    - "{{ web_instances }}"
+#  notify: "Reload nginx"
+#  tags:
+#    - web
+
+- name: Force to reload nginx if updated
+  meta: flush_handlers
+
+### Pull and deploy-script & Push to deploy ##########################################################
+
+#- name: Create key for web_instances to Bitbucket for Pull and deploy-script
+#  become: yes
+#  user:
+#    name: "{{ item.process_user }}"
+#    generate_ssh_key: yes
+#    ssh_key_bits: 4096
+#    ssh_key_file: "{{ item.path }}/deploy/key/{{ item.process_user }}_bitbucket_rsa"
+#    ssh_key_comment: "{{ item.process_user }}@{{ devicename }} {{ item.name }} Bitbucket {{ ansible_date_time.date }}"
+#  register: key_info
+#  when: item.repo_slug is defined
+#  with_items: "{{ web_instances }}"
+
+#TODO: Remove home just created?
+#Troligen inte, tror ~/.ssh behövs för att köra ssh.
+
+#- name: Debug response (Key_info)
+#  debug:
+#    var: key_info
+#  tags:
+#    - web
+#    - bitbucket
+#    - pushtodeploy
+
+#- name: Register key in Bitbucket in repo for Pull and deploy-script
+#  uri:
+#    url: "https://bitbucket.org/api/1.0/repositories/{{ item.0.repo_user }}/{{ item.0.repo_slug }}/deploy-keys"
+#    method: POST
+#    user: "{{ main_user.bitbucket_username }}"
+#    password: "{{ bitbucket_password }}"
+#    body: "label={{ (devicename ~ ' Push to deploy') | urlencode }}&key={{ item.1.ssh_public_key | urlencode }}"
+#    return_content: yes
+#  register: response
+#  failed_when: not (response.status == 200 or (response.status == 400 and "Someone has already added that access key to this repository." in response.content ))
+#  changed_when: response.status == 200
+#  when: item.0.repo_slug is defined and bitbucket_password is defined and not bitbucket_password == ""
+#  with_together:
+#    - "{{ web_instances }}"
+#    - "{{ key_info.results }}"
+
+#- name: Debug response (Register key)
+#  debug:
+#     var: response
+#  tags:
+#    - web
+#    - bitbucket
+#    - pushtodeploy
+
+# Dokumentation API: https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/hooks
+#
+#- name: Look for registrerd Webhook in Bitbucket in repo for Push to deploy
+#  uri:
+#    url: "https://api.bitbucket.org/2.0/repositories/{{ item.repo_user }}/{{ item.repo_slug }}/hooks"
+#    method: GET
+#    user: "{{ main_user.bitbucket_username }}"
+#    password: "{{ bitbucket_password }}"
+#    #body_format: json
+#    #body: "{\"description\":\"Push to deploy @ {{devicename}}\",\"url\":\"{{ pushtodeploy_url }}?\",\"active\":true,\"events\": [\"repo:push\"]}"
+#    return_content: yes
+#  register: response_get
+#  when: (item.push_to_deploy | default(false)) and bitbucket_password is defined and not bitbucket_password == ""
+#  with_items: "{{ web_instances }}"
+
+#- name: Show result-list (Webhook GET)
+#  debug:
+#    var: ((pushtodeploy_url~'?user='~item.0.repo_user~'&slug='~item.0.repo_slug) in (item.1.json['values'] | map(attribute='url')| list))
+#  when: (item.0.push_to_deploy | default(false))
+#  with_together:
+#    - "{{ web_instances }}"
+#    - "{{ response_get.results }}"
+
+
+# .values can't be used in item.1.json['values'] since it is a reseved word. Use [''] instead
+# Vid felet: "The conditional check..." troligen variabeln pushtodeploy_url ej satt! 2017-11-13 / LL
+#- name: Register Webhook in Bitbucket in repo for push to deploy
+#  uri:
+#    url: "https://api.bitbucket.org/2.0/repositories/{{ item.0.repo_user }}/{{ item.0.repo_slug }}/hooks"
+#    method: POST
+#    user: "{{ main_user.bitbucket_username }}"
+#    password: "{{ bitbucket_password }}"
+#    body_format: json
+#    body: "{\"description\":\"Pushtodeploy@{{devicename}}\",\"url\":\"{{ pushtodeploy_url }}?user={{ item.0.repo_user }}&slug={{ item.0.repo_slug }}\",\"active\":true,\"events\": [\"repo:push\"]}"
+#    return_content: yes
+#  register: response
+#  failed_when: not response.status == 201
+#  changed_when: response.status == 201
+#  when: (item.0.push_to_deploy | default(false)) and bitbucket_password is defined and not bitbucket_password == "" and not ((pushtodeploy_url~'?user='~item.0.repo_user~'&slug='~item.0.repo_slug) in (item.1.json['values'] | map(attribute='url')| list))
+#  with_together:
+#    - "{{ web_instances }}"
+#    - "{{ response_get.results }}"
+
+#- name: Debug response (Webhooks POST)
+#  debug:
+#    var: response
+#  tags:
+#    - web
+#    - bitbucket
+#    - pushtodeploy
+
+#- name: Check if repo is cloned
+#  stat:
+#    path: "{{ item.path }}/deploy/workspace/{{ item.repo_slug }}"
+#  when: item.repo_slug is defined
+#  with_items: "{{ web_instances }}"
+#  register: repo_stat
+
+#- name: "Let main user write to workspace (temporary for hg clone)"
+#  become: yes
+#  file:
+#    path: "{{ item.0.path }}/deploy/workspace"
+#    state: directory
+#    mode: "u=rwx,g=rwx,o=rwx"
+#  when: item.0.repo_slug is defined and (not item.1.stat.exists)
+#  with_together:
+#    - "{{ web_instances }}"
+#    - "{{ repo_stat.results }}"
+
+#- name: Clone repo for webinstance
+#  hg:
+#    repo: ssh://hg@bitbucket.org/{{ item.0.repo_user }}/{{ item.0.repo_slug }}
+#    dest: "{{ item.0.path }}/deploy/workspace/{{ item.0.repo_slug }}"
+#  when: item.0.repo_slug is defined and (not item.1.stat.exists)
+#  with_together:
+#    - "{{ web_instances }}"
+#    - "{{ repo_stat.results }}"
+
+#- name: "Fix file owner and file permisson of repo"
+#  become: yes
+#  file:
+#    path: "{{ item.path }}/deploy/workspace"
+#    state: directory
+#    owner: "{{ item.process_user }}"
+#    group: "{{ item.process_group }}"
+#    #setype: "{{ item[4] | default( '_default' ) }}"                  # httpd_sys_content_t
+#    mode: "u=rwX,g=rX,o=rX"
+#    recurse: yes
+#  when: item.repo_slug is defined
+#  with_items: "{{ web_instances }}"
+
+
+#- name: Edit hgrc (ui exists)
+#  become: yes
+#  lineinfile:
+#    dest: "{{ item.path }}/deploy/workspace/{{ item.repo_slug }}/.hg/hgrc"
+#    line: "[ui]"
+#  when: item.repo_slug is defined
+#  with_items: "{{ web_instances }}"
+
+#- name: Edit hgrc (ssh with key)
+#  become: yes
+#  lineinfile:
+#    dest: "{{ item.path }}/deploy/workspace/{{ item.repo_slug }}/.hg/hgrc"
+#    insertafter: "\\[ui\\]"
+#    regexp: "ssh\\s*="
+#    line: "ssh = ssh -C -i {{ item.path }}/deploy/key/{{ item.process_user }}_bitbucket_rsa"
+#  when: item.repo_slug is defined
+#  with_items: "{{ web_instances }}"
+
+#- name: Create pull and deploy-script
+#  become: yes
+#  template:
+#    src: pullanddeploy.sh.j2
+#    dest: "{{ item.path }}/deploy/pullanddeploy.sh"
+#    owner: "{{ item.process_user }}"
+#    group: "{{ item.process_group }}"
+#    setype: httpd_sys_script_exec_t
+#    mode: "u=rwx,g=r,o=r"
+#  when: item.pull_and_deploy_script is defined
+#  with_items: "{{ web_instances }}"
+
+#- name: If first setup, pull and deploy!
+#  become: yes
+#  become_user: "{{ item.0.process_user }}"
+#  shell: "{{ item.0.path }}/deploy/pullanddeploy.sh"
+#  when: item.0.repo_slug is defined and (not item.1.stat.exists)
+#  with_together:
+#    - "{{ web_instances }}"
+#    - "{{ repo_stat.results }}"
+
+#- name: Create systemd unit for jetty
+#  become: yes
+#  template:
+#    src: jetty.service.j2
+#    dest: "/etc/systemd/system/jetty-{{ item.name }}.service"
+#    owner: "root"
+#    group: "root"
+#    mode: "u=rwx,g=r,o=r"
+#  when: item.pull_and_deploy_script is defined and item.pull_and_deploy_script == "maven-jetty"
+#  with_items: "{{ web_instances }}"
+#  notify: "Reload systemd units"
+
+#- name: Force to reload systemd to prepare for enable service
+#  meta: flush_handlers
+
+#- name: Enable and start Jetty-serivce
+#  become: yes
+#  service:
+#    name: jetty-{{ item.name }}
+#    state: started
+#    enabled: yes
+#  when: item.pull_and_deploy_script is defined and item.pull_and_deploy_script == "maven-jetty"
+#  with_items: "{{ web_instances }}"
+
+### Databas ########################################################################################################################
+
+#- name: Create DB for webinstances
+#  become: yes
+#  mysql_db:
+#    name: "{{ item.1.name }}"
+#    collation: "{{ item.1.collation | default('utf8_general_ci') }}"
+#    encoding: "{{ item.1.encoding | default('utf8') }}"
+#    state: present
+#  with_subelements:
+#     - "{{ web_instances | selectattr('db', 'defined') | list }}"
+#     - db
+
+#- name: Create DB-user for webinstances
+#  become: yes
+#  mysql_user:
+#    check_implicit_admin: yes
+#    login_password: "{{ mariadb_root_password }}"
+#    login_user: root
+#    user: "{{ item.1.user }}"
+#    password: "{{ item.1.password }}"
+#    host: "localhost" # Eller 127.0.0.1? Eller ::1?
+#    priv:  "{{ item.1.name }}.*:{{ item.1.priv | default('ALL') }}"
+#  with_subelements:
+#     - "{{ web_instances | selectattr('db', 'defined') | list }}"
+#     - db
+
+### Install Wordpress ###############################################################################################################
+
+#- name: Wordpress - Download and unpack if not present
+#  become: yes
+#  unarchive:
+#    remote_src: yes
+#    extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root wordpress/
+#    src: "https://wordpress.org/latest.tar.gz"
+#    dest: "{{ item.path }}/{{ item.root_dir }}"
+#    owner: "{{ item.process_user }}"
+#    group: "{{ item.process_group }}"
+#    mode: "u=rwX,g=rX,o=rX"
+#    creates: "{{ item.path }}/{{ item.root_dir }}/wp-admin"
+#  when: item.wordpress | default(false)
+#  with_items: "{{ web_instances }}"
+
+### Config mail ########################################
+
+#- name: "Create /etc/msmtp dir"
+#  become: yes
+#  file:
+#    path: "/etc/msmtp"
+#    state: directory
+#    owner: "root"
+#    group: "root"
+#    setype: "httpd_sys_content_t"
+#    mode: "u=rwx,g=rx,o=rx"
+
+
+#- name: "Create msmtp config"
+#  become: yes
+#  template:
+#    src: msmtp.j2
+#    dest: "/etc/msmtp/test.se.msmtp"
+#    owner: "www-test"
+#    group: "www-test"
+#    setype: "httpd_sys_content_t"
+#    mode: "u=rw,g=,o="
+##  when: item.pull_and_deploy_script is defined
+##  with_items: "{{ web_instances }}"
+#  tags:
+#    - web
+#    - mail

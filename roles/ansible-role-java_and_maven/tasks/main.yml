@@ -1,0 +1,63 @@
+---
+- name: Install java (YUM)
+  become: yes
+  yum:
+    name:
+      - "java-{{ java_version }}-openjdk-devel"
+    update_cache: yes
+    state: latest
+  when: ansible_os_family == "RedHat"
+
+- name: Fix JAVA_HOME
+  become: yes
+  template:
+    src: java.sh.j2
+    dest: /etc/profile.d/java.sh
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: "Create maven dir"
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    #owner: "{{ item | default( item[0].process_user, true ) }}"
+    #group: "{{ item[3] | default( item[0].process_group, true ) }}"
+    #setype: "{{ item[4] | default( '_default', true ) }}"
+    #mode: "{{ item[5] | default( 'u=rwx,g=rx,o=rx', true ) }}"
+  with_items:
+    - "/opt/maven"
+
+#- name: Download Apache Maven 
+#  become: yes
+#  get_url:
+#    url: "http://mirror.vorboss.net/apache/maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+#    dest: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+
+- name: Download and extract Maven
+  become: yes
+  unarchive:
+    remote_src: yes
+    src: "http://apache.mirrors.spacedump.net/maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+    #src: "http://mirror.vorboss.net/apache/maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+    #src: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+    dest: /opt/maven
+    creates: /opt/maven/apache-maven-{{ maven_version }}/bin/mvn
+
+- name: Update the symbolic link to the Maven install
+  become: yes
+  file:
+    path: /usr/local/bin/mvn
+    src: /opt/maven/apache-maven-{{ maven_version }}/bin/mvn
+    state: link
+    force: yes
+
+- name: Fix M2_HOME
+  become: yes
+  template:
+    src: maven.sh.j2
+    dest: /etc/profile.d/maven.sh
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"

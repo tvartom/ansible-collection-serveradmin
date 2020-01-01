@@ -1,0 +1,8 @@
+---
+- hosts: "{{ target }}"
+  gather_facts: yes
+  collections:
+    - tvartom.serveradmin
+  tasks:
+    - include_role:
+        name: lab

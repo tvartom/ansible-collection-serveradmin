@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# Managed by Ansible!
+#
+
+# Exit on error:
+set -e
+source include_common.sh
+COLOR="${{ host_color | default('NC') }}"
+echo ""
+{% for line in organisation.splash.split('\n') %}
+echo -e "{{ line|replace("`", "\`")|replace('"', '\\"')|replace("$", "\$")|replace("\${", "${") }}"
+{% endfor %}
+
+{% for file in serveradmin.files %}
+{%   if file.show_on_splash | default(file.desc is defined) %}
+echo -e "  ${BWhite}{{ file.target }}${NC} ${Yellow}{{ file.desc }}${NC}"
+{%   endif %}
+{% endfor %}
+echo ""

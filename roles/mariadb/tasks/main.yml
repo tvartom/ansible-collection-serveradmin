@@ -1,0 +1,233 @@
+---
+# https://mariadb.com/kb/en/library/yum/
+# /LL 2018-03-02
+
+# Uppgradering:
+# systemctl stop mariadb
+# yum remove mariadb-server mariadb mariadb-libs
+
+# Uppgradering 2019-07-03 (10.1 IUS till 10.4 MariaDB-repo)
+# service mariadb stop
+# yum remove mariadb101u mariadb101u-common mariadb101u-config php72u-mysqlnd galera
+# (Kolla att allt är borta med "yum list installed | grep aria") 
+# Kör ansible playbook, se till att nya servicen är startad igen.
+# sudo mysql_upgrade 
+
+- name: Install MariaDB repo (RedHat).
+  become: yes
+  yum_repository:
+    name: "mariadb"
+    description: "Offical MariaDB repo"
+    #baseurl: "http://yum.mariadb.org/10.2/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_version[0:3] | replace('.', '') }}-amd64"
+    #baseurl: "http://yum.mariadb.org/10.2/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
+    #baseurl: "http://yum.mariadb.org/10.1/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
+    baseurl: "http://yum.mariadb.org/10.4/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
+    gpgkey: https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+    gpgcheck: yes
+    state: present
+  when: ansible_distribution_file_variety == "RedHat"
+# - pause:
+# Källa: https://github.com/fabaff/fedora-ansible/blob/master/tasks/mariadb.yml
+
+# Fix problem with MariaDB-server missing on CentOS 8
+# https://jira.mariadb.org/browse/MDEV-20673?focusedCommentId=139613&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-139613
+- name: "Hotfix for CentOS 8"
+  become: yes
+  ini_file:
+    path: "/etc/yum.repos.d/mariadb.repo"
+    section: "mariadb"
+    option: "module_hotfixes"
+    value: "true"
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "8"
+
+- name: "Install mariadb (YUM)"
+  become: yes
+  yum:
+    name:
+      # För CentOS standard repo:
+      #- mariadb
+      #- mariadb-server 
+      
+      # Finns även paket i IUS med namn i still med mariadb101u-
+      #- mariadb101u-server
+      #- mariadb10u-client
+      
+      # Offical MariaDB repo.
+      - MariaDB-server
+      #- MariaDB-client
+    state: "present"
+  when: ansible_os_family == "RedHat"
+
+- name: install related packages (YUM)
+  become: yes
+  yum:
+    name:
+      # - "{{ php_package }}-mysqlnd"
+      # - MySQL-python # Python behövs av Ansible
+      # The PyMySQL (Python 2.7 and Python 3.X) or MySQL-python (Python 2.X) module is required."}
+      - "python3-PyMySQL" # MySQL-python finns inte i CentOS 8, funkar denna?
+    state: "present"
+  when: ansible_os_family == "RedHat"
+
+- name: "Konfigurera MariaDB Lägg till värden"
+  become: yes
+  lineinfile:
+    path: "/etc/my.cnf.d/server.cnf"
+    state: present
+    insertafter: "\\[{{ item.section }}\\]"
+    regexp: '^\s*#?\s*{{ item.option }}\s*=\s*{{ item.value }}'
+    line: '{{ item.option }} = {{ item.value }}'
+  loop:
+    - { section: mariadb,  option: plugin_load_add, value: "auth_socket" }
+    - { section: mariadb,  option: plugin_load_add, value: "auth_ed25519" }
+  notify: Restart MariaDB
+
+- name: "Create dir for mariadb"
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( 'root', true ) }}"
+    group: "{{ item.group | default( 'root', true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "u=rwx,g=rx,o=rx"
+  when: item.when | default(True)
+  loop:
+    - { path: "/var/log/mariadb", owner: "mysql", group: "mysql" }
+
+- name: "Konfigurera MariaDB Sätt värden"
+  become: yes
+  ini_file:
+    path: "/etc/my.cnf.d/{{ item.file }}"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    allow_no_value: "{{ item.allow_no_value | default(false) }}"
+  loop:
+    # Följande rad ser till att pluginen auth_socket är laddad och kräver att den finns:
+    - { file: server.cnf, section: mariadb,  option: unix_socket, value: "FORCE_PLUS_PERMANENT" }
+    # Loggning, fel:
+    - { file: server.cnf, section: mariadb,  option: "log_error",    value: "/var/log/mariadb/mariadb-error.log"}
+    # Loggning, general:
+    - { file: server.cnf, section: mariadb,  option: "general_log",    value: "", allow_no_value: True }
+    - { file: server.cnf, section: mariadb,  option: "general_log_file",    value: "/var/log/mariadb/mariadb.log"}
+    # Loggning, långsamt:
+    - { file: server.cnf, section: mariadb,  option: "slow_query_log", value: "", allow_no_value: True }
+    - { file: server.cnf, section: mariadb,  option: "slow_query_log_file",    value: "/var/log/mariadb/mariadb-slow.log"}
+    - { file: server.cnf, section: mariadb,  option: "long_query_time",    value: "15"} # 10 default
+    # Encoding för servern
+    - { file: server.cnf, section: server, option: character-set-server, value: "{{ mariadb_conf_server_character_set }}" }
+    - { file: server.cnf, section: server, option: collation-server,      value: "{{ mariadb_conf_server_collation }}" }
+    # Slå på event_scheduler om aktiverad för hosten:
+    - { file: server.cnf, section: server, option: event_scheduler,       value: "{{ 'ON' if mariadb_conf_server_event_scheduler | bool else 'OFF' }}" }
+    # Se till att server och client har samma socket
+    - { file: server.cnf, section: mysqld, option: socket, value: /var/lib/mysql/mysql.sock }
+    - { file: client.cnf, section: client, option: socket, value: /var/lib/mysql/mysql.sock }
+  notify: Restart MariaDB
+
+- name: Enable the service
+  become: yes
+  service:
+    name: mariadb
+    enabled: yes
+  notify: Restart MariaDB
+
+- name: Start/restart MariaDB
+  meta: flush_handlers
+
+# 2019-12-30 LL Not longer needed:
+# root has no password-access, only unix-socket by default.
+# https://mariadb.org/authentication-in-mariadb-10-4/
+## Första gången denna körs är root-lösenordet blankt.
+## Men när localhost är satt, så måste
+## mariadb.old_root_password ändras i host_vars.yaml på servern
+#- name: Set the sql root password (Se kommentarer i kod)
+#  become: yes
+#  mysql_user:
+#    check_implicit_admin: yes
+#    login_password: "{{ mariadb.old_root_password }}"
+#    login_user: root
+#    user: root
+#    password: "{{ mariadb.root_password }}"
+#    host: "{{ item }}"
+#  with_items:
+#   - "%"
+#   - localhost
+#   - "127.0.0.1"
+#   - "::1"
+
+##### 
+#- name: Create group for backup user
+#  become: yes
+#  group:
+#    name: "{{ backup_source_group }}"
+#    system: yes
+
+#- name: Create user to run backup jobs
+#  become: yes
+#  user:
+#    name: "{{ backup_source_user }}"
+#    group: "{{ backup_source_group }}"
+#    createhome: yes
+#    system: yes
+
+#- name: Create database backup-user
+#  become: yes
+#  mysql_user:
+#    check_implicit_admin: yes
+#    login_password: "{{ mariadb_root_password }}"
+#    login_user: root
+#    user: "{{ backup_source_user }}"
+#    password: "{{ mariadb_backup_password }}"
+#    host: "{{ item }}"
+#    priv:  "*.*:LOCK TABLES,SELECT,SHOW VIEW,EVENT"
+#  with_items:
+#   - localhost
+#   - "127.0.0.1"
+#   - "::1"
+
+- name: "Remove the mariadb test database"
+  become: yes
+  mysql_db:
+    db: test
+    state: absent
+    login_user: root
+    login_unix_socket: "/var/lib/mysql/mysql.sock"
+
+- name: "Delete anonymous sql server user"
+  become: yes
+  mysql_user:
+    user: ""
+    host_all: yes
+    state: absent
+    login_user: root
+    login_unix_socket: "/var/lib/mysql/mysql.sock"
+
+- name: "Lägg till användare för access till mariadb"
+  include_role:
+    name: mariadb
+    tasks_from: create_user
+  vars:
+    user: "{{ item }}"
+  loop: |
+      {#- Skapar en lista från linuxanvändare ifrån users, samt informationen i mariadb.users som finns i /root/host_vars.yml som hämtas från hosten. -#}
+      {%- set output = [] -%}
+      {#- Lista linuxanvändare i users, och lägg till dessa. -#}
+      {%- for user in users -%}
+      {%-   set dbuser = user -%}
+      {#-   Sätt direkttiv till mariadb create_user för linuxanvändare. -#}
+      {{-   dbuser.__setitem__('is_linux_user', true) -}}
+      {{-   dbuser.__setitem__('is_superadmin', user.sudoer | default(false)) -}}
+      {#-   I host_vars.yml som hämtas från /root kan extra användare, och direktiv till befintliga sättas. Kombinera in dessa i linuxanvändarna, om det är samma användarnamn. -#}
+      {%-   for mariadbuser in mariadb.users | default([]) if mariadbuser.name == dbuser.name -%}
+      {%-     for key,value in mariadbuser.items() if key != 'name' -%}
+      {{-       dbuser.__setitem__(key, value) -}}
+      {%-     endfor -%}
+      {%-   endfor -%}
+      {{-   output.append(dbuser) -}}
+      {%- endfor -%}
+      {#- De användare som inte matchade mot linuxaanvändarna lägg till som egna användare. -#}
+      {%- for mariadbuser in mariadb.users | default([]) if not mariadbuser.name in output|map(attribute="name") -%}
+      {{-   output.append(mariadbuser) -}}
+      {%- endfor -%}
+      {{- output -}}

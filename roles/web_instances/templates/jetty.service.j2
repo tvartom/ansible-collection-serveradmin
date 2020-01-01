@@ -1,0 +1,20 @@
+{#- 
+http://alesnosek.com/blog/2016/12/04/controlling-a-multi-service-application-with-systemd/
+https://wiki.archlinux.org/index.php/systemd#Service_types
+https://www.freedesktop.org/software/systemd/man/systemd.service.html#Type=
+http://alesnosek.com/blog/2016/12/04/controlling-a-multi-service-application-with-systemd/
+
+-#}
+[Unit]
+Description=Jetty Web Application Server for {{ item.name }}
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/java -server -Dfile.encoding=utf-8 -jar {{ item.path }}/webapp/jetty-runner.jar --port {{ item.proxy_port }} {{ item.path }}/webapp/web.war
+Restart=always
+User={{ item.process_user }}
+Group={{ item.process_group }}
+
+[Install]
+WantedBy=multi-user.target

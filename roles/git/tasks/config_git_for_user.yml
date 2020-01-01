@@ -1,0 +1,31 @@
+
+#- name: Konfigurera git för användaren
+#  include_role:
+#    name: git
+#    tasks_from: config_git_for_user
+#  vars:
+#    user:
+#      name: "användarenamn" #Användarnamnet på användaren
+#      fullname: "hela namnet" #Optional: annars använs user.name
+#      email: "Epost" #Optional: annars används user.name @ inventory_hostname
+
+- name: Ta reda på huvudgruppen för användaren
+  command: id -gn
+  become: yes
+  become_user: "{{ user.name }}"
+  register: git_user_primary_group_result
+  changed_when: false
+
+- name: "Lägg in user och name i git-config"
+  become: yes
+  ini_file:
+    path: "~{{ user.name }}/.gitconfig"
+    section: "user"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ user.name }}"
+    group: "{{ git_user_primary_group_result.stdout }}"
+    mode: "u=rw,g=rw,o=r"
+  loop:
+    - { option: name,  value: "{{ user.fullname | default(user.name) | replace('å','a') | replace('ä', 'a') | replace('ö','o') | replace('Å','A') | replace('Ä', 'A') | replace('Ö','O')}}" }
+    - { option: email, value: "{{ user.email | default(user.name+'@'+inventory_hostname) }}" }

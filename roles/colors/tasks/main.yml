@@ -1,0 +1,33 @@
+---
+# tasks file for colors
+- include_vars:
+    file: colors.yml
+
+- set_fact:
+    bashcolors: |
+      {%- set output = {} -%}
+      {%- for key,value in colorcodes.items() -%}
+      {{-   output.__setitem__(key, '\e['+value+'m') -}}
+      {%- endfor -%}
+      {{- output -}}
+
+# Usage:
+# echo -e "I {{ bashcolors.Red }}love{{ bashcolors.NC }} you!"
+
+
+- set_fact:
+    yamlcolors: |
+      {%- set output = {} -%}
+      {%- for key,value in colorcodes.items() -%}
+      {{-   output.__setitem__(key, x1b+'['+value+'m') -}}
+      {%- endfor -%}
+      {{- output -}}
+  vars:
+    x1b: "\x1b"
+
+# Usage:
+#- pause:
+#    prompt: |
+#      I {{  yamlcolors.Red }}love{{  yamlcolors.NC }} you!
+#    seconds: 0
+

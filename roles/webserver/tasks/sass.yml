@@ -1,0 +1,62 @@
+---
+
+- name: Ta reda på senaste versionen
+  shell: >-
+    curl -s https://api.github.com/repos/sass/dart-sass/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")'
+  args:
+    # Warning om att inte shell ska användas för curl:
+    warn: false
+  register: sass_latest_version_output
+  changed_when: false
+
+- set_fact:
+    sass_latest_version: "{{ sass_latest_version_output.stdout }}"
+
+- name: "Create /opt/sass"
+  become: yes
+  file:
+    path: "/opt/sass{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+  loop:
+    - ""
+    - "/dart-sass-{{ sass_latest_version }}"
+
+- name: Ladda ner och packa upp senaste sass
+  become: yes
+  become_user: "root"
+  unarchive:
+    remote_src: yes
+    src: "https://github.com/sass/dart-sass/releases/download/{{ sass_latest_version }}/dart-sass-{{ sass_latest_version }}-linux-x64.tar.gz"
+    dest: "/opt/sass/dart-sass-{{ sass_latest_version }}"
+    mode: "u=rwX,g=rX,o=rX"
+    owner: "root"
+    group: "root"
+    creates: "/opt/sass/dart-sass-{{ sass_latest_version }}/dart-sass"
+
+# Måste vara absolut path i symlink för att sass ska hitta sin dart!
+- name: "Symlink sass"
+  become: yes
+  file:
+    path: "/opt/sass/sass"
+    src: "/opt/sass/dart-sass-{{ sass_latest_version }}/dart-sass/sass"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+    state: link
+    force: yes
+    
+# Orginal på ubuntu: PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+- name: add sass path to path
+  become: yes
+  lineinfile:
+    dest: /etc/environment
+    state: present
+    backrefs: yes
+    regexp: 'PATH=(["]?)((?!.*?{{ sass_path }}).*?)(["]?)$'
+    line: 'PATH=\1\2:{{ sass_path }}\3'
+  vars:
+    sass_path: "/opt/sass"
+

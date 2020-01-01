@@ -1,0 +1,22 @@
+---
+- name: Install Git (APT)
+  become: yes
+  apt:
+    name: git
+    update_cache: yes
+    cache_valid_time: 600
+    state: present
+  when: ansible_os_family == "Debian"
+
+# git på CenotOS 7 är hopplöst gammal 1.8
+# Där finns package "git2u" från IUS repot
+
+- name: Install Git (YUM)
+  become: yes
+  yum:
+    name: git
+    update_cache: yes
+    state: present
+  when: ansible_os_family == "RedHat"
+
+

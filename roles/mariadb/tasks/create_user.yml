@@ -1,0 +1,80 @@
+---
+#- name: Lägg unix användare för access till mariadb
+#  include_role:
+#    name: mariadb
+#    tasks_from: create_user
+#  vars:
+#    user:
+#      [is_linux_user: default(true)] # Gör att det går att logga in utan lösenord för användaren (unix_socket)
+#      name: "användarenamn" #Användarnamnet på användaren (kan vara linux användare)
+#      [password: sätt lösenord, annars default unix_socekt om linux-användare] 
+#      [host: default(localhost)]
+#      [databases:
+#        - database: databasename
+#          [table: tablename | default("*")]
+#          [privileges: privilege, privilege... | default('ALL PRIVILEGES')] (Från: https://mariadb.com/kb/en/library/grant/ )
+# Borttagna:
+#      [database: default("*")]
+#      [grant_all_privileges: default(false)
+
+#- debug:
+#    var: user
+
+- set_fact:
+    user_temp: |-
+      {{- {
+      'is_linux_user': false,
+      'is_superadmin': false,
+      'host': 'localhost',
+      'databases': []
+      } | combine(user) -}}
+
+- name: Ta reda på huvudgruppen för användaren
+  command: id -gn
+  become: yes
+  become_user: "{{ user_temp.name }}"
+  register: mariadb_create_user_primary_group_result
+  changed_when: false
+  when: user_temp.is_linux_user
+
+# 2019-12-30 LL Not needed when using unix-socket
+#- name: config my.cnf
+#  become: yes
+#  template:
+#    src: my.cnf.j2
+#    owner: "{{ user_temp.name }}"
+#    group: "{{ mariadb_create_user_primary_group_result.stdout }}"
+#    dest: "~{{ user_temp.name }}/.my.cnf"
+#    mode: "u=rw,g=,o="
+#  when: user_temp.is_linux_user
+
+- name: Skapa database-användaren
+  become: yes
+  command: >-
+      mysql -u root -e "CREATE OR REPLACE USER '{{ user_temp.name }}'@'{{ user_temp.host }}'{{ identified_via }}"
+  vars:
+    # använder mysql_native_password istället för ed25519 på grund av följande bugg: https://jira.mariadb.org/browse/MDEV-19807
+    identified_via: >-
+      {%- set output = [] -%}
+      {%- if user_temp.password is defined -%}
+      {{-   output.append("mysql_native_password USING PASSWORD('"+user_temp.password+"')") -}}
+      {%- endif -%}
+      {%- if user_temp.is_linux_user -%}
+      {{-   output.append('unix_socket') -}}
+      {%- endif -%}
+      {%- if output -%}
+      {{ ' ' }}IDENTIFIED VIA {{ output | join(' OR ') }}
+      {%- endif -%}
+
+- name: Ge access (Superadmin)
+  become: yes
+  command: >-
+    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '{{ user_temp.name }}'@'{{ user_temp.host }}' WITH GRANT OPTION;"
+  when: user_temp.is_superadmin
+  
+- name: "Ge access till databaser (och tables)"
+  become: yes
+  command: >-
+    mysql -u root -e "GRANT {{ item.privileges | default('ALL PRIVILEGES') }} ON {{ item.database }}.{{ item.table | default('*') }} TO '{{ user_temp.name }}'@'{{ user_temp.host }}';"
+  loop: "{{ user_temp.databases }}"
+

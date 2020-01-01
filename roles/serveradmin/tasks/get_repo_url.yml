@@ -1,0 +1,59 @@
+---
+#- include_role:
+#    name: serveradmin
+#    tasks_from: get_repo_url
+#  vars:
+#    repo:
+#      [protocol:]
+#      [domain:]
+#      [user:]
+#      [port:]
+#      path:
+#    [repo_url_loop: true]
+#
+#
+# Returns: repo_url, repo_return
+
+- name: "Returnera repo object"
+  set_fact:
+    repo_return: >-
+     {%-  set found = {} -%}
+     {%- for serveradmin_repo_default in serveradmin_default.repos_default if serveradmin_repo_default.domain == repo.domain -%}
+     {{-   found.__setitem__('repo', serveradmin_repo_default) -}}
+     {%- endfor -%}
+     {%- set output = {'protocol':'protocol_saknas', 'domain':'domain_saknas', 'port': false, 'use_unique_deploy_key': false} | combine(found.repo) | combine(repo) -%}
+     {%- set repo_use_user = (output.user+'@' if output.protocol == 'ssh' else '') -%}
+     {%- set repo_use_port = ':' ~ output.port if output.port else '' -%}
+     {{- output.__setitem__('url', output.protocol ~ '://' ~ repo_use_user ~ output.domain ~ repo_use_port ~ repo.path ) -}}
+     {{- output.__setitem__('unique_deploy_key', 'deploy_' ~ output.domain ~ output.path | replace('/','_')) -}}
+     {{- output -}}
+
+- name: "Returnera URL till repo"
+  set_fact:
+    repo_url: "{{ repo_return.url }}"
+
+#- name: Returnera URL till repo
+#  set_fact:
+#    repo_url: >-
+#     {%-  set found = {} -%}
+#     {%- for serveradmin_repo_default in serveradmin_default.repos_default if serveradmin_repo_default.domain == repo.domain -%}
+#     {{-   found.__setitem__('repo', serveradmin_repo_default) -}}
+#     {%- endfor -%}
+#     {%- set repo_default = found.repo | default({}) -%}
+#     {%- set repo_use_protocol = repo.protocol | default( repo_default.protocol | default('saknas', true ), true) -%}
+#     {%- set repo_use_user = (repo.user|default(repo_default.user)+'@' if repo_use_protocol == 'ssh' else '') -%}
+#     {%- set repo_use_domain = repo.domain|default(repo_default.domain) -%}
+#     {%- set repo_port = repo.port|default(repo_default.port, true)|default(false, true) -%}
+#     {%- set repo_use_port = ':'+repo_port|string if repo_port else '' -%}
+#     {{- repo_use_protocol -}}://{{- repo_use_user -}}{{- repo_use_domain -}}{{- repo_use_port -}}{{- repo.path -}}
+
+- debug:
+    var: repo_url
+
+- name: Spara värden i en loop
+  set_fact:
+    repo_urls: >-
+      {{- repo_urls.append(repo_url) -}}
+      {{- repo_urls -}}
+  when: repo_url_loop|default(false)
+

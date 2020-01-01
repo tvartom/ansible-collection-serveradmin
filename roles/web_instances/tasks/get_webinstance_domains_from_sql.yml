@@ -1,0 +1,37 @@
+---
+#- shell: "echo \"{{ active_webinstances[webinstance.name].domain_instances_query|replace('`','\\`')|replace(double_quote,double_quote+single_quote+double_quote+single_quote+double_quote) }}\""
+#  register: test
+#- debug:
+#    var: test
+#- pause:
+
+# Bugg https://github.com/ansible/ansible/issues/14172
+# Går ej att escapa " och ' så lätt. Finns därför två variabler satta med single_quote+double_quote
+# I bash kan man byta mellan single och double hela tiden: "Hej "'jag '" heter!"
+# vilket gör att man kan byta mellan dem när man behöver quotes, istället för att skriva \
+
+# Om single quote används i kommandot, kan single-quote escapas med:
+# |replace(single_quote,single_quote+double_quote+single_quote+double_quote+single_quote)
+
+# Om double används. (Då får även ` betydelsen att något ska exekveras.)
+# |replace('`','\\`')|replace(double_quote,double_quote+single_quote+double_quote+single_quote+double_quote)
+# Double quote krävs för att använda variabeler.
+
+# Finns ett quote-filter som jag inte fått att fungera med
+# |quote
+
+- name: Hämta domän-instanser från databasen.
+  become: yes
+  become_user: "{{ serveradmin.process_user }}"
+  shell: "environment={{ webinstance_temp.environment }}; mysql -N -B -e\"{{ webinstance_temp.domains_source.sql_domaininstances|replace('`','\\`')|replace(double_quote,double_quote+single_quote+double_quote+single_quote+double_quote) }}\" {{ webinstance_temp.database }}"
+  register: domaininstances_stdout_json
+  changed_when: false
+
+- name: Returnera resultat (tolka json)
+  set_fact:
+    domaininstances_result: "{{ domaininstances_stdout_json.stdout_lines|map('from_json')|list }}"
+
+#- name: domaininstances i from_sql
+#  debug:
+#    var: domaininstances_result
+#- pause:

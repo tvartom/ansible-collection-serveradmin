@@ -1,0 +1,65 @@
+---
+#- name: Collect facts
+#  include_role:
+#    name: collect_facts
+#    tasks_from: collect_facts
+#  vars:
+#    facts_options:
+#      [var_files:] # Read variables from files in var/[item].yml
+#        - system
+#        - webinstances
+#        - users
+#      [host_vars_from_host: false|true]
+#      [diskspace_message: false|true]
+
+#
+# Default values, see /default/main.yml
+#
+
+- name: Get default value and combine with parameters.
+  set_fact:
+    facts_options_temp: "{{ facts_options_default | combine(facts_options, recursive=True) }}"
+
+### (var_files) ###
+- name: (var_files) Read listed files with variables.
+  include_vars: "vars/{{ item }}.yml"
+  loop: "{{ facts_options_temp.var_files }}"
+
+### (host_vars_from_host) ###
+- name: (host_vars_from_host) Download host_vars-file from host.
+  become: yes
+  fetch:
+    src: /root/host_vars.yml
+    dest: temp/host_vars.yml
+    flat: yes
+  ignore_errors: yes
+  register: collect_local_host_vars_result
+  changed_when: false
+  when: facts_options_temp.host_vars_from_host | bool
+
+#- debug:
+#    var: collect_local_host_vars_result
+
+- name: (host_vars_from_host) Read downloaded file.
+  include_vars: temp/host_vars.yml
+  when: not collect_local_host_vars_result.skipped | default(false) and not collect_local_host_vars_result.failed
+
+- name: (host_vars_from_host) Delete downloaded file.
+  file:
+    path: temp
+    state: absent
+  delegate_to: 127.0.0.1
+  changed_when: false
+
+### (diskspace_message) ###
+- name: (diskspace_message) Create message with diskpace on host.
+  set_fact:
+    diskspace_message: >-
+      {%- set rows = [] -%}
+      {%- for mount in ansible_facts.mounts if not mount.mount.startswith('/snap') and mount.size_total > 0 -%}
+      {{- rows.append(mount.mount+' '+ ((1 - mount.size_available/mount.size_total) * 100)|int|string + '%' + ' (' + (mount.size_total - mount.size_available)|human_readable + '/' + mount.size_total|human_readable + ')') -}}
+      {%- endfor -%}
+      {{- rows|join(newline) -}}
+  vars:
+    newline: "{{ '\n' }}"
+  when: facts_options_temp.diskspace_message | bool

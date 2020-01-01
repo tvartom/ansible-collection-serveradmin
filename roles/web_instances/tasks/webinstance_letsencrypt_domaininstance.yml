@@ -1,0 +1,60 @@
+---
+- name: "Generate Letsencrypt domain key"
+  become: yes
+  shell: openssl genrsa 4096 > /etc/nginx/ssl/domain-{{ domaininstance.fullname }}.key
+  args:
+    creates: "/etc/nginx/ssl/domain-{{ domaininstance.fullname }}.key"
+  register: new_key
+
+- name: Generate subjectAltName for CSR
+  become: yes
+  template:
+    src: subjectaltname_domain.txt.j2
+    dest: "{{ webinstance.path }}/letsencrypt/subjectaltname_domain-{{ domaininstance.fullname }}.txt"
+    owner: root
+    group: root
+    mode: "u=rw,g=,o="
+  register: subjectaltname
+
+- name: Check if Certificate Signing Request (CSR) exists
+  stat:
+    path: "{{ webinstance.path }}/letsencrypt/domain-{{ domaininstance.fullname }}.csr"
+  register: csr_exists
+
+# openssl finns på olika ställen: Källan visar denna: /etc/ssl/openssl.cnf
+# använder /etc/pki/tls på CentoOS 7
+# Notationen <() är bash-specefik, därav executable-argumenet: https://groups.google.com/forum/#!topic/ansible-project/K2pixPHXlpI
+- name: Generate Certificate Signing Request (CSR)
+  become: yes
+  shell: "openssl req -new -sha256 -key /etc/nginx/ssl/domain-{{ domaininstance.fullname }}.key -subj \"/\" -reqexts SAN -config <(cat /etc/pki/tls/openssl.cnf {{ webinstance.path }}/letsencrypt/subjectaltname_domain-{{ domaininstance.fullname }}.txt) > {{ webinstance.path }}/letsencrypt/domain-{{ domaininstance.fullname }}.csr"
+  args:
+    executable: /usr/bin/bash
+  when: ((not csr_exists.stat.exists) or subjectaltname.changed or new_key.changed)
+  register: new_csr
+
+- name: Create Letsencrypt-script to create (by ansible) and renew (by cron) cert
+  become: yes
+  template:
+    src: letsencrypt_renew_cert.sh.j2
+    dest: "{{ webinstance.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance.fullname }}.sh"
+    owner: root
+    group: root
+    mode: 0744
+
+### Nginx and Letsencrypt #########################################################################
+
+- name: Check if ssl is ready for site (pem exists)
+  stat:
+    path: "/etc/nginx/ssl/chained-{{ domaininstance.fullname }}.pem"
+  register: ssl_ready
+
+- name: Create site-conf for nginx only for Letsencrypt (temporary)
+  become: yes
+  template:
+    src: nginx_site_letsencrypt_only.conf.j2
+    dest: "/etc/nginx/web_instances.d/{{ domaininstance.fullname }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  when: not ssl_ready.stat.exists
+  notify: "Reload nginx"

@@ -1,0 +1,35 @@
+---
+- name: "Add linux-user to server"
+  become: yes
+  user:
+    name: "{{ item.name }}"
+    state: present
+    groups: "{{ item.groups | default([]) }}"
+    append: yes
+  loop: "{{ users }}"
+
+- name: "Add public keys to linux-user"
+  become: yes
+  authorized_key:
+    user: "{{ item.0.name }}"
+    state: present
+    key: "{{ item.1 }}"
+  loop: "{{ users|subelements('authorized_keys', skip_missing=True) }}"
+
+- name: "Make user to sudoer (withput requirement of password)"
+  include_tasks: make_user_sudoer.yml
+  vars:
+    user: "{{ item.name }}" #Användarnamnet på användaren som ska bli sudoer utan lösenord
+  when: item.sudoer | default( false, true )
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: "Setup git for linux-user"
+  include_role:
+    name: git
+    tasks_from: config_git_for_user
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.name }}"

@@ -1,0 +1,22 @@
+---
+#- name: Install Sendmail (YUM)
+#  become: yes
+#  yum:
+#    name: "{{ item }}"
+#    state: present
+#  when: ansible_os_family == "RedHat"
+#  with_items:
+#    #- "sendmail"
+#    - msmtp
+#  tags:
+#    - web
+
+#- name: Allow sendmail (SE-Linux)
+#  become: yes
+#  seboolean:
+#    name: httpd_can_sendmail
+#    state: yes
+#    persistent: yes
+#  tags:
+#    - web
+

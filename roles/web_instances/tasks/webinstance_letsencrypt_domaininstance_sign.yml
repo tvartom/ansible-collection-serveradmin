@@ -1,0 +1,18 @@
+---
+
+- name: Check if ssl is ready for site (pem exists)
+  stat:
+    path: "/etc/nginx/ssl/chained-{{ domaininstance.fullname }}.pem"
+  register: ssl_ready
+
+- name: Status domaininstance
+  debug:
+    msg: >-
+      {{ domaininstance.fullname }} {% if ssl_ready.stat.exists %}OK!{% else %}ej klar, signerar...{% endif %}
+
+- name: Get the certs signed by Letsencrypt
+  become: yes
+  shell: "{{ webinstance.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance.fullname }}.sh >> {{ webinstance.path }}/log/letsencrypt/{{ domaininstance.fullname }}.log 2>&1"
+  when: not ssl_ready.stat.exists
+  register: signed_created
+

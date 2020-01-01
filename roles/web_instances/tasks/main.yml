@@ -1,0 +1,81 @@
+---
+# Cert files:
+# Account key:                       /opt/letsencrypt/account.key
+# Letsencrypt domain key:            "/etc/nginx/ssl/domain-{{ item.name }}.key"
+# subjectAltName for CSR:            "{{ item.path }}/letsencrypt/subjectaltname_domain-{{ item.name }}.txt"
+# Certificate Signing Request (CSR): "{{ item.path }}/letsencrypt/domain-{{ item.name }}.csr"
+# Letsencrypt-script:                "{{ item.path }}/letsencrypt/letsencrypt-renew-{{ item.name }}.sh"
+# Signed cert:                       "{{ item.path }}/letsencrypt/domain-{{ item.name }}-signed.crt"
+# Intermdiate certs:                 /opt/letsencrypt/intermediate.pem
+# Signed chainged cert:              "/etc/nginx/ssl/chained-{{ webinstance.name }}.pem"
+
+# Nginx conf: /etc/nginx/web_instances.d/{{ webinstance.name }}.conf
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+
+### Create global folders #######################################################################
+
+- name: "Create /etc/nginx/ssl"
+  become: yes
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: "Create /etc/nginx/web_instances.d"
+  become: yes
+  file:
+    path: /etc/nginx/web_instances.d
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
+
+### Loop over webinstances ##################################################################
+- name: Samla data under körning i webinstance_facts
+  set_fact:
+    webinstance_facts: "{{ {} }}"
+
+- name: Include webinstance
+  include_tasks: webinstance.yml
+  loop: "{{ active_webinstances }}"
+  loop_control:
+    loop_var: active_webinstance
+    label: "{{ active_webinstance.name }}-{{ active_webinstance.environment }}"
+
+### Configfiler för alla webinstancer #########################################################################
+
+- name: Setup cron-jobb for Letsencrypt
+  become: yes
+  template:
+    src: letsencrypt.cron.j2
+    dest: /etc/cron.d/letsencrypt
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+- name: Setup cron-jobb for database backup
+  become: yes
+  template:
+    src: backup_db.cron.j2
+    dest: /etc/cron.d/backup_db
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+
+- name: Setup lograte for webinstances (php-fpm och nginx)
+  become: yes
+  template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/webinstances
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"

@@ -1,0 +1,7 @@
+# Default my.cnf file for MySQL. Distributed by Ansible.
+[client]
+user={{ user_temp.name }}
+
+{% if user_temp.password is defined %}
+password={{ user_temp.password }}
+{% endif %}

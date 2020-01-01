@@ -1,0 +1,4 @@
+---
+
+php_fpm_pool_path: /etc/php-fpm.d
+nginx_user: nginx

@@ -1,0 +1,237 @@
+---
+#- name: Texteditor
+#  include_role:
+#    name: commons
+#    tasks_from: texteditor
+#  vars:
+#    menu:
+#      caption: "Följande instanser finns på denna server"
+#      current_textlines:
+#        - text line 1
+#        - text line 2
+#
+# Editerade rader returneras i variablen: texteditor_result
+#- name: texteditor_caller
+#  debug:
+#    var: texteditor_caller
+
+- name: Meny
+  when: texteditor_caller.action == 'start'
+  include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "{{ texteditor_caller.caption_prefix }}{{ texteditor_caller.caption }}"
+      question: "Välj åtgärd eller rad att ersätta"
+      options: |
+        {%- set output = [] -%}
+        {%- for textline in texteditor_caller.textlines -%}
+        {{-   output.append({
+          'name': textline,
+          'value': { 'action': 'replace', 'textline': textline, 'index': loop.index }
+        }) -}}
+        {%- endfor -%}
+        {{- output.append({
+          'name': yamlcolors.Yellow+'Add: Lägg till rader på slutet'+yamlcolors.NC+' (Två blanka rader avslutar)',
+          'option': 'a',
+          'value': { 'action': 'add' }
+        }) -}}
+        {{- output.append({
+          'name': yamlcolors.Yellow+'Insert: Infoga nya rader'+yamlcolors.NC+' (Två blanka rader avslutar)',
+          'option': 'i',
+          'value': { 'action': 'ins' }
+        }) -}}
+        {{- output.append({
+          'name': yamlcolors.Yellow+'Delete: Ta bort rad'+yamlcolors.NC,
+          'option': 'd',
+          'value': { 'action': 'del' }
+        }) -}}
+        {{- output.append({
+          'name': 'Spara',
+          'option': 'ok',
+          'default': true,
+          'value': { 'action': 'ok' }
+        }) -}}
+        {{- output -}}
+- set_fact:
+    texteditor_state:
+      action: "{{ menu_result.action if texteditor_caller.action == 'start' else texteditor_caller.action }}"
+      index: "{{ menu_result.index | default(-1) if texteditor_caller.action == 'start' else texteditor_caller.index }}"
+
+
+### Replace ######################################################################
+- set_fact:
+    replace_state:
+      index: |
+        {%- if texteditor_state.action == 'replace' -%}
+        {{-   texteditor_state.index -}}
+        {%- else -%}
+        -1
+        {%- endif -%}
+
+- name: " "
+  when: texteditor_state.action == 'replace'
+  pause:
+    prompt: |-
+      {{ texteditor_caller.caption_prefix }}Skriv in ersättningsrad för:{{ yamlcolors.NC }}
+      {% for textline in texteditor_caller.textlines %}
+      {{   (loop.index|string).rjust(texteditor_caller.textlines|length|string|length) }}) {%   if replace_state.index|int == loop.index -%}
+      {{- yamlcolors.Yellow }}---> {{ yamlcolors.NC -}}
+      {%-   endif -%}
+       {{   yamlcolors.Green+textline+yamlcolors.NC }}
+      {% endfor %}
+
+  register: prompt_replaceline
+  delegate_to: localhost
+
+
+### Delete ######################################################################
+- name: Meny
+  when: texteditor_state.action == 'del'
+  include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "{{ texteditor_caller.caption_prefix }}{{ yamlcolors.Red }}Radera rad{{ yamlcolors.NC }}"
+      question: "Välj rad att radera"
+      options: |
+        {%- set output = [] -%}
+        {%- for textline in texteditor_caller.textlines -%}
+        {{-   output.append({
+          'name': textline,
+          'value': { 'action': 'del', 'index': loop.index }
+        }) -}}
+        {%- endfor -%}
+        {{- output.append({
+          'name': yamlcolors.Yellow+'Avbryt'+yamlcolors.NC,
+          'option': 'c',
+          'default': true,
+          'value': { 'action': 'cancel' }
+        }) -}}
+        {{- output -}}
+
+- set_fact:
+    del_state:
+      index: |
+        {%- if texteditor_state.action == 'del' -%}
+        {{-   menu_result.index | default(-1) -}}
+        {%- else -%}
+        -1
+        {%- endif -%}
+
+### Insert ######################################################################
+- name: Meny
+  when: texteditor_state.action == 'ins' and texteditor_state.index|int == -1
+  include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "{{ texteditor_caller.caption_prefix }}Infoga nya rader, välj placering"
+      question: "Före vilken rad"
+      options: |
+        {%- set output = [] -%}
+        {%- for textline in texteditor_caller.textlines -%}
+        {{-   output.append({
+          'name': textline,
+          'value': { 'action': 'ins', 'index': loop.index }
+        }) -}}
+        {%- endfor -%}
+        {{- output.append({
+          'name': yamlcolors.Yellow+'Avbryt'+yamlcolors.NC,
+          'option': 'c',
+          'default': true,
+          'value': { 'action': 'cancel' }
+        }) -}}
+        {{- output -}}
+
+- set_fact:
+    ins:
+      index: |
+        {%- if texteditor_state.action == 'ins' -%}
+        {%-   if texteditor_caller.index|int == -1 -%}
+        {{-     menu_result.index | default(-1) -}}
+        {%-   else -%}
+        {{-     texteditor_caller.index -}}
+        {%-   endif -%}
+        {%- else -%}
+        -1
+        {%- endif -%}
+
+- name: " "
+  when: texteditor_state.action == 'ins' and ins.index|int != -1
+  pause:
+    prompt: |-
+      {{ texteditor_caller.caption_prefix }}Skriv in den nya raden{{ yamlcolors.NC }}
+      {% for textline in texteditor_caller.textlines %}
+      {%   if ins.index|int == loop.index %}
+      {{ yamlcolors.Yellow }}--->{{ yamlcolors.NC }}
+      {%   endif %}
+      {{   (loop.index|string).rjust(texteditor_caller.textlines|length|string|length) }}) {{   yamlcolors.Green+textline+yamlcolors.NC }}
+      {% endfor %}
+  register: prompt_insline
+  delegate_to: localhost
+
+### Add ######################################################################
+- name: " "
+  when: texteditor_state.action == 'add'
+  pause:
+    prompt: |-
+      {{ texteditor_caller.caption_prefix }}Lägg till nya rader:{{ yamlcolors.NC }} (Två blanka rader avslutar)
+      {% for textline in texteditor_caller.textlines %}
+      {{   (loop.index|string).rjust(texteditor_caller.textlines|length|string|length) }}) {{   yamlcolors.Green+textline+yamlcolors.NC }}
+      {% endfor %}
+  register: prompt_addline
+  delegate_to: localhost
+
+### Result ######################################################################
+- set_fact:
+    texteditor_result_extra: |-
+      {%- set output = {} -%}
+      {%- set state = {
+        'action': texteditor_state.action,
+        'index':  texteditor_state.index
+      } -%}
+      {%- if (state.action == 'ins' and ins.index|int == -1)
+              or state.action == 'del'
+              or state.action == 'replace' -%}
+      {{-   state.__setitem__('action', 'start') -}}
+      {%- endif -%}
+      {{- output.__setitem__('textlines', []) -}}
+      {%- for textline in texteditor_caller.textlines -%}
+      {%-   if ins.index|int == loop.index -%}
+      {%-     if not loop.first and loop.previtem == '' and prompt_insline.user_input == '' -%}
+      {{-       state.__setitem__('action','start') -}}
+      {%-     else -%}
+      {{-       state.__setitem__('index',loop.index+1) -}}
+      {{-       output.textlines.append(prompt_insline.user_input) -}}
+      {%-     endif -%}
+      {%-   endif -%}
+      {%-   if replace_state.index|int == loop.index -%}
+      {{-     output.textlines.append(prompt_replaceline.user_input) -}}
+      {%-   elif
+                del_state.index|int == loop.index
+                or
+                (
+                  textline == ''
+                  and
+                  (
+                    (ins.index|int == loop.index+1 and prompt_insline.user_input == '')
+                    or
+                    (loop.last and texteditor_state.action == 'add' and prompt_addline.user_input == '')
+                  )
+                )
+                -%}
+      {{-     state.__setitem__('action','start') -}}
+      {{-     state.__setitem__('index',-1) -}}
+      {%-   else -%}
+      {{-     output.textlines.append(textline) -}}
+      {%-   endif -%}
+      {%- endfor -%}
+      {%- if state.action == 'add' -%}
+      {{-   output.textlines.append(prompt_addline.user_input) -}}
+      {%- endif -%}
+      {{- output | combine(state) -}}
+

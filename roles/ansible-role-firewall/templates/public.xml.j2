@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone>
+  <!-- This file is handled by Ansible -->
+  <short>Public</short>
+  <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+  {% for item in firewall_settings.services | default([]) %}
+  <service name="{{ item.name }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
+  {% endfor %}
+
+  {% for item in firewall_settings.extra_ports | default([]) %}
+  <port protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
+  {% endfor %}
+
+  {% for item in firewall_settings.forward_ports | default([]) %}
+    <forward-port to-port="{{ item.to_port }}" protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
+  {% endfor %}
+</zone>

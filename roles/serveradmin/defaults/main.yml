@@ -1,0 +1,13 @@
+---
+serveradmin_default:
+  process_user: serveradmin
+  process_group: serveradmin
+  path: /opt/serveradmin
+  repos_default:
+    - domain: "github.com"
+      user: "git"
+      protocol: ssh
+      #port: 2022 (Optional)
+  use_gcloud: false
+
+#gcloud_key: "Sätts lokalt i /root/host_vars.yml

@@ -1,0 +1,37 @@
+---
+# Source: https://linuxaria.com/howto/enabling-automatic-updates-in-centos-7-and-rhel-7
+
+- name: Install yum-cron
+  become: yes
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  when: ansible_os_family == "RedHat"
+  with_items:
+    - yum-cron
+
+# Notes:
+# CentOS 6 uses: /etc/sysconfig/yum-cron
+
+- name: Fix config (CentOS 7)
+  become: yes
+  lineinfile:
+    dest: /etc/yum/yum-cron.conf
+    state: present
+    regexp: "^\\s*{{ item.key }}\\s*="
+    line: "{{ item.key }} = {{ item.value }}"
+  with_items:
+    - { key: "update_cmd",       value: "default"}
+    - { key: "download_updates", value: "yes"}
+    - { key: "apply_updates",    value: "yes"}
+    - { key: "random_sleep",     value: "0"}
+    - { key: "emit_via",         value: "stdio"}
+
+- name: "Enable yum-cron service"
+  become: yes
+  service:
+    name: yum-cron
+    enabled: yes
+    state: started
+

@@ -1,0 +1,102 @@
+---
+- name: Install Nginx (YUM)
+  become: yes
+  yum:
+    name:
+      - nginx
+      - httpd-tools  #För htpasswd
+#    update_cache: yes
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Nginx (APT)
+  become: yes
+  apt:
+    name:
+      - nginx
+      - apache2-utils  #För htpasswd
+#    update_cache: yes
+    state: present
+    install_recommends: yes
+    update_cache: yes
+    cache_valid_time: 600
+  when: ansible_os_family == "Debian"
+
+
+
+- name: Sync nginx main conf
+  become: yes
+  synchronize:
+    src: "nginx/"
+    dest: "/etc/nginx/"
+    archive: no
+    links: yes
+    times: yes
+    recursive: no
+    delete: no
+    dirs: yes
+  notify: "Reload nginx"
+
+- name: Byt namn på nginx-användare
+  become: yes
+  lineinfile:
+    path: "/etc/nginx/nginx.conf"
+    regexp: "^user "
+    line: "user {{ nginx_user }};"
+  notify: "Reload nginx"
+
+
+#- name: Sync nginx conf.d-directory
+#  become: yes
+#  synchronize:
+#    src: "{{ host_files }}/webserver/nginx_conf.d/"
+#    dest: "/etc/nginx/conf.d"
+#    archive: no
+#    links: yes
+#    times: yes
+#    recursive: yes
+#    delete: yes
+#  notify: "Reload nginx"
+
+- name: "Create dir auth"
+  become: yes
+  file:
+    path: "/etc/nginx/auth"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: "Copy readme to create .htpasswd-file"
+  become: yes
+  copy:
+    src: auth-readme.txt
+    dest: /etc/nginx/auth/readme.txt
+    owner: root
+    group: root
+    mode: "u=rw,g=,o="
+
+
+# Set (httpd_can_network_connect) flag on and keep it persistent across reboots
+- name: Install libsemanage to fix selinux in ansible (YUM)
+  become: yes
+  yum:
+    name: "libsemanage-python"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Make proxy-pass work (SE-Linux)
+  become: yes
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  when: ansible_selinux is defined and ansible_selinux != false and ansible_selinux.status == 'enabled'
+
+- name: "Enable Nginx service"
+  become: yes
+  service:
+    name: nginx
+    enabled: yes
+    state: started
+

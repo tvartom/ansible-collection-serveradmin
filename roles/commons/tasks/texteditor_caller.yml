@@ -1,0 +1,14 @@
+---
+
+- name: Meny
+  include_role:
+    name: commons
+    tasks_from: texteditor_core
+  vars:
+    texteditor_caller:
+      caption_prefix: "{{ yamlcolors.NC }}({{ iteration+1 }}/{{ texteditor.max_iterations|default(max_iterations) }}) {{ yamlcolors.BIYellow }}"
+      caption: "{{ texteditor.caption | default('Text att editera') }}"
+      textlines: "{{ texteditor_result_extra.textlines if texteditor_result_extra is defined else texteditor.textlines }}"
+      action: "{{ texteditor_result_extra.action if texteditor_result_extra is defined else 'start' }}"
+      index: "{{ texteditor_result_extra.index if texteditor_result_extra is defined else -1 }}"
+  when: menu_result.action != 'ok'

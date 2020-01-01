@@ -1,0 +1,211 @@
+---
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+- include_role:
+    name: google_cloud_sdk
+  when: serveradmin.use_gcloud
+
+#- debug:
+#     var: serveradmin
+#  tags: test
+#- pause:
+#  tags: test
+
+- name: "Create dir"
+  become: yes
+  file:
+    path: "/home/system"
+    state: directory
+    owner: root
+    group: root
+    setype: "_default"
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: Create group for serveradmin
+  become: yes
+  group:
+    name: "{{ serveradmin.process_group }}"
+    system: yes
+
+- name: Adding users to the serveradmin-group
+  become: yes
+  user:
+    name: "{{ item.name }}"
+    groups: "{{ serveradmin.process_group }}"
+    append: yes
+  when: item.sudoer | default(false)
+  loop: "{{ users }}"
+
+- name: Create user for serveradmin
+  become: yes
+  user:
+    name: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_group }}"
+    create_home: yes
+    home: "/home/system/{{ serveradmin.process_user }}"
+    system: yes
+    generate_ssh_key: yes
+    ssh_key_bits: 4096
+    ssh_key_comment: "{{ serveradmin.process_user }}@{{ inventory_hostname }}  {{ ansible_date_time.date }}"
+  register: key_info
+
+- name: "Install Python3 and pip (DNF)"
+  become: yes
+  dnf:
+    name:
+      - python3
+      - python3-pip
+#      - ansible
+#      - pandoc
+#      - lynx
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: "Install latest ansible for serveradmin with pip."
+  become: yes
+  become_user: "{{ serveradmin.process_user }}"
+  pip:
+    name: ansible
+    extra_args: --user
+
+- name: "Make serveradmin-user to sudoer without password"
+  include_role:
+    name: users
+    tasks_from: make_user_sudoer
+  vars:
+    user: "{{ serveradmin.process_user }}" #Användarnamnet på användaren som ska bli sudoer utan lösenord
+
+
+#- name: Lägg serveradmin-användare för access till mariadb
+#  include_role:
+#    name: mariadb
+#    tasks_from: create_user
+#  vars:
+#    user:
+#      name: "{{ serveradmin.process_user }}"
+#      is_linux_user: true
+#      databases:
+#        - database: "*"
+
+- name: "Create dir"
+  become: yes
+  file:
+    path: "{{ serveradmin.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( serveradmin.process_user, true ) }}"
+    group: "{{ item.group | default( serveradmin.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "u=rwx,g=rwx,o=rx"
+  when: item.when | default(True)
+  loop:
+    - { path: "" }
+    - { path: "/log" }
+    - { path: "/workspace" }
+
+- name: Registrera nyckel för Google Cloud på aktuell användare
+  include_role:
+    name: google_cloud_sdk
+    tasks_from: gcloud_add_key
+  vars:
+    gcloud_linuxuser: "{{ serveradmin.process_user }}"
+    gloud_key: "{{ serveradmin.gcloud_key }}"
+  when: serveradmin.use_gcloud
+
+- name: Skapa serveradmin-skript
+  become: yes
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ item.path | default(serveradmin.path) }}/{{ item.target }}"
+    owner: "{{ item.owner | default(serveradmin.process_user) }}"
+    group: "{{ item.group | default(serveradmin.process_group) }}"
+    mode: "{{ item.mode | default('u=rwx,g=rx,o=r') }}"
+  loop: "{{ serveradmin.files }}"
+
+- name: Stäng av Message of the day (MOTD)
+  become: yes
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?\s*PrintMotd'
+    line: "PrintMotd no"
+- debug:
+    var: serveradmin
+
+- name: Konfigurera git för användaren
+  include_role:
+    name: git
+    tasks_from: config_git_for_user
+  vars:
+    user:
+      name: "{{ serveradmin.process_user }}"
+
+- name: "Skapa deploy-key för serveradmin-repot"
+  become: yes
+  openssh_keypair:
+    comment: "Deploykey for {{ serveradmin.process_user }}@{{ inventory_hostname}}"
+    owner: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_group }}"
+    setype: "_default"
+    mode: "u=rw,g=,o="
+    path: "/home/system/{{ serveradmin.process_user }}/.ssh/{{ serveradmin.repo.unique_deploy_key }}"
+  register: key_info_unique
+  when: serveradmin.repo.use_unique_deploy_key
+
+
+# Note 1
+# If problem with Host key verification failed, look in basic_centos_tools where
+# repository-providers is added to known hosts. (like github.com)
+
+# Note 2
+# Necessary to pull as other user:
+# https://serverfault.com/questions/81746/bypass-ssh-key-file-permission-check
+
+# Note 3
+# To clone with different key-file:
+# GIT_SSH_COMMAND="ssh -i $KEYFILE_ABS" git clone ...
+
+- name: "Clone serveradmin-repo"
+  become: yes
+  become_user: "{{ serveradmin.process_user }}"
+  git:
+    repo: "{{ serveradmin.repo_url }}"
+    dest: "{{ serveradmin.path }}/workspace/serveradmin"
+    key_file: "{{ '/home/system/' ~ serveradmin.process_user ~ '/.ssh/' ~ serveradmin.repo.unique_deploy_key if serveradmin.repo.use_unique_deploy_key else '' }}"
+  ignore_errors: yes
+  register: git_clone_serveradmin_result
+
+
+- name: "Info about user to be used when resolving cloning problem of serveradmin."
+  debug:
+    var: key_info
+  when: git_clone_serveradmin_result.failed and not serveradmin.repo.use_unique_deploy_key
+
+- name: "Info about unique deploy key to be used when resolving cloning problem of serveradmin."
+  debug:
+    var: key_info_unique
+  when: git_clone_serveradmin_result.failed and serveradmin.repo.use_unique_deploy_key
+
+- name: "Error message if git clone of serveradmin fails."
+  fail:
+    msg: "Cloning serveradmin repo ({{ serveradmin.repo_url }}) failed. Make sure above user/deploy key has access."
+  when: git_clone_serveradmin_result.failed
+
+- name: "Config git-repo to use deploy-key"
+  become: yes
+  become_user: "{{ serveradmin.process_user }}"
+  git_config:
+    name: core.sshCommand
+    repo: "{{ serveradmin.path }}/workspace/serveradmin"
+    scope: local
+    value: "ssh -i {{ '/home/system/' ~ serveradmin.process_user ~ '/.ssh/' ~ serveradmin.repo.unique_deploy_key }}"
+  when: serveradmin.repo.use_unique_deploy_key
+
+- name: Konfigurera git för användaren
+  include_role:
+    name: git
+    tasks_from: config_git_for_user
+  vars:
+    user:
+      name: "{{ serveradmin.process_user }}"

@@ -1,0 +1,18 @@
+---
+
+firewall_default:
+  services:
+    - name: "dhcpv6-client"
+    - name: "ssh"
+    - name: "http"
+    - name: "https"
+  extra_ports: []
+    #- port: 9999
+    #  protocol: tcp
+    #  comment: "My service"
+  forward_ports: []
+    #- port: 80
+    #  to_port: 8080
+    #  protocol: tcp
+    #  comment: "My service"
+

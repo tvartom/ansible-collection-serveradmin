@@ -1,0 +1,71 @@
+---
+#- name: Meny
+#  include_role:
+#    name: commons
+#    tasks_from: menu
+#  vars:
+#    menu:
+#      caption: "Följande instanser finns på denna server"
+#      question: "Välj instans"
+#      options:
+#        - name: alt 1
+#        - { name: alt 2, value: 10 }
+#        - name: alt *
+#          value: 100
+#          option: all
+#          default: true
+#
+# Valet returneras i variablen: menu_result
+# menu.options[?].value används, om ej satt används name.
+
+- name: set_fact menu_extra
+  set_fact:
+    menu_extra: |-
+      {{- menu.__setitem__('return_values', {}) -}}
+      {{- menu.__setitem__('return_names', {}) -}}
+      {{- menu.__setitem__('optionobjects', []) -}}
+      {%- set counter = {'current': 0} -%}
+      {%- for row in menu.options -%}
+      {%-   set optionobject = {
+                'name': row.name | default(row),
+                'option': row.option | default(null),
+                'value': row.value | default(row.name | default(row)),
+                } -%}
+      {%-   if not row.option is defined -%}
+      {{-     counter.__setitem__('current', counter.current+1) -}}
+      {{-     optionobject.__setitem__('option', counter.current) -}}
+      {{-     optionobject.__setitem__('option_is_int', true) -}}
+      {%-   endif -%}
+      {{-   menu.return_values.__setitem__(optionobject.option|string, optionobject.value) -}}
+      {{-   menu.return_names.__setitem__(optionobject.option|string, optionobject.name) -}}
+      {%-   if row.default | default(false) -%}
+      {{-     menu.__setitem__('default_option', optionobject.option|string) -}}
+      {%-   endif -%}
+      {{-   menu.optionobjects.append(optionobject) -}}
+      {%- endfor -%}
+      {{- menu.__setitem__('number_of_int_options', counter.current) -}}
+      {{- menu.__setitem__('max_number_of_digits', counter.current|string|length) -}}
+      {{- menu -}}
+
+#- debug:
+#    var: menu_extra
+
+- name: " "
+  pause:
+    prompt: |-
+
+      {{ yamlcolors.BIYellow }}{{ menu.caption }}{{ yamlcolors.NC }}:
+      {% for row in menu_extra.optionobjects %}
+      {{   (row.option|string).rjust(menu_extra.max_number_of_digits | default(0)) if row.option_is_int | default(false) else row.option }}) {{ yamlcolors.Green }}{{ row.name }}{{ yamlcolors.NC }}
+      {% endfor %}
+      {{ menu.question }}{{ '['+menu_extra.default_option+']' if menu_extra.default_option is defined else '' }}
+  register: prompt_menu
+  until: prompt_menu.user_input in menu_extra.return_values or (prompt_menu.user_input == '' and menu_extra.default_option is defined)
+  delegate_to: localhost
+
+- debug:
+    msg: "Choosen option: {{ prompt_menu.user_input if prompt_menu.user_input != '' else menu_extra.default_option }} ({{ menu_extra.return_names[prompt_menu.user_input if prompt_menu.user_input != '' else menu_extra.default_option] }})"
+
+- set_fact:
+    menu_result: "{{ menu_extra.return_values[prompt_menu.user_input if prompt_menu.user_input != '' else menu_extra.default_option] }}"
+

@@ -1,0 +1,34 @@
+---
+- hosts: "{{ target }}"
+  connection: "{{ connection_type | default('ssh', true) }}"
+  gather_facts: yes
+  collections:
+    - tvartom.serveradmin
+  tasks:
+    - name: Visa info
+      debug:
+        var: active_webinstances
+
+    - name: Visa info
+      debug:
+        var: ansible_facts
+
+    - name: Hostname
+      debug:
+        msg: "inventory_hostname: {{ inventory_hostname }}, inventory_hostname_short: {{ inventory_hostname_short }}"
+
+    - name: from remote host_vars
+      debug:
+        var: mariadb
+
+    - name: colorcodes
+      debug:
+        var: yamlcolors
+
+    - name: colors
+      debug:
+        var: bashcolors
+
+    - name: Använt diskutrymme
+      debug:
+        var: diskspace_message

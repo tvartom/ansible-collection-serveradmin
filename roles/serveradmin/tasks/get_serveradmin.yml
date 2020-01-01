@@ -1,0 +1,70 @@
+---
+#- include_role:
+#    name: serveradmin
+#    tasks_from: get_serveradmin
+#
+# Returns: serveradmin
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_repo_url
+  vars:
+    repo: "{{ serveradmin.repo }}"
+
+- name: Lista filer
+  set_fact:
+    serveradmin_files:
+      - { file: splash.sh,    dest: "{{ organisation.name }}", prefix: "", desc: "Visa denna meny", mode: "u=rwx,g=rx,o=rx" }
+      - { file: autostart.sh, path: "/etc/profile.d", owner: root, group: root, mode: "u=rwx,g=rx,o=rx" }
+      - { file: pull_devops, dest: "pull_devops", prefix: ""}
+      - { file: ansiblerunner_helper.sh, prefix: ""}
+      - { file: include_common.sh, prefix: "", mode: "u=rwx,g=rx,o=rx" }
+#      - file: ansiblerunner.sh
+#        dest: "deploy"
+#        desc: "Driftsättning av webinstans"
+#        meta:
+#          ansible_playbook: "webinstance_deploy.yml"
+      - file: ansiblerunner.sh
+        dest: "ansible_facts_show"
+        #desc: "Visa ansible-information om denna server."
+        meta:
+          playbook_in_serveradmin_collection: true
+          ansible_playbook: "facts_show.yml"
+#      - file: ansiblerunner.sh
+#        dest: "ansible_webserver"
+#        desc: "Kör playbooken 'webserver' lokalt på denna server."
+#        meta:
+#          ansible_playbook: "webserver.yml"
+      - file: ansiblerunner.sh
+        dest: "ansible_serveradmin"
+        desc: "Kör playbooken 'serveradmin' lokalt på denna server."
+        meta:
+          playbook_in_serveradmin_collection: true
+          ansible_playbook: "serveradmin.yml"
+
+- name: Lista filer (databaskopiering)
+  set_fact:
+    serveradmin_files: |-
+      {%- for database_migration in serveradmin.database_migrations | default([]) -%}
+      {{-   serveradmin_files.append({
+        'file': 'database_migration.sh',
+        'dest': 'copy_db_'+database_migration.from_database,
+        'desc': 'Kopiera databasen '+database_migration.from_database+' från '+database_migration.from_server+' till '+database_migration.to_database,
+        'meta': database_migration,
+        'show_on_splash': database_migration.show_on_splash | default(true) }) -}}
+      {%- endfor -%}
+      {{- serveradmin_files -}}
+
+- name: Kombinera default-värden och host-värden
+  set_fact:
+    serveradmin: >-
+      {%- set output = serveradmin_default | combine(serveradmin, recursive=True) -%}
+      {%- set output = output | combine({
+        'repo_url': repo_url,
+        'repo': repo_return,
+        'files': serveradmin_files
+      }) -%}
+      {%- for item in output.files -%}
+      {{-   item.__setitem__('target', item.prefix | default(organisation.command_prefix) + item.dest | default(item.file)) -}}
+      {%- endfor -%}
+      {{- output -}}

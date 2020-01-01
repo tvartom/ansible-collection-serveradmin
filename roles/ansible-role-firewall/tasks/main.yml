@@ -1,0 +1,30 @@
+---
+
+- name: Hämta default-värden
+  set_fact:
+    firewall_settings: "{{ firewall_default | combine(firewall) }}"
+
+- name: Install packages for RedHat-family (YUM)
+  become: yes
+  yum:
+    name:
+      - firewalld
+    update_cache: yes
+    state: latest
+  when: ansible_os_family == "RedHat"
+
+- name: "Enable firewalld service"
+  become: yes
+  service:
+    name: firewalld
+    enabled: yes
+    state: started
+
+- name: Configure firewalld
+  become: yes
+  template:
+    src: public.xml.j2
+    dest: /etc/firewalld/zones/public.xml
+    setype: 'firewalld_etc_rw_t'
+  notify:
+    - "Restart firewalld"
