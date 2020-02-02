@@ -1,9 +1,0 @@
----
-- name: "Rensa Cache i Redis"
-  become: yes
-  become_user: "{{ webinstance.process_user }}"
-  shell: "redis-cli -s {{ webinstance.path }}/redis/redis.sock FLUSHALL"
-  args:
-    chdir: "{{ webinstance.path }}"
- 
-

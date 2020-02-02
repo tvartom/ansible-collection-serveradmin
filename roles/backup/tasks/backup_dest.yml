@@ -1,0 +1,145 @@
+---
+- name: Install rsnapshot (APT)
+  become: yes
+  apt:
+    name:
+      - rsnapshot
+      - rsync
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install rsnapshot (YUM)
+  become: yes
+  yum:
+    name:
+      - rsnapshot
+      - rsync
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Create group for backup-runner user
+  become: yes
+  group:
+    name: "{{ backup_info.dest_user.group }}"
+    system: yes
+
+#- name: Adding extra users to the backup-runner group
+#  become: yes
+#  user:
+#    name: "{{ item }}"
+#    groups: "{{ backup_server_group }}"
+#    append: yes
+#  loop:
+#    - "{{ backup_users_access_to_backup }}"
+
+- name: Create user to run backup jobs
+  become: yes
+  user:
+    name: "{{ backup_info.dest_user.name }}"
+    group: "{{ backup_info.dest_user.group }}"
+    home: "{{ backup_info.dest_user.home }}"
+    createhome: yes
+    system: yes
+
+- name: Generate Private key for backup-user
+  become: yes
+  user:
+    name: "{{ backup_info.dest_user.name }}"
+    generate_ssh_key: yes
+    ssh_key_bits: 4096
+    ssh_key_file: .ssh/id_rsa
+    ssh_key_comment: "{{ backup_info.dest_user.name }} {{ ansible_date_time.date }}"
+  register: backuprunner_key_info
+
+- name: "Export backup_dest_public_key to 'hostvars'"
+  set_fact:
+    backup_dest_public_key: "{{ backuprunner_key_info.ssh_public_key }}"
+
+#- debug:
+#    var: backup_instance.dest | selectattr("host", "equalto", inventory_hostname) | list | length > 0
+#  loop: "{{ backup_dest.instances }}"
+#  when: backup_instance.dest | selectattr('host', 'equalto', inventory_hostname) | list | length > 0
+#  loop_control:
+#     loop_var: backup_instance
+
+- name: "Loopa över backupinstancer"
+  include_role:
+    name: backup
+    tasks_from: backup_dest_instance
+  loop: "{{ backup_info.instances.values() | list }}"
+  loop_control:
+     loop_var: backupinstance
+
+- name: Install cron-jobs for backup_instances
+  become: yes
+  template:
+    src: "dest_rsnapshot.cron.j2"
+    dest: "/etc/cron.d/{{ backup_info.cronfile }}"
+    group: root
+    owner: root
+    mode: "u=rw,g=r,o=r"
+
+#########################################
+
+#- name: add env for perl in .bashrc
+#  become: yes
+#  lineinfile:
+#    dest: "{{ backup_dest_info.home }}/.bashrc"
+#    state: present
+#    line: "{{ item }}"
+#  with_items:
+#    - "export LC_CTYPE=C.UTF-8"
+#    - "export LC_ALL=C.UTF-8"
+
+#########################################
+
+- name: Get ssh-fingerprint from remote backup
+  shell: "ssh-keyscan -t rsa {{ backup_info.ssh_host }} | tail --lines=1"
+  register: ssh_keyscan
+  changed_when: false
+  failed_when: not 'ssh-rsa' in ssh_keyscan.stdout
+
+#   "ssh_keyscan": {
+#        "changed": false, 
+#        "cmd": "ssh-keyscan -t rsa cloud.lofquist.eu | tail --lines=1", 
+#        "delta": "0:00:00.463143", 
+#        "end": "2020-01-22 21:25:29.855297", 
+#        "failed": false, 
+#        "rc": 0, 
+#        "start": "2020-01-22 21:25:29.392154", 
+#        "stderr": "# cloud.lofquist.eu:22 SSH-2.0-OpenSSH_7.8", 
+#        "stderr_lines": [
+#            "# cloud.lofquist.eu:22 SSH-2.0-OpenSSH_7.8"
+#        ], 
+#        "stdout": "cloud.lofquist.eu ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDelsxzH/V/oDTzjDpHW6GP1KkbA7K2XxwtkqbtCQWs8Vju4r4WvV1UIxBaRYIFTON00e+SGd80xmAs5ifNTzdJJR+2JplC+SMFF8guMIGhutdVsvS6q/IHSsxWsJd1A7Vyku1Pip5PxSPqBWJ/Vo/ukdjW1+qzY2DUk4ipPC2Qq2c05zF0g3EmeeCQWLr8LjqYKMJQKYj8Ghq0AGM5+9LjXvWByjZSA96RLFUKsxE/CniU962QmNSTIyDpj+lPuW1VYZg1CMKnjHUhxovrZ5MRcysmDej2j+6tJwSEXXhF9WErmFTXRWZA20BO3UmY3eNR1ljiwi+2uZ7KQjCpkbXb", 
+#        "stdout_lines": [
+#            "cloud.lofquist.eu ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDelsxzH/V/oDTzjDpHW6GP1KkbA7K2XxwtkqbtCQWs8Vju4r4WvV1UIxBaRYIFTON00e+SGd80xmAs5ifNTzdJJR+2JplC+SMFF8guMIGhutdVsvS6q/IHSsxWsJd1A7Vyku1Pip5PxSPqBWJ/Vo/ukdjW1+qzY2DUk4ipPC2Qq2c05zF0g3EmeeCQWLr8LjqYKMJQKYj8Ghq0AGM5+9LjXvWByjZSA96RLFUKsxE/CniU962QmNSTIyDpj+lPuW1VYZg1CMKnjHUhxovrZ5MRcysmDej2j+6tJwSEXXhF9WErmFTXRWZA20BO3UmY3eNR1ljiwi+2uZ7KQjCpkbXb"
+#        ]
+#    }
+#   "ssh_keyscan": {
+#        "changed": false, 
+#        "cmd": "ssh-keyscan -t rsa cloud.lofquist.eu | tail --lines=1", 
+#        "delta": "0:00:00.009011", 
+#        "end": "2020-01-22 21:27:25.209490", 
+#        "failed": false, 
+#        "rc": 0, 
+#        "start": "2020-01-22 21:27:25.200479", 
+#        "stderr": "write (cloud.lofquist.eu): Network is unreachable", 
+#        "stderr_lines": [
+#            "write (cloud.lofquist.eu): Network is unreachable"
+#        ], 
+#        "stdout": "", 
+#        "stdout_lines": []
+#    }
+
+#- debug:
+#    var: ssh_keyscan
+
+- name: Add ssh-fingerprints to global known_hosts-file
+  become: yes
+  known_hosts:
+    path: "/etc/ssh/ssh_known_hosts"
+    host: "{{ backup_info.ssh_host }}"
+    key: "{{ ssh_keyscan.stdout }}"
+
+

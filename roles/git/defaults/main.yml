@@ -1,0 +1,8 @@
+---
+git_default:
+  repos_default:
+    - domain: "github.com"
+      user: "git"
+      protocol: ssh
+      #port: 2022 (Optional)
+      use_unique_deploy_key: true

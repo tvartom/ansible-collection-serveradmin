@@ -1,5 +1,31 @@
 ---
+- name: Create group for linux-users
+  become: yes
+  group:
+    name: "{{ item.group }}"
+    system: "{{ item.system|default(false) }}"
+  when: item.group is defined
+  loop: "{{ users }}"
+  tags:
+    - bootstrap
+
+# The groups may be primary groups of other users created in this loop, so skipped in first run.
 - name: "Add linux-user to server"
+  become: yes
+  user:
+    name: "{{ item.name }}"
+    group: "{{ item.group | default(omit) }}" #https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html#omitting-parameters
+    state: present
+    append: yes
+    create_home: yes
+    home: "/home{{ '/system' if item.system|default(false) else '' }}/{{ item.name }}"
+    system: "{{ item.system|default(false) }}"
+  loop: "{{ users }}"
+  tags:
+    - bootstrap
+
+# Run it again and add the groups.
+- name: "Add groups to linux-user on server"
   become: yes
   user:
     name: "{{ item.name }}"
@@ -7,6 +33,8 @@
     groups: "{{ item.groups | default([]) }}"
     append: yes
   loop: "{{ users }}"
+  tags:
+    - bootstrap
 
 - name: "Add public keys to linux-user"
   become: yes
@@ -15,8 +43,10 @@
     state: present
     key: "{{ item.1 }}"
   loop: "{{ users|subelements('authorized_keys', skip_missing=True) }}"
+  tags:
+    - bootstrap
 
-- name: "Make user to sudoer (withput requirement of password)"
+- name: "Make user to sudoer (without requirement of password)"
   include_tasks: make_user_sudoer.yml
   vars:
     user: "{{ item.name }}" #Användarnamnet på användaren som ska bli sudoer utan lösenord
@@ -24,6 +54,8 @@
   loop: "{{ users }}"
   loop_control:
     label: "{{ item.name }}"
+  tags:
+    - bootstrap
 
 - name: "Setup git for linux-user"
   include_role:

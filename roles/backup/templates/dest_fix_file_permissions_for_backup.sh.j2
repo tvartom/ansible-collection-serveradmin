@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "chown log..."
+sudo chown -R {{ backup_info.dest_user.name }}:{{ backup_info.dest_user.group }} {{ backupinstance.dest.root }}/log
+echo "chmod log..."
+sudo chmod -R u=rwx,g=rx,o=rx {{ backupinstance.dest.root }}/log
+
+echo "chown run..."
+sudo chown -R {{ backup_info.dest_user.name }}:{{ backup_info.dest_user.group }} {{ backupinstance.dest.root }}/run
+echo "chmod run..."
+sudo chmod -R u=rwx,g=rx,o= {{ backupinstance.dest.root }}/run
+
+
+
+echo "chown {{ backupinstance.name }}..."
+time sudo chown -R {{ backup_info.dest_user.name }}:{{ backup_info.dest_user.group }} {{ backupinstance.dest.root }}/{{ backupinstance.name }}
+
+echo "chmod {{ backupinstance.name }}..."
+time sudo chmod -R u=rwx,g=rwx,o= {{ backupinstance.dest.root }}/{{ backupinstance.name }}
+
+
+
+# time sudo chcon -R -t _default_t {{ backupinstance.dest.root }}/{{ backupinstance.name }}
+

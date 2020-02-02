@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# Managed by Ansible!!!
+#
+# Exit on error:
+set -e
+
+echo "Backup database. Application: {{ application.name }}" $(date -u)
+
+#Exempel:
+# dump_db.sh name_of_my_db
+# dump_db.sh name_of_my_db "kl%H%M"
+# dump_db.sh name_of_my_db "dag%d-kl%H%M"
+
+# dump_db.sh name_of_my_db "" root@server.myserver.se
+
+
+DB="{{ application.database }}"
+# Som namn på backupen används datum och tid, men annat namn kan sättas som argument till detta sctipt. 
+NAME="$DB-$(date +${1:-%Y%m%d-%H%M})"
+
+mkdir -p "{{ application.path }}/backup/plain"
+
+DUMP_FILENAME="dump-$NAME.sql"
+
+echo "Database: $DB"
+echo "Backup id: $NAME"
+echo "Dump file: $DUMP_FILENAME"
+
+
+mysqldump \
+    --events \
+    --routines \
+    --triggers \
+    `#--add-drop-database` \
+    --no-create-db \
+    `#--no-data` \
+    --skip-lock-tables \
+    --protocol=TCP \
+    $DB > "{{ application.path }}/backup/plain/$DUMP_FILENAME"
+
+gzip -f "{{ application.path }}/backup/plain/$DUMP_FILENAME"
+
+
+mkdir -p "{{ application.path }}/backup/encrypted/$NAME"
+cd "{{ application.path }}/backup/encrypted/$NAME"
+
+# Skapa en readme 
+cat <<EOT >> readme.txt
+Säkerhetskopia av databas för {{ application.name }} $(date -u) 
+Database: $DB
+Backup id: $NAME
+
+Filen $DUMP_FILENAME.gz.gpg är krypterat med ett genererat lösenord.
+Symmetrisk kryptering med AES256 används med kommandot gpg.
+
+Det genererade lösenordet finns krypterade i filerna *-key.bin.gpg
+och går enbart att avkryptera med respektive personlig nyckel.
+
+De som kan avkryptera säkerhetskopian är:
+{% for user in users if user.pgp_user is defined %}
+{{ user.pgp_user }}
+{% endfor %}
+
+Det finns ett hjälpscript för respektive användare, unpack-*.sh för att avkryptera filen.
+
+EOT
+
+
+# Generera en random nyckel:
+openssl rand -base64 32 > "$NAME-key.bin"
+
+# Kryptera denna nyckel, till de olika administratörer som kan läsa denna backup.
+{% set counter = {'i': 0} %}
+{% for user in users if user.pgp_user is defined %}
+{{   counter.__setitem__('i', counter.i+1) }}
+gpg --trust-model always --armor --encrypt --recipient "{{ user.pgp_user }}" -o "key-{{ user.pgp_user }}.bin.gpg" "$NAME-key.bin"
+
+# Gör ett script för var användare {{ user.pgp_user }} 
+cat <<EOT >> unpack-{{ user.pgp_user }}.sh
+#!/bin/bash
+gpg --output "$NAME-key.bin" --decrypt key-{{ user.pgp_user }}.bin.gpg
+cat "$NAME-key.bin" | gpg --batch --yes --passphrase-fd 0 --output "$DUMP_FILENAME.gz" --decrypt "$DUMP_FILENAME.gz.gpg"
+rm "$NAME-key.bin"
+EOT
+chmod a+x unpack-{{ user.pgp_user }}.sh
+{% endfor %}
+
+{% if counter.i == 0 %}
+# Nästa rader kommer få ansible att misslyckas 
+{{   MISSING_BACKUP_RECIEVER }}
+{{   0/0 }}
+{% endif %}
+
+cat "$NAME-key.bin" | gpg --batch --yes --passphrase-fd 0 --cipher-algo aes256 --output "$DUMP_FILENAME.gz.gpg" --symmetric "{{ application.path }}/backup/plain/$DUMP_FILENAME.gz"
+# Radera nyckeln: (Så att den bara finns krypterad)
+rm "$NAME-key.bin"
+
+# Paketera katalogen
+cd ..
+tar -c --remove-files -f $NAME.tar $NAME

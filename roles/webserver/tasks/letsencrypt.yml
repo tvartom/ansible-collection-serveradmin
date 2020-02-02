@@ -8,15 +8,6 @@
     group: root
     mode: "u=rwx,g=rx,o=rx"
 
-- name: "Create /opt/letsencrypt/log"
-  become: yes
-  file:
-    path: /opt/letsencrypt/log
-    state: directory
-    owner: root
-    group: root
-    mode: "u=rwx,g=rx,o=rx"
-
 - name: Install acme-tiny-script
   become: yes
   copy:
@@ -24,12 +15,12 @@
     dest: "/opt/letsencrypt"
     directory_mode: o=rwX,g=,o=
 
-- name: Download cert to put in chained file (To be used with Nginx)
-  become: yes
-  get_url:
-    url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
-    dest: /opt/letsencrypt/intermediate.pem
-    mode: u=rw,g=r,o=r
+#- name: Download cert to put in chained file (To be used with Nginx)
+#  become: yes
+#  get_url:
+#    url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
+#    dest: /opt/letsencrypt/intermediate.pem
+#    mode: u=rw,g=r,o=r
 
 - name: "Generate Letsencrypt account key"
   become: yes
@@ -46,8 +37,11 @@
     group: root
     mode: "u=rwx,g=rx,o=rx"
 
+# https://cipherli.st/
+- name: "Warning"
+  debug:
+    msg: "If dhparam.pem not exists, it will be created now. It takes a long time."
 
-# https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
 - name: Generate a stronger DHE parameter (This is going to take a long time)
   become: yes
   shell: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 4096

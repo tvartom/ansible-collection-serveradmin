@@ -62,7 +62,6 @@
   become: yes
   yum:
     name:
-      # - "{{ php_package }}-mysqlnd"
       # - MySQL-python # Python behövs av Ansible
       # The PyMySQL (Python 2.7 and Python 3.X) or MySQL-python (Python 2.X) module is required."}
       - "python3-PyMySQL" # MySQL-python finns inte i CentOS 8, funkar denna?

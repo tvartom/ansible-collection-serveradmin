@@ -1,0 +1,41 @@
+---
+# Usage:
+#
+#- include_tasks: get_backup.yml
+#  vars:
+#     target: (inventoryname på host)
+#
+# Returnerar: backup_info
+
+- name: "get_backup : Hämta info om backup från target host"
+  set_fact:
+    raw_backup: "{{ hostvars[target].backup }}"
+
+- name: "get_backup : Get default values for backup"
+  set_fact:
+    temp_backup_default:
+      target: "{{ target }}"
+      ssh_host: "{{ target  }}"
+      dest_user:
+        name: "backup_{{ target }}"
+        group: "backup_{{ target }}"
+        home: "/home/system/backup_{{ target }}"
+      source_user:
+        name: "backup_source"
+        group: "backup_source"
+        home: "/home/system/backup_source"
+      cronfile: "rsnapshot-{{ target }}"
+      backup_script_working_dir: "/home/system/backup_source/__nobackup__"
+      backup_script_output_dir:  "/home/system/backup_source/dobackup"
+      instances: {}
+
+- name: "get_backup : Skapa backup_info"
+  set_fact:
+    backup_info: "{{ temp_backup_default | combine(raw_backup) | combine({'instances': {}}) }}"
+
+- name: "get_backup : Loop over all backup instances"
+  include_tasks: get_backupinstance.yml
+  loop: "{{ raw_backup.instances | dict2items }}"
+  when: target == inventory_hostname or backupinstance_with_key.value.dest_instances | selectattr('host', 'equalto', inventory_hostname) | list | length > 0
+  loop_control:
+    loop_var: backupinstance_with_key

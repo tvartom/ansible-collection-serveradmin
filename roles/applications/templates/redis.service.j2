@@ -1,0 +1,20 @@
+#
+# Managed by Ansible!!!
+#
+[Unit]
+Description=Redis persistent key-value database for {{ application.fullname }}
+After=network.target
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/redis-server /etc/redis-{{ application.fullname }}.conf --supervised systemd
+ExecStop=/usr/libexec/redis-shutdown redis-{{ application.fullname }}
+Type=notify
+User={{ application.process_user }}
+Group={{ application.process_group }}
+#RuntimeDirectory=redis
+#RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=multi-user.target

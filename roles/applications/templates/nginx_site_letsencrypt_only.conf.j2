@@ -1,0 +1,24 @@
+#
+# Managed by Ansible!!!
+#
+
+# Temporary conf for Letsencrypt handshake
+
+server {
+  listen           80;
+
+  server_name{{- '         ' -}}
+  {%- for url in domaininstance_group.domains -%}
+  {{-   " " -}}{{- url -}}
+  {%- endfor -%}
+  ;
+
+  location '/.well-known/acme-challenge' {
+    default_type "text/plain";
+    alias        {{ application.path }}/letsencrypt/challenges;
+    try_files $uri =404;
+  }
+  location / {
+    return 503; # Service Unavailable (No https-certs in place!)
+  }
+}

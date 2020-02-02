@@ -2,11 +2,15 @@
 - include_role:
     name: serveradmin
     tasks_from: get_serveradmin
+  tags:
+    - bootstrap
 # Returns: serveradmin
 
 - include_role:
     name: google_cloud_sdk
   when: serveradmin.use_gcloud
+  tags:
+    - bootstrap
 
 #- debug:
 #     var: serveradmin
@@ -23,12 +27,16 @@
     group: root
     setype: "_default"
     mode: "u=rwx,g=rx,o=rx"
+  tags:
+    - bootstrap
 
 - name: Create group for serveradmin
   become: yes
   group:
     name: "{{ serveradmin.process_group }}"
     system: yes
+  tags:
+    - bootstrap
 
 - name: Adding users to the serveradmin-group
   become: yes
@@ -38,6 +46,8 @@
     append: yes
   when: item.sudoer | default(false)
   loop: "{{ users }}"
+  tags:
+    - bootstrap
 
 - name: Create user for serveradmin
   become: yes
@@ -51,6 +61,17 @@
     ssh_key_bits: 4096
     ssh_key_comment: "{{ serveradmin.process_user }}@{{ inventory_hostname }}  {{ ansible_date_time.date }}"
   register: key_info
+  tags:
+    - bootstrap
+
+- name: "Make serveradmin-user to sudoer without password"
+  include_role:
+    name: users
+    tasks_from: make_user_sudoer
+  vars:
+    user: "{{ serveradmin.process_user }}" #Användarnamnet på användaren som ska bli sudoer utan lösenord
+  tags:
+    - bootstrap
 
 - name: "Install Python3 and pip (DNF)"
   become: yes
@@ -63,6 +84,8 @@
 #      - lynx
     state: present
   when: ansible_os_family == "RedHat"
+  tags:
+    - bootstrap
 
 - name: "Install latest ansible for serveradmin with pip."
   become: yes
@@ -70,14 +93,8 @@
   pip:
     name: ansible
     extra_args: --user
-
-- name: "Make serveradmin-user to sudoer without password"
-  include_role:
-    name: users
-    tasks_from: make_user_sudoer
-  vars:
-    user: "{{ serveradmin.process_user }}" #Användarnamnet på användaren som ska bli sudoer utan lösenord
-
+  tags:
+    - bootstrap
 
 #- name: Lägg serveradmin-användare för access till mariadb
 #  include_role:
@@ -102,10 +119,11 @@
   when: item.when | default(True)
   loop:
     - { path: "" }
-    - { path: "/log" }
     - { path: "/workspace" }
+  tags:
+    - bootstrap
 
-- name: Registrera nyckel för Google Cloud på aktuell användare
+- name: "Register key for Google Cloud on serveradmin-user"
   include_role:
     name: google_cloud_sdk
     tasks_from: gcloud_add_key
@@ -113,8 +131,10 @@
     gcloud_linuxuser: "{{ serveradmin.process_user }}"
     gloud_key: "{{ serveradmin.gcloud_key }}"
   when: serveradmin.use_gcloud
+  tags:
+    - bootstrap
 
-- name: Skapa serveradmin-skript
+- name: "Create scripts for serveradmin"
   become: yes
   template:
     src: "{{ item.file }}.j2"
@@ -122,9 +142,12 @@
     owner: "{{ item.owner | default(serveradmin.process_user) }}"
     group: "{{ item.group | default(serveradmin.process_group) }}"
     mode: "{{ item.mode | default('u=rwx,g=rx,o=r') }}"
+  when: item.when | default(true)
   loop: "{{ serveradmin.files }}"
+  tags:
+    - bootstrap
 
-- name: Stäng av Message of the day (MOTD)
+- name: "Turn of Message of the day (MOTD)"
   become: yes
   lineinfile:
     path: /etc/ssh/sshd_config
@@ -132,80 +155,97 @@
     line: "PrintMotd no"
 - debug:
     var: serveradmin
+  tags:
+    - bootstrap
 
-- name: Konfigurera git för användaren
+- name: "Config git for serveradmin-user"
   include_role:
     name: git
     tasks_from: config_git_for_user
   vars:
     user:
       name: "{{ serveradmin.process_user }}"
+  tags:
+    - bootstrap
 
-- name: "Skapa deploy-key för serveradmin-repot"
-  become: yes
-  openssh_keypair:
-    comment: "Deploykey for {{ serveradmin.process_user }}@{{ inventory_hostname}}"
-    owner: "{{ serveradmin.process_user }}"
-    group: "{{ serveradmin.process_group }}"
-    setype: "_default"
-    mode: "u=rw,g=,o="
-    path: "/home/system/{{ serveradmin.process_user }}/.ssh/{{ serveradmin.repo.unique_deploy_key }}"
-  register: key_info_unique
-  when: serveradmin.repo.use_unique_deploy_key
-
-
-# Note 1
-# If problem with Host key verification failed, look in basic_centos_tools where
-# repository-providers is added to known hosts. (like github.com)
-
-# Note 2
-# Necessary to pull as other user:
-# https://serverfault.com/questions/81746/bypass-ssh-key-file-permission-check
-
-# Note 3
-# To clone with different key-file:
-# GIT_SSH_COMMAND="ssh -i $KEYFILE_ABS" git clone ...
-
-- name: "Clone serveradmin-repo"
-  become: yes
-  become_user: "{{ serveradmin.process_user }}"
-  git:
-    repo: "{{ serveradmin.repo_url }}"
-    dest: "{{ serveradmin.path }}/workspace/serveradmin"
-    key_file: "{{ '/home/system/' ~ serveradmin.process_user ~ '/.ssh/' ~ serveradmin.repo.unique_deploy_key if serveradmin.repo.use_unique_deploy_key else '' }}"
-  ignore_errors: yes
-  register: git_clone_serveradmin_result
-
-
-- name: "Info about user to be used when resolving cloning problem of serveradmin."
-  debug:
-    var: key_info
-  when: git_clone_serveradmin_result.failed and not serveradmin.repo.use_unique_deploy_key
-
-- name: "Info about unique deploy key to be used when resolving cloning problem of serveradmin."
-  debug:
-    var: key_info_unique
-  when: git_clone_serveradmin_result.failed and serveradmin.repo.use_unique_deploy_key
-
-- name: "Error message if git clone of serveradmin fails."
-  fail:
-    msg: "Cloning serveradmin repo ({{ serveradmin.repo_url }}) failed. Make sure above user/deploy key has access."
-  when: git_clone_serveradmin_result.failed
-
-- name: "Config git-repo to use deploy-key"
-  become: yes
-  become_user: "{{ serveradmin.process_user }}"
-  git_config:
-    name: core.sshCommand
-    repo: "{{ serveradmin.path }}/workspace/serveradmin"
-    scope: local
-    value: "ssh -i {{ '/home/system/' ~ serveradmin.process_user ~ '/.ssh/' ~ serveradmin.repo.unique_deploy_key }}"
-  when: serveradmin.repo.use_unique_deploy_key
-
-- name: Konfigurera git för användaren
-  include_role:
+- include_role:
     name: git
-    tasks_from: config_git_for_user
+    tasks_from: clone_repo
   vars:
-    user:
-      name: "{{ serveradmin.process_user }}"
+    clone_repo:
+      dest: "{{ serveradmin.path }}/workspace/serveradmin"
+      user: "{{ serveradmin.process_user }}"
+    repo: "{{ serveradmin.repo }}"
+  tags:
+    - bootstrap
+
+#- name: "Skapa deploy-key för serveradmin-repot"
+#  become: yes
+#  openssh_keypair:
+#    comment: "Deploykey for {{ serveradmin.process_user }}@{{ inventory_hostname}}"
+#    owner: "{{ serveradmin.process_user }}"
+#    group: "{{ serveradmin.process_group }}"
+#    setype: "_default"
+#    mode: "u=rw,g=,o="
+#    path: "/home/system/{{ serveradmin.process_user }}/.ssh/{{ serveradmin.repo.unique_deploy_key }}"
+#  register: key_info_unique
+#  when: serveradmin.repo.use_unique_deploy_key
+#  tags:
+#    - bootstrap
+#
+## Note 1
+## If problem with Host key verification failed, look in basic_centos_tools where
+## repository-providers is added to known hosts. (like github.com)
+#
+## Note 2
+## Necessary to pull as other user:
+## https://serverfault.com/questions/81746/bypass-ssh-key-file-permission-check
+#
+## Note 3
+## To clone with different key-file:
+## GIT_SSH_COMMAND="ssh -i $KEYFILE_ABS" git clone ...
+#
+#- name: "Clone serveradmin-repo"
+#  become: yes
+#  become_user: "{{ serveradmin.process_user }}"
+#  git:
+#    repo: "{{ serveradmin.repo.url }}"
+#    dest: "{{ serveradmin.path }}/workspace/serveradmin"
+#    key_file: "{{ '/home/system/' ~ serveradmin.process_user ~ '/.ssh/' ~ serveradmin.repo.unique_deploy_key if serveradmin.repo.use_unique_deploy_key else '' }}"
+#  ignore_errors: yes
+#  register: git_clone_serveradmin_result
+#  tags:
+#    - bootstrap
+#
+#- name: "Info about user to be used when resolving cloning problem of serveradmin."
+#  debug:
+#    var: key_info
+#  when: git_clone_serveradmin_result.failed and not serveradmin.repo.use_unique_deploy_key
+#  tags:
+#    - bootstrap
+#
+#- name: "Info about unique deploy key to be used when resolving cloning problem of serveradmin."
+#  debug:
+#    var: key_info_unique
+#  when: git_clone_serveradmin_result.failed and serveradmin.repo.use_unique_deploy_key
+#  tags:
+#    - bootstrap
+#
+#- name: "Error message if git clone of serveradmin fails."
+#  fail:
+#    msg: "Cloning serveradmin repo ({{ serveradmin.repo.url }}) failed. Make sure above user/deploy key has access."
+#  when: git_clone_serveradmin_result.failed
+#  tags:
+#    - bootstrap
+#
+#- name: "Config git-repo to use deploy-key"
+#  become: yes
+#  become_user: "{{ serveradmin.process_user }}"
+#  git_config:
+#    name: core.sshCommand
+#    repo: "{{ serveradmin.path }}/workspace/serveradmin"
+#    scope: local
+#    value: "ssh -i {{ '/home/system/' ~ serveradmin.process_user ~ '/.ssh/' ~ serveradmin.repo.unique_deploy_key }}"
+#  when: serveradmin.repo.use_unique_deploy_key
+#  tags:
+#    - bootstrap

@@ -1,0 +1,115 @@
+---
+#
+# autofs:
+#   user:
+#   group:
+#
+#
+- name: Install packages for Debian-family (APT)
+  become: yes
+  apt:
+    name:
+      - autofs
+      - cifs-utils
+    update_cache: yes
+    cache_valid_time: 600
+    state: latest
+  when: ansible_os_family == "Debian"
+  tags:
+    - autofs
+
+- name: Install packages for RedHat-family (YUM)
+  become: yes
+  yum:
+    name:
+      - autofs
+      - cifs-utils
+    update_cache: no
+    state: latest
+  when: ansible_os_family == "RedHat"
+  notify: "Start/Restart/enable autofs service"
+  tags:
+    - autofs
+
+- name: Create group for autofs
+  become: yes
+  group:
+    name: "{{ autofs.group }}"
+    system: yes
+  tags:
+    - autofs
+
+- name: Create users for autofs
+  become: yes
+  user:
+    name: "{{ autofs.user }}"
+    group: "{{ autofs.group }}"
+    createhome: no
+    system: yes
+  tags:
+    - autofs
+
+- name: "auto.master edit"
+  become: yes
+  replace:
+    dest: "/etc/{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+    backup: yes
+  with_items:
+    - { file: 'auto.master', regexp: '^(/misc.*)',    replace: '# \1'}
+    - { file: 'auto.master', regexp: '^(/net.*)',    replace: '# \1'}
+  notify: "Start/Restart/enable autofs service"
+  tags:
+    - autofs
+
+- name: "auto.master add"
+  become: yes
+  lineinfile:
+    path: "/etc/auto.master"
+    line: "/media/smb	auto.cifs"
+  notify: "Start/Restart/enable autofs service"
+  tags:
+    - autofs
+
+
+- name: Automount med credentials
+  become: yes
+  template:
+    src: auto.cifs.j2 
+    dest: "/etc/auto.cifs"
+    owner: root
+    group: root
+    mode: "u=rwx,g=r,o=r"
+  notify: "Start/Restart/enable autofs service"
+  tags:
+    - autofs
+
+# mount_cifs_credentials finns i secret_basecamp.yml
+- name: Skapa credentials files
+  become: yes
+  template:
+    src: auto.cifs.credentials.j2 
+    dest: "/etc/auto.cifs.{{ item.host }}"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  loop: "{{ mount_cifs_credentials | default([]) }}"
+  notify: "Start/Restart/enable autofs service"
+  tags:
+    - autofs
+
+#- name: Gather home list
+#  shell: echo /root && ls -d1 /home/*
+#  register: home_directory_list
+#  changed_when: false
+
+#- name: Use home-file-list...
+#  become: yes
+#  somthing:
+#    path: "{{ item }}/.somefile"
+#    state: absent
+#  with_items: "{{ home_directory_list.stdout_lines }}"
+
+
+#sudo systemctl enable --now autofs

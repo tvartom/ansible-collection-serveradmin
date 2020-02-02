@@ -1,0 +1,364 @@
+---
+# To fix files:
+# chcon -R -t httpd_sys_rw_content_t cloud
+# chown -R cloud:cloud cloud
+
+- name: Install php-dependencis (YUM)
+  become: yes
+  yum:
+    name:
+      - "{{ php_package }}-xml"
+      - "{{ php_package }}-gd"
+      - "{{ php_package }}-posix"
+      - "{{ php_package }}-intl"
+      - "{{ php_package }}-pecl-zip"
+#      - "{{ php_package }}-pecl-redis" #https://pagure.io/epel/issue/75 #https://serverfault.com/questions/997028/where-is-the-redis-module-for-php-on-centos-8-php-pecl-redis
+      - bzip2
+    state: present
+  when: ansible_os_family == "RedHat"
+  notify: "Restart php-fpm"
+  tags:
+    - nextcloud
+
+- set_fact:
+    nextcloud_folder: nextcloud-{{ nextcloud.version }}
+  tags:
+    - nextcloud
+
+- set_fact:
+    nextcloud_archive: "{{ nextcloud_folder }}.tar.bz2"
+  tags:
+    - nextcloud
+
+- set_fact:
+    nextcloud_url: https://download.nextcloud.com/server/releases/{{nextcloud_archive }}
+  tags:
+    - nextcloud
+
+- name: Check current installed nextcloud
+  become: yes
+  stat:
+    path: "{{ nextcloud.installdir}}/{{ nextcloud_folder }}"
+  register: nextcloud_stat
+  tags:
+    - nextcloud
+
+- set_fact:
+    nextcloud_install: "{{ nextcloud_stat.stat.exists == false }}"
+  tags:
+    - nextcloud
+
+- name: Stoppa php-fpm
+  become: yes
+  service:
+    name: php-fpm
+    state: stopped
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
+- name: Skapa dir
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "u=rwx,g=rwx,o="
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+  when: item != ""
+  loop:
+    - "{{ nextcloud.datadir }}"
+  tags:
+    - nextcloud
+
+- name: Skapa dir (External dirs)
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "u=rwx,g=rwx,o="
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+  when: item != ""
+  loop: "{{ nextcloud.datadir_external | default([]) }}"
+  tags:
+    - nextcloud
+
+- name: Skapa fix-file till External dirs
+  become: yes
+  template:
+    src: fix_file_permissions_for_nextcloud.sh.j2
+    dest: "{{ item }}/fix_file_permissions_for_nextcloud.sh"
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+    mode: "u=rwx,g=rwx,o=rx"
+  when: item != ""
+  loop: "{{ nextcloud.datadir_external | default([]) }}"
+  tags:
+    - nextcloud
+
+- name: Skapa dir
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "u=rwx,g=rwx,o="
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+  when: item != ""
+  loop:
+    - "{{ nextcloud_tempdir }}"
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
+- name: Download nextcloud
+  become: yes
+  get_url:
+    url: "{{ nextcloud_url }}"
+    dest: "{{ nextcloud_tempdir }}/{{ nextcloud_archive }}"
+#    validate_certs: no
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
+- name: Skapa installdir med versionsnummer
+  become: yes
+  file:
+    path: "{{ nextcloud.installdir }}/{{ nextcloud_folder }}"
+    state: directory
+    mode: "u=rwx,g=rx,o=rx"
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
+- name: Packa upp
+  become: yes
+  become_user: "{{ nextcloud.user }}"
+  unarchive:
+    copy: no
+    src: "{{ nextcloud_tempdir }}/{{ nextcloud_archive }}"
+    dest: "{{ nextcloud.installdir }}/{{ nextcloud_folder }}"
+    mode: "u=rwX,g=rX,o=rX"
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
+- name: "Check if old config exists"
+  become: yes
+  stat: 
+    path: "{{ nextcloud.installdir }}/nextcloud/config/config.php"
+  register: nextcloud_old_config
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
+- name: "Copy old config"
+  become: yes
+  become_user: "{{ nextcloud.user }}"
+  copy:
+    src: "{{ nextcloud.installdir }}/nextcloud/config/config.php"
+    dest: "{{ nextcloud_folder }}/nextcloud/config/config.php"
+    remote_src: yes
+  when: nextcloud_install and nextcloud_old_config.stat.exists
+  tags:
+    - nextcloud
+
+- name: "Fix mode on nextcloud dir."
+  become: yes
+  file:
+    path: "{{ nextcloud.installdir }}/{{ nextcloud_folder }}/nextcloud"
+    state: touch
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+    mode: "u=rwx,g=rx,o=rx"
+  tags:
+    - nextcloud
+
+- name: "Symlink installdir med versionsnummer till nuvarande version"
+  become: yes
+  file:
+    path: "{{ nextcloud.installdir }}/nextcloud"
+    src: "{{ nextcloud_folder }}/nextcloud"
+    state: link
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
+    mode: "u=rwx,g=rx,o=rx"
+  tags:
+    - nextcloud
+
+- name: "Kör occ upgrade"
+  become: yes
+  become_user: "{{ nextcloud.user }}"
+  shell: php occ upgrade 2>&1
+  args:
+    chdir: "{{ nextcloud_installdir }}/nextcloud/"
+  register: nextcloud_occ_upgrade
+  ignore_errors: true
+  when: nextcloud_install and nextcloud_old_config.stat.exists
+  tags:
+    - nextcloud
+
+- name: "Resultat av occ upgrade"
+  debug:
+    msg: "{{ nextcloud_occ_upgrade.stdout }}"
+  when: nextcloud_install and nextcloud_old_config.stat.exists
+  failed_when: nextcloud_occ_upgrade.failed
+  tags:
+    - nextcloud
+
+- name: "Starta php-fpm"
+  include_role:
+    name: webserver
+    tasks_from: start_php
+  vars:
+    state: started
+    enabled: true
+  tags:
+    - nextcloud
+
+- name: Create nginx include conf
+  become: yes
+  template:
+    src: nextcloud.include.nginx.j2
+    dest: "/etc/nginx/webinstances.d/{{ nextcloud.webinstance_fullname }}_custom.include"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  notify: "Reload nginx"
+  tags:
+    - nextcloud
+    - web
+
+- name: Setup cron-jobb
+  become: yes
+  template:
+    src: nextcloud.cron.j2
+    dest: "/etc/cron.d/nextcloud_{{ nextcloud.name }}"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  tags:
+    - nextcloud
+
+- name: SELinux for Nextcloud
+  become: yes
+  file:
+    path: "{{ item }}"
+    setype: "httpd_sys_rw_content_t"
+  when: item != ""
+  loop:
+    - "{{ nextcloud.datadir }}"
+    - "{{ nextcloud.installdir}}/{{ nextcloud_folder }}/nextcloud/config"
+    - "{{ nextcloud.installdir}}/{{ nextcloud_folder }}/nextcloud/apps"
+  tags:
+    - nextcloud
+
+- name: SELinux for Nextcloud (external dirs)
+  become: yes
+  file:
+    path: "{{ item }}"
+    setype: "httpd_sys_rw_content_t"
+  when: item != "" and "smb" not in item
+  loop: "{{ nextcloud.datadir_external | default([]) }}"
+  tags:
+    - nextcloud
+
+
+
+#- name: Check SELinux is installed (if not, occurring error is to be ignored)
+#  shell: which getenforce
+#  register: nextcloud_which_getenfoce
+#  changed_when: False
+#  ignore_errors: yes
+# include if SELinux is installed
+#- include: modify_selinux.yml
+#  when: nextcloud_which_getenfoce.stdout != ""
+
+
+# Ant:
+# Installera server
+
+# Hämta backup
+
+# Skapa cronjob
+
+# För Backup:
+# Maintenance mode
+# https://doc.owncloud.org/server/8.2/admin_manual/maintenance/enable_maintenance.html
+
+# Back up
+# https://doc.owncloud.org/server/8.2/admin_manual/maintenance/backup.html>>>>>>> other
+
+#########################################################################################################################################
+
+#wget https://download.owncloud.org/community/owncloud-latest.tar.bz2
+#tar xfv owncloud-latest.tar.bz2
+#mv owncloud /tvartom/web/cloud.tvartom.com
+
+#adduser --system --no-create-home owncloud
+
+#chown owncloud:owncloud -R /tvartom/web/cloud.tvartom.com/owncloud
+
+# Data-dir:
+
+#mkdir -p /mnt/cloud
+#chown owncloud:owncloud /mnt/cloud
+
+#mkdir -p /tvartom/web/cloud.tvartom.com/log
+#chown owncloud:owncloud /tvartom/web/cloud.tvartom.com/log
+
+#mkdir -p /tvartom/web/cloud.tvartom.com/log/php-fpm
+#chown owncloud:owncloud /tvartom/web/cloud.tvartom.com/log/php-fpm
+
+
+#mkdir -p /tvartom/web/cloud.tvartom.com/php/session
+#chown owncloud:owncloud /tvartom/web/cloud.tvartom.com/php/session
+
+#mkdir -p /tvartom/web/cloud.tvartom.com/php/wsdlcache
+#chown owncloud:owncloud /tvartom/web/cloud.tvartom.com/php/wsdlcache
+
+
+#####################################
+# Update
+#####################################
+#sudo service php-fpm stop
+#wget https://download.owncloud.org/community/owncloud-latest.tar.bz2
+#tar xfv owncloud-latest.tar.bz2
+
+#wget https://download.owncloud.org/community/owncloud-8.1.1.tar.bz2
+#tar xfv owncloud-8.1.1.tar.bz2
+
+#mv /tvartom/web/cloud.tvartom.com/owncloud /tvartom/web/cloud.tvartom.com/owncloud_old
+#mv owncloud /tvartom/web/cloud.tvartom.com
+
+#chown owncloud:owncloud -R /tvartom/web/cloud.tvartom.com/owncloud
+#cp -p /tvartom/web/cloud.tvartom.com/owncloud_old/config/config.php /tvartom/web/cloud.tvartom.com/owncloud/config/config.php
+
+#cd /tvartom/web/cloud.tvartom.com/owncloud
+#sudo -u owncloud php occ upgrade
+#sudo service php-fpm start
+
+- name: "Modify /etc/php.ini"
+  become: yes
+  lineinfile:
+    dest: "/etc/php.ini"
+    state: present
+    backrefs: yes
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backup: yes
+  loop:
+    - regexp: '^;?\s*default_charset'
+      line: "default_charset = \"{{ nextcloud_php_default_char }}\""
+    - regexp: '^;?\s*date.timezone'
+      line: "date.timezone = \"{{ nextcloud_php_timezone }}\""
+    - regexp: '^;?\s*memory_limit'
+      line: "memory_limit = {{ nextcloud_php_memory_limit }}"
+  notify: Restart php-fpm
+  tags:
+    - nextcloud

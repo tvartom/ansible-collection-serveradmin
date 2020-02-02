@@ -1,0 +1,138 @@
+---
+### Install Wordpress ########################################################################################
+
+- name: Wordpress - Download and unpack if not present
+  become: yes
+  unarchive:
+    remote_src: yes
+    extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root wordpress/
+    src: "https://wordpress.org/latest.tar.gz"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o=rX"
+    creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-admin"
+
+- name: Create wp-config.php with proper new lines
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: cat wp-config-sample.php | tr -d '\r' > wp-config.php
+  args:
+    chdir: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"
+    creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-config.php"
+
+- name: "Config Wordpress (Constants)"
+  become: yes
+  lineinfile:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-config.php"
+    state: present
+    regexp: |-
+      ^\s*define\(\s*('|"){{ item.constant }}("|')
+    line: |-
+      define( '{{ item.constant }}', '{{ item.value }}' ); // Set by Ansible!
+  loop:
+    - constant: DB_NAME
+      value: "{{ application.database.name }}"
+    - constant: DB_USER
+      value: "{{ application.process_user }}"
+    - constant: DB_PASSWORD
+      value: ""
+    - constant: DB_HOST
+      value: "localhost:/var/lib/mysql/mysql.sock"
+    - constant: DB_CHARSET
+      value: "{{ application.database.charset | default('utf8mb4') }}"
+
+- name: "Config Wordpress (Variables)"
+  become: yes
+  lineinfile:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-config.php"
+    state: present
+    regexp: |-
+      ^\s*\${{ item.variable }}\s*=
+    line: |-
+      ${{ item.variable }} = {{ item.value }}; // Set by Ansible!
+  loop:
+    - variable: table_prefix
+      value: "'{{ application.database.prefix | default('wp_') }}'" # Remember quotes
+
+- name: "List of key/salt for cookies"
+  set_fact:
+    cookie_constants:
+      - AUTH_KEY
+      - SECURE_AUTH_KEY
+      - LOGGED_IN_KEY
+      - NONCE_KEY
+      - AUTH_SALT
+      - SECURE_AUTH_SALT
+      - LOGGED_IN_SALT
+      - NONCE_SALT
+
+- name: "Checking for unset cookie key/salt constants"
+  become: yes
+  shell: egrep "^\\s*define\(\\s*'{{ item }}'\\s*,\\s*'put your unique phrase here'" "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-config.php" > /dev/null
+  loop: "{{ cookie_constants }}"
+  failed_when: false
+  changed_when: cookie_constants_test.rc == 0
+  register: cookie_constants_test
+
+- name: "Set cookie keys/salts constants"
+  become: yes
+  lineinfile:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-config.php"
+    state: present
+    regexp: |-
+      ^\s*define\(\s*('|"){{ result_row[result_row.ansible_loop_var] }}("|')
+    line: |-
+      define( {{ "%-20s" | format("'"~result_row[result_row.ansible_loop_var]~"',") }}'{{ lookup('password', '/dev/null length=64') }}' ); // Set by Ansible!
+  loop: "{{ cookie_constants_test.results }}"
+  loop_control:
+    loop_var: result_row
+    label: "{{ result_row[result_row.ansible_loop_var] }}"
+  when: result_row.rc == 0
+
+### Install CiviCRM ########################################################################################
+
+- name: CiviCRM - Download and unpack if not present
+  become: yes
+  unarchive:
+    remote_src: yes
+    # extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root wordpress/
+    # https://download.civicrm.org
+    src: "https://download.civicrm.org/civicrm-{{ application.metadata.wordpress.civicrm.version }}-wordpress.zip"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o=rX"
+    creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm"
+  when: application.metadata.wordpress.civicrm.version is defined
+
+- name: Patch CiviCRM
+  block:
+  - name: "Install GNU patch (DNF)"
+    become: yes
+    dnf:
+      name: patch
+      state: present
+    when: ansible_os_family == "RedHat"
+
+  - name: "CiciCRM installer patch for unix socket unix(/var/lib/mysql/mysql.sock)"
+    become: yes
+    patch:
+      src: "civicrm-{{ application.metadata.wordpress.civicrm.version }}.patch"
+      basedir: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins"
+  when: application.metadata.wordpress.civicrm.patch_for_unix_socket | default(false)
+
+- name: CiviCRM - Localization - Download and unpack if not present
+  become: yes
+  unarchive:
+    remote_src: yes
+    extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root civicrm/
+    # https://download.civicrm.org
+    src: "https://download.civicrm.org/civicrm-{{ application.metadata.wordpress.civicrm.version }}-l10n.tar.gz"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o=rX"
+    creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm/l10n"
+  when: application.metadata.wordpress.civicrm.localization | default(false)
+

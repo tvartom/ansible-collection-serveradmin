@@ -1,0 +1,61 @@
+---
+- name: "Backup dest"
+  hosts: "prod"
+  gather_facts: false
+  collections:
+    - tvartom.serveradmin
+  # Agent forwarding används då denna playbook körs från serveradmin på servern
+  # Då sätter vi ssh-användaren till den som startat scriptet.
+  # I ansible_runner.sh finns ett hack som låter vidarebefodra agent forwarding till serveradmin-användaren.
+  #
+  # På så sätt kan en admin konfigurera säkerhetskopieringen på destinations-servrarna, utan att servern i sig har
+  # access till dessa servrar.
+  vars:
+    # I fall vi kör scriptet från serveradmin så använder vi agentforwarding ifrån admin-användaren
+    # som startade scriptet.
+    # (I andra playbooks, som "Backup source" nedan, kör vi lokalt, utan ssh, som linuxanvändaren serveradmin)
+    ansible_user: "{{ ansible_started_by_user | default(omit) }}"
+  tasks:
+    - include_role:
+        name: backup
+        tasks_from: get_backup
+        # Returnerar backup_info
+    - block:
+        - name: "Hämta information ifrån dessa hosts som vi har backup till"
+          gather_facts:
+        - name: "Visa sammanställning av backup_info för aktuell dest-server"
+          debug:
+            var: backup_info
+        - include_role:
+            name: backup
+            tasks_from: backup_dest
+      when: backup_info.instances.keys() | length > 0 and inventory_hostname != target
+
+
+- name: "Backup source"
+  hosts: "{{ target }}"
+  connection: "{{ connection_type | default('ssh', true) }}"
+  collections:
+    - tvartom.serveradmin
+  vars:
+    # Tar listan med backup_instances
+    # map(attribute='host'... gör om det till en lista med alla destination-hosts
+    # intersect(... Rensar med hosts som inte det finns hostvars för. (Ej körda, ej i inventory?)
+    # map('extract'... ifrån hostvars hämtas värdet 'backup_dest_public_key' på alla hosts som skapats ovan.
+    # select('defined'... Om nyckeln inte är satt för en host, rensar bort värdet. (Ej kört/misslyckat)
+    backup_dest_public_keys: |-
+      {{-
+        backup.instances.values()
+        | map(attribute='dest_instances') | flatten | map(attribute='host')
+        | intersect(hostvars.keys())
+        | map('extract', hostvars, 'backup_dest_public_key')
+        | select('defined') | list
+      -}}
+  tasks:
+    - include_role:
+        name: backup
+        tasks_from: get_backup
+        # Returnerar backup_info
+    - include_role:
+        name: backup
+        tasks_from: backup_source

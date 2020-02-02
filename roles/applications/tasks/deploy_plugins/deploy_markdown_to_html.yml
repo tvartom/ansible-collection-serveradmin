@@ -1,0 +1,61 @@
+---
+- name: "Create dir for repo in versions"
+  become: yes
+  file:
+    path: "{{ application.path }}/versions/{{ repo.name }}"
+    state: directory
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    # setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "u=rwx,g=rx,o=rx"
+
+
+- name: deploy_facts
+  set_fact:
+    deploy_facts: >-
+      {{- deploy_facts | combine({
+        repo.name: {
+            'repo_source': deploy_facts[repo.name].source,
+            'source': application.path+'/versions/'+repo.name+'/'+deploy_facts[repo.name].version
+          }
+        }
+        , recursive=True) -}}
+
+- name: Copy files (Ej *.md)
+  become: yes
+  become_user: "{{ application.process_user }}"
+  # Don't use cp, rsync is easier with exclude-list
+  #cp -r 'web'/ "${DEPLOY_PATH}_${DEPLOY_TAG}"
+  
+  #rsync:
+  #-a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
+  #  -r, --recursive             recurse into directories
+  #  -l, --links                 copy symlinks as symlinks
+  #  -p, --perms                 preserve permissions
+  #  -t, --times                 preserve modification times
+  #  -g, --group                 preserve group
+  #  -o, --owner                 preserve owner (super-user only)
+  #  -D                          same as --devices --specials
+  #    --devices               preserve device files (super-user only)
+  #    --specials              preserve special files
+  
+  #  -H, --hard-links     This tells rsync to look for hard-linked files in the transfer and link together the corresponding files on the receiving side. Without this option, hard-linked files in the transfer are treated as though they were separate files.
+  #  -A, --acls           This option causes rsync to update the destination ACLs to be the same as the source ACLs. The option also implies --perms.
+  #  -X, --xattrs         This option causes rsync to update the remote extended attributes to be the same as the local ones.
+  
+  #-v, --verbose
+  #-z, --compress              compress file data during the transfer
+  shell: "rsync -a --delete --exclude \"*.md\" '{{ deploy.markkdown_folder }}'/ \"{{ deploy_facts[repo.name].source }}\""
+  args:
+    chdir: "{{ deploy_facts[repo.name].repo_source }}"
+
+
+# https://stackoverflow.com/questions/26126362/converting-all-files-in-a-folder-to-md-using-pandoc-on-mac
+# https://stackoverflow.com/questions/40993488/convert-markdown-links-to-html-with-pandoc/41005658
+- name: Generate html from markdown
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: "find ./ -iname \"*.md\" -type f -exec sh -c 'mkdir -p \"{{ deploy_facts[repo.name].source }}/$(dirname ${0})\" && pandoc -t html -f markdown+pipe_tables -c ../../css/docs.css -s \"${0}\" | sed \"s,\\.md,\\.html,\" > \"{{ deploy_facts[repo.name].source }}/$(dirname ${0})/$(basename ${0%.md}.html)\"' {} \\;"
+  args:
+    chdir: "{{ deploy_facts[repo.name].repo_source }}/{{ deploy.markkdown_folder }}"
+    

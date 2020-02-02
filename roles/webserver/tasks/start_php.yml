@@ -1,0 +1,22 @@
+---
+#- include_role:
+#    name: webserver
+#    tasks_from: start_php
+#  vars:
+#    state: started
+#    enabled: true
+
+- name: Gather list of php pool conf
+  find:
+    paths: "{{ php_fpm_pool_path }}"
+    patterns:
+      - "*.conf"
+  register: current_php_pools
+
+- name: Autostart php-fpm
+  become: yes
+  service:
+    name: "{{ php_fpm_service }}"
+    state: "{{ enabled | default('started') }}"
+    enabled: "{{ enabled | default(true) }}"
+  when: current_php_pools[0] is defined

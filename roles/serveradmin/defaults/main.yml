@@ -8,6 +8,7 @@ serveradmin_default:
       user: "git"
       protocol: ssh
       #port: 2022 (Optional)
+      use_unique_deploy_key: true
   use_gcloud: false
 
 #gcloud_key: "Sätts lokalt i /root/host_vars.yml

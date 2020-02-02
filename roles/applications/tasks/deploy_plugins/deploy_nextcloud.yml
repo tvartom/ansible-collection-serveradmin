@@ -1,0 +1,15 @@
+---
+- include_role:
+    name: nextcloud_server
+  vars:
+    nextcloud:
+      name: "{{ application.environment }}"
+      version: "{{ application.metadata.nextcloud.version | mandatory}}"
+      user: "{{ application.process_user }}"
+      group: "{{ application.process_group }}"
+      installdir: "{{ application.path }}"
+      datadir: "{{ application.metadata.nextcloud.datadir | mandatory }}"
+      #Använder external storage, för stora fil-bibliotek. Datadir vill vi ha på SSD, för thumbnails oc
+      datadir_external: "{{ application.metadata.nextcloud.datadir_external | default([]) }}"
+      # Används på namnet på use_custom_nginx_include_file, samt namnet på php-socket in den.
+      webinstance_fullname: "{{ application.webinstances[deploy.webinstance | mandatory].fullname }}"

@@ -1,0 +1,82 @@
+---
+# Cert files:
+# Account key:                       /opt/letsencrypt/account.key
+# Letsencrypt domain key:            "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+# subjectAltName for CSR:            "{{ application.path }}/letsencrypt/subjectaltname_{{ item.name }}-domain.txt"
+# Certificate Signing Request (CSR): "{{ application.path }}/letsencrypt/{{ item.name }}-domain.csr"
+# Letsencrypt-script:                "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ item.name }}.sh"
+# Signed chained cert:               "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+- include_role:
+    name: colors
+
+- name: Meny
+  include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "Följande instanser finns på denna server"
+      question: "Välj instans"
+      options: |
+        {%- set output = [] -%}
+        {%- for instance in application_instances -%}
+        {{-   output.append({
+          'name': instance.name+yamlcolors.NC+' ('+instance.environment+')',
+          'value': instance
+        }) -}}
+        {%- endfor -%}
+        {{- output -}}
+
+- name: "Returnerar application"
+  include_tasks: get_application.yml
+  vars:
+     application_instance: "{{ menu_result }}"
+
+- name: "Applikation"
+  debug:
+    var: application
+
+### Loop over deploy plugins ##################################################################
+- name: Samla data under körning i deploy_facts
+  set_fact:
+    deploy_facts: {}
+
+- name: Repos
+  include_tasks: deploy_repo.yml
+  loop: "{{ application.repos }}"
+  loop_control:
+    loop_var: repo
+    label: "{{ repo.name }}"
+
+- name: Deploy
+  include_tasks: "deploy_plugins/deploy_{{ deploy.plugin }}.yml"
+  when: >
+    deploy.filter is not defined
+    or (deploy.filter.include_environment is defined and application.environment in deploy.filter.include_environment)
+    or (deploy.filter.exclude_environment is defined and application.environment not in deploy.filter.exclude_environment)
+  loop: "{{ application.deploy | default([]) }}"
+  loop_control:
+    loop_var: deploy
+
+
+#- name: Repos
+#  include_tasks: deploy_repo.yml
+#  loop: "{{ application.repos }}"
+#  loop_control:
+#    loop_var: repo
+#    label: "{{ repo.name }}"
+
+### Starta om php-fpm ##################################################################
+# https://ma.ttias.be/how-to-clear-php-opcache/
+- name: "Reload php-fpm (För att tömma opcache)"
+  become: yes
+  service:
+    name: "{{ php_fpm_service }}"
+    state: reloaded
+  when: application.any_enable_php

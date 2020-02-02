@@ -1,0 +1,6 @@
+
+
+sudo chown -R {{ nextcloud.user }}:{{ nextcloud.group }} {{ item }}
+sudo chmod -R u=rwx,g=rwx,o= {{ item }}
+sudo chcon -R -t httpd_sys_rw_content_t {{ item }}
+

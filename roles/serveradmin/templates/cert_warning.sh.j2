@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Managed by Ansible!
+#
+
+# Exit on error:
+set -e
+source include_common.sh
+
+grep -Poh "(?<=ssl_certificate)\s+.*\s*(?=;)" /etc/nginx/webinstances.d/* | grep -o "\S*" | sort | uniq | while read -r cert ; do
+   openssl x509 -checkend $1 -noout -in "$cert" &> /dev/null
+done
+
+

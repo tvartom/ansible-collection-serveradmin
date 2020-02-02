@@ -1,5 +1,4 @@
 ---
-
 firewall_default:
   services:
     - name: "dhcpv6-client"
@@ -15,4 +14,3 @@ firewall_default:
     #  to_port: 8080
     #  protocol: tcp
     #  comment: "My service"
-

@@ -5,7 +5,7 @@
 
 PATH=$PATH:{{ serveradmin.path }}
 
-{{ serveradmin.path }}/{{ organisation.name }} || true
+{{ serveradmin.path }}/{{ organisation.command_prefix }} || true
 
 
 # Säkerställ att vi avslutar utan dålig exit-kod (Annars kommer vi aldrig mer in på servern...)

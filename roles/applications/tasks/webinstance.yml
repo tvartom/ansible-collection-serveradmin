@@ -1,0 +1,234 @@
+---
+# Cert files:
+# Account key:                       /opt/letsencrypt/account.key
+# Letsencrypt domain key:            "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+# subjectAltName for CSR:            "{{ application.path }}/letsencrypt/subjectaltname_{{ domaininstance_group.fullname }}-domain.txt"
+# Certificate Signing Request (CSR): "{{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr"
+# Letsencrypt-script:                "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ item.name }}.sh"
+# Signed chained cert:               "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
+#
+# För att jämföra nyckel signerat cert och domän-nyckeln:
+# $ openssl x509 -noout -modulus -in /etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt | openssl md5
+# $ openssl rsa -noout -modulus -in /etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key" | openssl md5
+# 
+# För att titta på innehåll i signerat cert:
+# $ openssl x509 -noout -text -in /etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt.crt
+
+# Nginx conf: /etc/nginx/webinstances.d/{{ webinstance.fullname }}.conf
+
+# PHP-socket:  /var/run/php-fpm-{{ webinstance.fullname }}.sock
+
+- debug:
+    var: webinstance.fullname
+
+# https://www.getpagespeed.com/server-setup/nginx/nginx-selinux-configuration
+- name: "Create dir for webinstances"
+  become: yes
+  file:
+    path: "{{ application.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( application.process_user, true ) }}"
+    group: "{{ item.group | default( application.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "u=rwx,g=rx,o=rx"
+  when: item.when | default(True)
+  loop:
+    - { path: "/{{ webinstance.root_dir | default( webinstance.root_dir|mandatory if webinstance.create_root_dir else None ) }}",                    setype: "httpd_sys_content_t",    when: "{{ webinstance.create_root_dir }}" }
+    # För PHP
+    - { path: "/php-fpm/{{ webinstance.instance }}",                                             when: "{{ webinstance.enable_php }}" }
+    - { path: "/php-fpm/{{ webinstance.instance }}/session",   setype: "httpd_sys_rw_content_t", when: "{{ webinstance.enable_php }}" }
+    - { path: "/php-fpm/{{ webinstance.instance }}/wsdlcache", setype: "httpd_sys_rw_content_t", when: "{{ webinstance.enable_php }}" }
+
+- name: Create php-fpm-pool-conf
+  become: yes
+  template:
+    src: php-fpm-pool.conf.j2
+    dest: "{{ php_fpm_pool_path }}/{{ webinstance.fullname }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  when: webinstance.enable_php
+  notify: "Reload php-fpm"
+
+- name: Remove php-fpm-pool-conf for none php-sites
+  become: yes
+  file:
+    path: "{{ php_fpm_pool_path }}/{{ webinstance.fullname }}.conf"
+    state: absent
+  when: not webinstance.enable_php
+  notify: "Reload php-fpm"
+
+### Lets encrypt #######################################################################
+
+#- name: Lets encrypt
+#  include_tasks: webinstance_letsencrypt.yml
+#  when: webinstance.enable_https and false
+
+- name: Include Letsencrypt
+  include_tasks: "webinstance_domaininstance_group_{{ webinstance.cert_handler }}.yml"
+  loop: "{{ webinstance.domaininstance_groups.values()|list }}"
+  when: webinstance.enable_https
+  loop_control:
+    loop_var: domaininstance_group
+    label: "{{ domaininstance_group.fullname }}"
+
+### Nginx ##############################################################################
+
+- name: Create nginx conf
+  become: yes
+  template:
+    src: nginx_site.conf.j2
+    dest: /etc/nginx/webinstances.d/{{ domaininstance.fullname }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ webinstance.domaininstances }}"
+  loop_control:
+    loop_var: domaininstance
+  notify: "Reload nginx"
+
+- name: Create nginx include site-conf
+  become: yes
+  template:
+    src: nginx_site.include.j2
+    dest: "/etc/nginx/webinstances.d/{{ webinstance.fullname }}.include"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "Reload nginx"
+
+- name: Create empty include-file so nginx will start
+  become: yes
+  copy:
+    content: ""
+    dest: "/etc/nginx/webinstances.d/{{ webinstance.fullname }}_custom.include"
+    force: no
+    owner: root
+    group: root
+    mode: 0644
+  when: webinstance.use_custom_nginx_include_file
+  notify: "Reload nginx"
+
+- name: Force to reload nginx if updated
+  meta: flush_handlers
+
+- name: "Define webinstance specific scripts"
+  set_fact:
+    webinstance_scripts:
+      - file: php_status
+        when: "{{ webinstance.enable_php and webinstance.php_status_path | d('',True) != '' }}"
+
+- name: "Remove unsued script for this webinstance"
+  become: yes
+  file:
+    path: "{{ serveradmin.path }}/{{ organisation.command_prefix }}app_{{ webinstance.fullname }}_{{ item.file }}"
+    state: absent
+  loop: "{{ webinstance_scripts }}"
+  when: not item.when
+
+- name: Create script for this webinstance
+  become: yes
+  template:
+    src: "webinstance_{{ item.file }}.j2"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}app_{{ webinstance.fullname }}_{{ item.file }}"
+    owner: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_group }}"
+    mode: "u=rwx,g=rx,o=r"
+  when: item.when
+  loop: "{{ webinstance_scripts }}"
+
+
+#- name: Create systemd unit for jetty
+#  become: yes
+#  template:
+#    src: jetty.service.j2
+#    dest: "/etc/systemd/system/jetty-{{ item.name }}.service"
+#    owner: "root"
+#    group: "root"
+#    mode: "u=rwx,g=r,o=r"
+#  when: item.pull_and_deploy_script is defined and item.pull_and_deploy_script == "maven-jetty"
+#  with_items: "{{ webinstances }}"
+#  notify: "Reload systemd units"
+
+#- name: Force to reload systemd to prepare for enable service
+#  meta: flush_handlers
+
+#- name: Enable and start Jetty-serivce
+#  become: yes
+#  service:
+#    name: jetty-{{ item.name }}
+#    state: started
+#    enabled: yes
+#  when: item.pull_and_deploy_script is defined and item.pull_and_deploy_script == "maven-jetty"
+#  with_items: "{{ webinstances }}"
+
+### Databas ########################################################################################################################
+
+#- name: Create DB for webinstances
+#  become: yes
+#  mysql_db:
+#    name: "{{ item.1.name }}"
+#    collation: "{{ item.1.collation | default('utf8_general_ci') }}"
+#    encoding: "{{ item.1.encoding | default('utf8') }}"
+#    state: present
+#  with_subelements:
+#     - "{{ webinstances | selectattr('db', 'defined') | list }}"
+#     - db
+
+#- name: Create DB-user for webinstances
+#  become: yes
+#  mysql_user:
+#    check_implicit_admin: yes
+#    login_password: "{{ mariadb_root_password }}"
+#    login_user: root
+#    user: "{{ item.1.user }}"
+#    password: "{{ item.1.password }}"
+#    host: "localhost" # Eller 127.0.0.1? Eller ::1?
+#    priv:  "{{ item.1.name }}.*:{{ item.1.priv | default('ALL') }}"
+#  with_subelements:
+#     - "{{ webinstances | selectattr('db', 'defined') | list }}"
+#     - db
+
+### Install Wordpress ###############################################################################################################
+
+#- name: Wordpress - Download and unpack if not present
+#  become: yes
+#  unarchive:
+#    remote_src: yes
+#    extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root wordpress/
+#    src: "https://wordpress.org/latest.tar.gz"
+#    dest: "{{ item.path }}/{{ item.root_dir }}"
+#    owner: "{{ item.process_user }}"
+#    group: "{{ item.process_group }}"
+#    mode: "u=rwX,g=rX,o=rX"
+#    creates: "{{ item.path }}/{{ item.root_dir }}/wp-admin"
+#  when: item.wordpress | default(false)
+#  with_items: "{{ webinstances }}"
+
+### Config mail ########################################
+
+#- name: "Create /etc/msmtp dir"
+#  become: yes
+#  file:
+#    path: "/etc/msmtp"
+#    state: directory
+#    owner: "root"
+#    group: "root"
+#    setype: "httpd_sys_content_t"
+#    mode: "u=rwx,g=rx,o=rx"
+
+
+#- name: "Create msmtp config"
+#  become: yes
+#  template:
+#    src: msmtp.j2
+#    dest: "/etc/msmtp/test.se.msmtp"
+#    owner: "www-test"
+#    group: "www-test"
+#    setype: "httpd_sys_content_t"
+#    mode: "u=rw,g=,o="
+##  when: item.pull_and_deploy_script is defined
+##  with_items: "{{ webinstances }}"
+#  tags:
+#    - web
+#    - mail

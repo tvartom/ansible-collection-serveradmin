@@ -1,0 +1,52 @@
+---
+- name: "rsnapshot.conf for backupinstance"
+  become: yes
+  template:
+    src: "dest_rsnapshot.conf.j2"
+    dest: "{{ backupinstance.rsnapshotfile }}"
+    owner: "{{ backup_info.dest_user.name }}"
+    group: "{{ backup_info.dest_user.group }}"
+    mode: "u=rw,g=r,o=r"
+
+- name: "rsnapshot.sh for backupinstance"
+  become: yes
+  template:
+    src: "dest_rsnapshot.sh.j2"
+    dest: "{{ backupinstance.rsnapshotscript }}"
+    owner: "{{ backup_info.dest_user.name }}"
+    group: "{{ backup_info.dest_user.group }}"
+    mode: "u=rwx,g=r,o=r"
+
+#- name: Create create_disk_usage_report-*.sh
+#  become: yes
+#  template:
+#    src: "dest_create_disk_usage_report.sh.j2"
+#    dest: "{{ backup_info.dest_user.home }}/create_disk_usage_report-{{ backup_dest_info.name }}.sh"
+#    owner: "{{ backup_info.dest_user.name }}"
+#    group: "{{ backup_info.dest_user.group }}"
+#    mode: "u=rwx,g=r,o=r"
+
+- name: "Create directories (root, log, run)"
+  become: yes
+  file:
+    path: "{{ backupinstance.dest.root }}{{ item.path }}"
+    state: directory
+    owner: "{{ backup_info.dest_user.name }}"
+    group: "{{ backup_info.dest_user.group }}"
+    setype: "{{ '_default' }}"
+    mode: "{{ item.mode | default('u=rwx,g=rx,o=rx') }}"
+  loop:
+    - path: ""
+    - path: "/log"
+    - path: "/run"
+    - path: "/{{ backupinstance.name }}"
+      mode: "u=rwx,g=rx,o="
+
+- name: "Script för fixa rätt användare"
+  become: yes
+  template:
+    src: "dest_fix_file_permissions_for_backup.sh.j2"
+    dest: "{{ backupinstance.dest.root }}/fix_file_permissions_for_backup_{{ backupinstance.name }}.sh"
+    owner: "{{ backup_info.dest_user.name }}"
+    group: "{{ backup_info.dest_user.group }}"
+    mode: "u=rwx,g=rx,o=rx"

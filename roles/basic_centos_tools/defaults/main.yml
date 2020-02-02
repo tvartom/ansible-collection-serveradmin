@@ -2,9 +2,16 @@
 # defaults file for ansible-role-basic_centos_tools
 basic_default:
   timezone: "Europe/Stockholm"
+  system_locale: 'sv_SE.UTF-8'
+  system_language: 'en_US.UTF-8'
   package_to_install:
-    - mc
+    - byobu
+    - glibc-langpack-en
+    - glibc-langpack-sv
+    - perl-Image-ExifTool
+    - joe
+    - unzip
+    - bzip2
+
     #- net-tools #ifconfig finns i denna
     #- rsync
-    #- unzip
-    #- bzip2

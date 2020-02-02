@@ -2,13 +2,14 @@
 #
 # Managed by Ansible!
 #
-
+{% set agent_forwarding = item.meta.agent_forwarding | default(false) %}
 # Se till att devops-repot alltid är uppdaterat:
 pull_devops
 
-
+{% if not agent_forwarding %}
 # Exit on error:
 set -e
+{% endif %}
 source include_common.sh
 
 
@@ -21,4 +22,16 @@ source include_common.sh
   {% set playbook_to_run = item.meta.ansible_playbook %}
 {% endif %}
 
-sudo -u {{ serveradmin.process_user }} -i ansiblerunner_helper.sh $(whoami) {{ playbook_to_run }}
+
+
+{% if agent_forwarding %}
+# https://unix.stackexchange.com/questions/131596/ssh-agent-forwarding-works-but-what-about-sudo-u-username-no-shell-permission
+# https://linux.die.net/man/1/setfacl
+setfacl -R -m u:{{ serveradmin.process_user }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ serveradmin.process_user }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}" 
+{% endif %}
+
+sudo -u serveradmin -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) {{ playbook_to_run }}
+
+{% if agent_forwarding %}
+setfacl -R -b "${SSH_AUTH_SOCK%/*}"
+{% endif %}

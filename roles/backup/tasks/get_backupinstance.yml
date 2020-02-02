@@ -1,0 +1,46 @@
+---
+
+- name: "get_backupinstance : Backupinstance name and source_user"
+  set_fact:
+    temp_backupinstance_default:
+      name: "{{ backupinstance_with_key.key }}"
+      rsnapshotfile: "{{ backup_info.dest_user.home }}/rsnapshot-{{ backupinstance_with_key.key }}.conf"
+      rsnapshotscript: "{{ backup_info.dest_user.home }}/rsnapshot-{{ backupinstance_with_key.key }}.sh"
+#      logfile: "{{ 
+
+#- debug:
+#    var: backupinstance_with_key
+
+- name: "get_backupinstance : Backupinstance dest"
+  set_fact:
+    temp_backupinstance_dest:
+      dest: |-
+        {%-
+            set dest_output = backupinstance_with_key.value.dest_instances
+            | selectattr('host', 'equalto', inventory_hostname)
+            | list | first
+        -%}
+        {{- dest_output.__setitem__('logfile', dest_output.root + '/log/rsnapshot-' + temp_backupinstance_default.name +'.log') -}}
+        {%- for every_instance in dest_output.every -%}
+        {{-   every_instance.__setitem__('interval', every_instance.interval | default(1) if not every_instance.unit in ['year','week'] else 1 ) -}}
+        {{-   every_instance.__setitem__('name', alphabet[loop.index0]~'_'~((every_instance.interval~'_') if every_instance.interval > 1 else '')~every_instance.unit~('s' if every_instance.interval > 1 else '')) -}}
+        {%- endfor -%}
+        {{- dest_output -}}
+  when: inventory_hostname != target
+
+- name: "get_backupinstance : Backupinstance"
+  set_fact:
+    temp_backup_info_with_instance:
+      instances: |-
+          {{ {
+               backupinstance_with_key.key:
+                 temp_backupinstance_default
+                 | combine(backupinstance_with_key.value, recursive=True)
+                 | combine(temp_backupinstance_dest | default({}))
+             } }}
+
+
+- name: "get_backupinstance : Set values in backup_info"
+  set_fact:
+    backup_info: "{{ backup_info | combine(temp_backup_info_with_instance, recursive=True) }}"
+

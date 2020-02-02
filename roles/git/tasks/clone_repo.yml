@@ -1,0 +1,118 @@
+---
+#- include_role:
+#    name: git
+#    tasks_from: clone_repo
+#  vars:
+#    clone_repo:
+#      dest:
+#      user:
+#      [update: yes]
+#    repo:
+#      url:
+#      use_unique_deploy_key:
+#      unique_deploy_key:
+#      [branch: 'HEAD']
+#      ...
+
+#- name: "Config git for user"
+#  include_role:
+#    name: git
+#    tasks_from: config_git_for_user
+#  vars:
+#    user:
+#      name: "{{ clone_repo.user }}"
+#  tags:
+#    - always
+
+- name: "Get home for user"
+  command: "echo ~{{ clone_repo.user }}"
+  register: user_home
+  failed_when: "'~' in user_home.stdout"
+  changed_when: false
+  tags:
+    - always
+
+- name: "Create /.ssh dir for clone user"
+  become: yes
+  file:
+    path: "{{ user_home.stdout }}/.ssh"
+    state: directory
+    owner: "{{ clone_repo.user }}"
+    group: "{{ clone_repo.user }}"
+    mode: "u=rwx,g=,o="
+  when: repo.use_unique_deploy_key
+  tags:
+    - always
+
+- name: "Skapa deploy-key för repot på aktuell användare"
+  become: yes
+  openssh_keypair:
+    comment: "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname}}"
+    owner: "{{ clone_repo.user }}"
+    group: "{{ clone_repo.user }}"
+    setype: "_default"
+    mode: "u=rw,g=,o="
+    path: "{{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
+  register: key_info_unique
+  when: repo.use_unique_deploy_key
+  tags:
+    - always
+
+# Note 1
+# If problem with Host key verification failed, look in basic_centos_tools where
+# repository-providers is added to known hosts. (like github.com)
+
+# Note 2
+# Necessary to pull as other user:
+# https://serverfault.com/questions/81746/bypass-ssh-key-file-permission-check
+
+# Note 3
+# To clone with different key-file:
+# GIT_SSH_COMMAND="ssh -i $KEYFILE_ABS" git clone ...
+
+- name: "Clone repo"
+  become: yes
+  become_user: "{{ clone_repo.user }}"
+  git:
+    repo: "{{ repo.url }}"
+    dest: "{{ clone_repo.dest }}"
+    key_file: "{{ user_home.stdout ~ '/.ssh/' ~ repo.unique_deploy_key if repo.use_unique_deploy_key else '' }}"
+    update: "{{ clone.repo.update | default(true) }}"
+    version: "{{ repo.branch | default('HEAD') }}"
+  ignore_errors: yes
+  register: git_clone_result
+  tags:
+    - always
+
+- name: "Info about user to be used when resolving cloning problem."
+  debug:
+    var: key_info
+  when: git_clone_result.failed and not repo.use_unique_deploy_key
+  tags:
+    - always
+
+- name: "Info about unique deploy key to be used when resolving cloning problem."
+  debug:
+    var: key_info_unique
+  when: git_clone_result.failed and repo.use_unique_deploy_key
+  tags:
+    - always
+
+- name: "Error message if git clone fails."
+  fail:
+    msg: "Cloning repo ({{ repo.url }}) failed. Make sure above user/deploy key has access."
+  when: git_clone_result.failed
+  tags:
+    - always
+
+- name: "Config git-repo to use deploy-key"
+  become: yes
+  become_user: "{{  clone_repo.user }}"
+  git_config:
+    name: core.sshCommand
+    repo: "{{ clone_repo.dest }}"
+    scope: local
+    value: "ssh -i {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
+  when: serveradmin.repo.use_unique_deploy_key
+  tags:
+    - always

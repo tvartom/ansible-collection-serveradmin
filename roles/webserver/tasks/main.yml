@@ -5,7 +5,7 @@
 - include: php.yml
 
 - include: letsencrypt.yml
-  when: letsencrypt is not defined or not letsencrypt
+  when: webserver_use_letsencrypt
 
 - include: sendmail.yml
 

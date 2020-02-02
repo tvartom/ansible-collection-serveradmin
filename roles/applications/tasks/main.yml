@@ -1,0 +1,91 @@
+---
+# Cert files:
+# Account key:                       /opt/letsencrypt/account.key
+# Letsencrypt domain key:            "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+# subjectAltName for CSR:            "{{ application.path }}/letsencrypt/subjectaltname_{{ domaininstance_group.fullname }}-domain.txt"
+# Certificate Signing Request (CSR): "{{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr"
+# Letsencrypt-script:                "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance_group.fullname }}.sh"
+# Signed chained cert:               "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
+
+# Nginx conf: /etc/nginx/webinstances.d/{{ webinstance.fullname }}.conf
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+### Create global folders #######################################################################
+
+- name: "Create /etc/nginx/ssl"
+  become: yes
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: "Create /etc/nginx/webinstances.d"
+  become: yes
+  file:
+    path: /etc/nginx/webinstances.d
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
+### Loop over webinstances ##################################################################
+- name: "Read all applications into applications_info"
+  include_tasks: get_application.yml
+  loop: "{{ application_instances }}"
+  loop_control:
+    loop_var: application_instance
+    label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+
+- name: "Delete unused .conf-files in /etc/nginx/webinstances.d"
+  include_tasks: clean_nginx_conf.yml
+
+- name: "Include application"
+  include_tasks: application.yml
+  loop: "{{ applications_info }}"
+  loop_control:
+    loop_var: application
+    label: "{{ application.environment|default('') }}-{{ application.name }}"
+
+### Configfiler för alla applikationer/webinstancer #########################################
+
+- name: Setup cron-jobb for Letsencrypt
+  become: yes
+  template:
+    src: letsencrypt.cron.j2
+    dest: /etc/cron.d/letsencrypt
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+- name: Setup cron-jobb for database backup
+  become: yes
+  template:
+    src: backup_db.cron.j2
+    dest: /etc/cron.d/backup_db
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+- name: Setup lograte for webinstances (php-fpm och nginx)
+  become: yes
+  template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/applications
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+- name: "Skapa lista med applikationer"
+  become: yes
+  template:
+    src: list_applications.sh.j2
+    dest: "{{ serveradmin.path }}/{{ organisation.name }}_list_applications"
+    owner: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_user }}"
+    mode: "u=rwx,g=rx,o=rx"

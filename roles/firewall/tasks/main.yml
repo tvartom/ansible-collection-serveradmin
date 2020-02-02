@@ -28,3 +28,6 @@
     setype: 'firewalld_etc_rw_t'
   notify:
     - "Restart firewalld"
+
+- name: "Flush handlers to restart firewall"
+  meta: flush_handlers

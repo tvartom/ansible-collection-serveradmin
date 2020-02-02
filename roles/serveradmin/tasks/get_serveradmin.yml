@@ -6,41 +6,59 @@
 # Returns: serveradmin
 
 - include_role:
-    name: serveradmin
+    name: git
     tasks_from: get_repo_url
   vars:
     repo: "{{ serveradmin.repo }}"
+  tags:
+    - bootstrap
 
 - name: Lista filer
   set_fact:
     serveradmin_files:
-      - { file: splash.sh,    dest: "{{ organisation.name }}", prefix: "", desc: "Visa denna meny", mode: "u=rwx,g=rx,o=rx" }
-      - { file: autostart.sh, path: "/etc/profile.d", owner: root, group: root, mode: "u=rwx,g=rx,o=rx" }
-      - { file: pull_devops, dest: "pull_devops", prefix: ""}
-      - { file: ansiblerunner_helper.sh, prefix: ""}
-      - { file: include_common.sh, prefix: "", mode: "u=rwx,g=rx,o=rx" }
-#      - file: ansiblerunner.sh
-#        dest: "deploy"
-#        desc: "Driftsättning av webinstans"
-#        meta:
-#          ansible_playbook: "webinstance_deploy.yml"
+      - { file: splash.sh,    dest: "", desc: "Visa denna meny", mode: "u=rwx,g=rx,o=rx", bootstrap: true }
+      - { file: autostart.sh, path: "/etc/profile.d", owner: root, group: root, mode: "u=rwx,g=rx,o=rx", bootstrap: true  }
+      - { file: pull_devops, dest: "pull_devops", prefix: "", bootstrap: true }
+      - { file: list_certs, desc: "Lista använda certifikat med utgångsdatum."}
+      - { file: cert_warning.sh, prefix: ""}
+      - { file: ansiblerunner_helper.sh, prefix: "", bootstrap: true }
+      - { file: include_common.sh, prefix: "", mode: "u=rwx,g=rx,o=rx", bootstrap: true  }
       - file: ansiblerunner.sh
         dest: "ansible_facts_show"
         #desc: "Visa ansible-information om denna server."
         meta:
           playbook_in_serveradmin_collection: true
           ansible_playbook: "facts_show.yml"
-#      - file: ansiblerunner.sh
-#        dest: "ansible_webserver"
-#        desc: "Kör playbooken 'webserver' lokalt på denna server."
-#        meta:
-#          ansible_playbook: "webserver.yml"
+        bootstrap: true
       - file: ansiblerunner.sh
         dest: "ansible_serveradmin"
         desc: "Kör playbooken 'serveradmin' lokalt på denna server."
         meta:
+          playbook_in_serveradmin_collection: false
+          ansible_playbook: "playbook-serveradmin.yml"
+        bootstrap: true
+      - file: ansiblerunner.sh
+        dest: "ansible_applications"
+        desc: "Konfigurera alla applikationer lokalt på denna server."
+        meta:
           playbook_in_serveradmin_collection: true
-          ansible_playbook: "serveradmin.yml"
+          ansible_playbook: "applications.yml"
+      - file: ansiblerunner.sh
+        dest: "ansible_backup"
+        desc: "Konfigurera säkerhetskopiering från denna server till andra."
+        meta:
+          playbook_in_serveradmin_collection: true
+          ansible_playbook: "backup.yml"
+          agent_forwarding: true
+        when: "{{ backup is defined }}"
+      - file: ansiblerunner.sh
+        dest: "deploy"
+        desc: "Driftsättning av applikation."
+        meta:
+          playbook_in_serveradmin_collection: true
+          ansible_playbook: "applications_deploy.yml"
+  tags:
+    - bootstrap
 
 - name: Lista filer (databaskopiering)
   set_fact:
@@ -55,12 +73,18 @@
       {%- endfor -%}
       {{- serveradmin_files -}}
 
+- name: "Filtrera alternativ för bootstrap"
+  set_fact:
+    serveradmin_files: "{{ serveradmin_files | selectattr('bootstrap', 'defined') | selectattr('bootstrap') | list }}"
+  tags:
+    - never
+    - bootstrap
+
 - name: Kombinera default-värden och host-värden
   set_fact:
     serveradmin: >-
       {%- set output = serveradmin_default | combine(serveradmin, recursive=True) -%}
       {%- set output = output | combine({
-        'repo_url': repo_url,
         'repo': repo_return,
         'files': serveradmin_files
       }) -%}
@@ -68,3 +92,5 @@
       {{-   item.__setitem__('target', item.prefix | default(organisation.command_prefix) + item.dest | default(item.file)) -}}
       {%- endfor -%}
       {{- output -}}
+  tags:
+    - bootstrap

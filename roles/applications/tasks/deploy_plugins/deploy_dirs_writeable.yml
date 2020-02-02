@@ -1,0 +1,14 @@
+---
+
+- name: "Fixa till ägare och selinux-type där php ska skriva"
+  become: yes
+  file:
+    path: "{{ application.path }}/{{ item }}"
+    state: directory
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    setype: httpd_sys_rw_content_t
+    mode: "u=rwX,g=rX,o=rX"
+    recurse: yes
+  loop: "{{ deploy.dirs }}"
+

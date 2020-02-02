@@ -1,0 +1,8 @@
+---
+#- include_role:
+#    name: commons
+#    tasks_from: flush_handlers.yml
+#  when: "{{ possible to use conditionals in flush_handlers }}"
+
+- name: "Force flush handlers"
+  meta: "flush_handlers"

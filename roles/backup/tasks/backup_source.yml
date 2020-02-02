@@ -1,0 +1,238 @@
+---
+# LL 2016-02-28
+# http://www.mad-hacking.net/documentation/linux/reliability/backup/using-rsnapshot-remote.xml
+# http://troy.jdmz.net/rsync/#validate-rsync
+
+- name: Install rsnapshot (APT)
+  become: yes
+  apt:
+    name:
+      - rsnapshot
+      - rsync
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install rsnapshot (YUM)
+  become: yes
+  yum:
+    name:
+      - rsnapshot
+      - rsync
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Create group for backup user
+  become: yes
+  group:
+    name: "{{ backup_info.source_user.group }}"
+    system: yes
+
+# Notes:
+# Ubuntu can't login in with ssh and public keys to system user.
+- name: Create user to run backup jobs
+  become: yes
+  user:
+    name: "{{ backup_info.source_user.name }}"
+    group: "{{ backup_info.source_user.group }}"
+    home: "{{ backup_info.source_user.home }}"
+    createhome: yes
+    system: "{{ ansible_os_family != 'Debian' }}"
+
+- name: "Let user join group to read source-data"
+  become: yes
+  user:
+    name: "{{ backup_info.source_user.name }}"
+    groups: "{{ backup_info.instances.values() | map(attribute='jobs') | flatten | selectattr('group_to_access', 'defined') | map(attribute='group_to_access') | unique | list }}"
+    append: true
+
+# https://www.shell-tips.com/2014/09/08/sudo-sorry-you-must-have-a-tty-to-run-sudo/
+#- name: Make rsync work with sudo
+#  become: yes
+#  lineinfile:
+#    dest: /etc/sudoers
+#    state: present
+#    regexp: "Defaults!/usr/bin/rsync.+!requiretty"
+#    line: "Defaults!/usr/bin/rsync !requiretty"
+#    insertafter: "Defaults\\s+requiretty"
+
+#- name: Make backup-user sudoer without password for rsync
+#  become: yes
+#  lineinfile:
+#    dest: /etc/sudoers
+#    state: present
+#    regexp: "^{{ backup_source_user }}"
+#    line: "{{ backup_source_user }} ALL=(root) NOPASSWD: /usr/bin/rsync"
+
+- name: Set access from backupserver with public key and restrict to filter-command
+  become: yes
+  authorized_key:
+    user: "{{ backup_info.source_user.name }}"
+    manage_dir: yes
+    key: "{{ item }}"
+    key_options: |-
+      command="{{ backup_info.source_user.home }}/validate-backup-cmd.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding
+  loop: "{{ backup_dest_public_keys }}"
+
+- name: Security filter-command
+  become: yes
+  template:
+    dest: "{{ backup_info.source_user.home }}/validate-backup-cmd.sh"
+    src: validate-backup-cmd.sh.j2
+    owner: "root" #Ägs av root för att inte ska kunna ändras av med rsync.
+    group: "{{ backup_info.source_user.group }}"
+    mode: "u=rwx,g=rx,o="
+
+- name: "Script in source home"
+  become: yes
+  template:
+    dest: "{{ backup_info.source_user.home }}/{{ item.dest }}"
+    src: "{{ item.src }}"
+    owner: "root" #Ägs av root för att inte ska kunna ändras av med rsync.
+    group: "{{ backup_info.source_user.group }}"
+    mode: "u=rwx,g=rx,o="
+  loop:
+    - dest: validate-backup-cmd.sh
+      src: validate-backup-cmd.sh.j2
+    - dest: preparebackup.sh
+      src: preparebackup.sh.j2
+    - dest: encrypt-file.sh
+      src: encrypt-file.sh.j2
+
+- name: "Lista databaser med rättigheter"
+  set_fact:
+    databases: |-
+      {{-
+        databases
+        + [
+            {
+              'database': item,
+              'privileges': privileges
+            }
+          ]
+      -}}
+  vars:
+    privileges: "SELECT, SHOW VIEW, EVENT"
+    databases:
+        # För att kunna läsa SP
+      - database: mysql
+        table: proc
+        privileges: SELECT
+    backup_database_jobs: |-
+      {{-
+        backup_info.instances.values()
+        | map(attribute='jobs') | flatten
+        | selectattr('type', 'defined') | selectattr('type', 'equalto', 'backup_database')
+        | list
+      -}}
+  loop: |-
+    {{-
+      ['*'] if
+        backup_database_jobs | selectattr('include', 'undefined') | list | length > 0
+        or
+        '*' in backup_database_jobs | selectattr('include', 'defined') | map(attribute='include') | flatten | list
+      else
+        backup_database_jobs | selectattr('include', 'defined') | map(attribute='include') | flatten | unique | list
+    -}}
+
+- name: Ge backup_source rättigheter till Databaser
+  include_role:
+    name: mariadb
+    tasks_from: create_user
+  vars:
+    user:
+      is_linux_user: true
+      name: "{{ backup_info.source_user.name }}"
+      databases: "{{ databases }}"
+  when: databases is defined
+
+- name: "Importera gpg-nycklar för backup_source"
+  include_role:
+    name: users
+    tasks_from: import_gpg_keys.yml
+  vars:
+     gpg_import:
+       user: "{{ backup_info.source_user.name }}"
+       home: "{{ backup_info.source_user.home }}"
+
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+- name: "Create directories for backup status"
+  become: yes
+  file:
+    path: "/opt/backup_source"
+    state: directory
+    owner: "{{ backup_info.source_user.name }}"
+    group: "{{ backup_info.source_user.group }}"
+    setype: "{{ '_default' }}"
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: "List backup script for serveradmin"
+  become: yes
+  template:
+    src: list_backups.sh.j2
+    dest: "{{ serveradmin.path }}/{{ organisation.name }}_list_backups"
+    owner: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_user }}"
+    mode: "u=rwx,g=rx,o=rx"
+
+######################################################################
+#- name: Install scripts for backup-user (Check if exists)
+#  local_action: stat path="{{ host_files }}/backup_source/scripts"
+#  register: scripts_exists
+#  tags:
+#    - backup
+
+#- name: Install scripts for backup-user (List files)
+#  when: scripts_exists.stat.exists
+#  local_action: command  ls "{{ host_files }}/backup_source/scripts"
+#  register: backupscripts
+#  changed_when: false
+#  tags:
+#    - backup
+
+#- debug:
+#    var: backupscripts
+#  tags:
+#    - backup
+
+#- name: Install scripts for backup-user (Create dir)
+#  when: scripts_exists.stat.exists
+#  become: yes
+#  file:
+#    dest: "/home/system/{{ backup_source_user }}/scripts/"
+#    state: directory
+#    owner: "{{ backup_source_user }}"
+#    group: "{{ backup_source_group }}"
+#    mode: "u=rwx,g=,o="
+#  tags:
+#    - backup
+
+# Notes:
+# fileglob has [role]/files as working dir (relative paths start from here), use playbook_dir to access playbook root
+# task will be iterated over files always, so create empty dir to avoid warnings.
+# fileglob ignores hidden files, (so a .keep-file is safe to have in an the repo
+#- name: Install scripts for backup-user (Copy files)
+#  when: scripts_exists.stat.exists
+#  become: yes
+#  copy:
+#    src: "{{ item }}"
+#    dest: "/home/system/{{ backup_source_user }}/scripts/"
+#    owner: "{{ backup_source_user }}"
+#    mode: "u=rwx,g=,o="
+#  with_fileglob:
+#    - "{{ playbook_dir }}/{{ host_files }}/backup_source/scripts/*"
+#  tags:
+#    - backup
+#####################################
+
+
+
+# Följande resetar SELInux-info (User, role, type) restorecon -v -F -R /home/lasse/btsync
+# https://wiki.gentoo.org/wiki/SELinux/Tutorials/Defining_SELinux_users
+# https://docs.fedoraproject.org/en-US/Fedora/11/html/Security-Enhanced_Linux/sect-Security-Enhanced_Linux-Working_with_SELinux-SELinux_Contexts_Labeling_Files.html
+
+

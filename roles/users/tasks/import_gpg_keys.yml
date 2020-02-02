@@ -1,0 +1,48 @@
+---
+# Usage:
+#
+#- include_role:
+#    name: users
+#    tasks_from: import_gpg_keys.yml
+#  vars:
+#     gpg_import:
+#       user:
+#       home:
+#
+#
+
+
+- name: Make sure the import directory exists
+  become: yes
+  become_user: "{{ gpg_import.user }}"
+  tempfile:
+    prefix: "gpg-import"
+    state: directory
+  register: gpg_import_directory
+
+- name: Copy gpg keys
+  become: yes
+  become_user: "{{ gpg_import.user }}"
+  copy:
+    content: "{{ item.public_pgp_keys }}"
+    dest: "{{ gpg_import_directory.path }}/{{ item.name }}-public.key"
+  when: item.public_pgp_keys is defined
+  loop: "{{ users }}"
+
+- name: Make sure the GPG config exists
+  become: yes
+  become_user: "{{ gpg_import.user }}"
+  command: "gpg --list-keys"
+  args:
+    creates: "{{ gpg_import.home }}/.gnupg"
+
+- name: Import public key
+  become: yes
+  become_user: "{{ gpg_import.user }}"
+  command: "gpg --import {{ gpg_import_directory.path }}/{{ item.name }}-public.key"
+  when: item.public_pgp_keys is defined
+  loop: "{{ users }}"
+
+
+ # Sedan kan detta användas för kryptera fil:
+ # gpg --trust-model always --armor --encrypt --recipient lasse@tvartom.com msg.txt

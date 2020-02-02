@@ -1,0 +1,81 @@
+---
+single_quote: "'"
+double_quote: '"'
+php_fpm_service: php-fpm
+php_fpm_pool_path: /etc/php-fpm.d
+nginx_user: nginx
+nginx_group: nginx
+
+
+
+applications_default:
+  #För att använda denna applikationen,
+  # i host_vars:
+  #application_instances:
+  #  - name: defaultnoresponse
+  #    environment: "system"
+  defaultnoresponse:
+    desc: "Servern ger tomt svar på anrop till ip eller okänd domän."
+    webinstances:
+      web:
+        domaininstances:
+          - domains: ["_"]
+            default_server: true
+        enable_https: true
+        enable_http2: false
+        only_https: false
+        cert_handler: "selfsigned"
+        nginx_includes:
+          rootlocation: "return 444;"
+
+  #För att använda denna applikationen,
+  # i host_vars:
+  #application_instances:
+  #  - name: nextcloud
+  #    [organisation: {orgname}]
+  #    environment: cloud_tvartom_com
+  #    desc: "Nextcloud ({domain})"
+  #  webinstances:
+  #    web:
+  #      domaininstances:
+  #        - domains:
+  #            - {domain}
+  #  [process_user: "{user}"]
+  #  [process_group: "{group}}"
+  #  [path: "{path}"]
+  #  database:
+  #    name: nextcloud
+  #    [create: true]
+  #  metadata:
+  #    nextcloud:
+  #      version: 18.0.0
+  #      datadir: "{data path}"
+  #      [datadir_external:]
+  #        - "{external data path}"
+  nextcloud:
+    webinstances:
+      web:
+        use_custom_nginx_include_file: true
+        enable_php: true
+        enable_https: true
+        enable_http2: true
+        upload_max_filesize: 16G
+    enable_redis: true
+    deploy:
+      - plugin: nextcloud
+        webinstance: web
+  wordpress:
+    webinstances:
+      web:
+        create_root_dir: true
+        root_dir: wordpress
+        #use_custom_nginx_include_file: true
+        enable_php: true
+        enable_https: true
+        enable_http2: true
+        # upload_max_filesize: 16G
+        wordpress: true
+    #enable_redis: true
+    deploy:
+      - plugin: wordpress
+        webinstance: web

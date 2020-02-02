@@ -1,4 +1,47 @@
 ---
+
+#- name: "shell..."
+#  shell: "echo ~serveradmin"
+#  register: shell_out
+
+- name: Test
+  set_fact:
+    testsrc:
+      var1: ett
+      var2: två
+      var3:
+       - 1
+       - 2
+
+- name: Test
+  set_fact:
+    var_name: "test_inject"
+
+- name: Test
+  set_fact: '{{ var_name }}="{{ testsrc }}"'
+
+
 - name: Test
   debug:
-    var: test
+    var: test_inject
+
+- fail:
+- name: "command..."
+  command: "echo ~serveradmin"
+  register: user_home
+  failed_when: "'~' in user_home.stdout"
+
+- name: Test
+  debug:
+    var: user_home.stdout
+
+- name: "command..."
+  command: "echo ~serveradmi2n"
+  register: user_home
+  failed_when: "'~' in user_home.stdout"
+
+- name: Test
+  debug:
+    var: user_home.stdout
+
+- fail:

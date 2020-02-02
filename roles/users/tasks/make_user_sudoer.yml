@@ -16,6 +16,8 @@
       - wheel
       - adm
     append: yes
+  tags:
+    - always
 
 - name: Make user sudoer without password
   become: yes
@@ -24,3 +26,5 @@
     state: present
     regexp: "^{{ user }}"
     line: "{{ user }} ALL=(ALL) NOPASSWD: ALL"
+  tags:
+    - always

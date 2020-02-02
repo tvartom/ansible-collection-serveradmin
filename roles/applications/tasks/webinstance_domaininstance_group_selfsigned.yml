@@ -1,0 +1,7 @@
+---
+- name: "Generate a self signed cert"
+  become: yes
+  shell: openssl req -x509 -nodes -days 36500 -newkey rsa:2048 -keyout /etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key -out /etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt -subj /C=XX
+  args:
+    creates: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
+# and "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"

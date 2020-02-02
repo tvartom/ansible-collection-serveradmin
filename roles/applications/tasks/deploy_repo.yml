@@ -1,0 +1,73 @@
+---
+- name: "Nuvarande repo"
+  debug:
+    msg: "{{ repo.url }}"
+#- pause:
+
+- name: deploy_facts
+  set_fact:
+    deploy_facts: >-
+      {{-
+        deploy_facts | combine({
+            repo.name: {
+              'version': repo.branch|default('master'),
+              'source': application.path+'/repos/'+repo.name,
+              'repo_source': application.path+'/repos/'+repo.name 
+            }
+         }) -}}
+
+
+- name: Clona repot
+  include_role:
+    name: git
+    tasks_from: clone_repo
+  vars:
+    clone_repo:
+      dest: "{{ deploy_facts[repo.name].source }}"
+      user: "{{ application.process_user }}"
+      update: false
+
+- name: Hämta alla taggar och uppdateringar ifrån repot
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: "git fetch --all --tags"
+  args:
+    chdir: "{{ application.path }}/repos/{{ repo.name }}"
+  register: tags_stdout
+
+- name: Checka ut nuvarande branch
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: "git checkout {{ deploy_facts[repo.name].version }}"
+  args:
+    chdir: "{{ application.path }}/repos/{{ repo.name }}"
+# changed_when: not Already on 'master'
+
+- name: Merge ändringar
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: "git pull"
+  args:
+    chdir: "{{ application.path }}/repos/{{ repo.name }}"
+# changed_when: not Already up to date
+    
+#setype: httpd_sys_rw_content_t om nginx ska skriva...
+
+#- name: Hämta alla taggar ifrån repot
+#  become: yes
+#  become_user: "{{ application.process_user }}"
+#  shell: "git fetch --all --tags"
+#  args:
+#    chdir: "{{ application.path }}/repos/{{ repo.name }}"
+
+# 2020-01-19 LL Borde vi ha plugins per repo, eller är det bättre med applikationsglobala?
+#- name: Deploy
+#  include_tasks: "deploy_plugins/deploy_{{ deploy.plugin }}.yml"
+#  loop: "{{ repo.deploy | default([]) }}"
+#  when: >
+#    deploy.filter is not defined
+#    or (deploy.filter.include_environment is defined and application.environment in deploy.filter.include_environment)
+#    or (deploy.filter.exclude_environment is defined and application.environment not in deploy.filter.exclude_environment)
+#  loop_control:
+#    loop_var: deploy
+

@@ -21,8 +21,8 @@
   when: ansible_os_family == "Debian"
 
 
-# Var webinstance har sin egen
-- name: "Disable Redis service huvud-service (skapas en för var webinstans istället)"
+# Var application har sin egen
+- name: "Disable Redis service huvud-service (skapas en för var application istället)"
   become: yes
   service:
     name: redis

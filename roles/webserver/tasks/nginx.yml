@@ -22,8 +22,6 @@
     cache_valid_time: 600
   when: ansible_os_family == "Debian"
 
-
-
 - name: Sync nginx main conf
   become: yes
   synchronize:
@@ -44,7 +42,6 @@
     regexp: "^user "
     line: "user {{ nginx_user }};"
   notify: "Reload nginx"
-
 
 #- name: Sync nginx conf.d-directory
 #  become: yes
@@ -76,12 +73,11 @@
     group: root
     mode: "u=rw,g=,o="
 
-
 # Set (httpd_can_network_connect) flag on and keep it persistent across reboots
 - name: Install libsemanage to fix selinux in ansible (YUM)
   become: yes
   yum:
-    name: "libsemanage-python"
+    name: "python3-libsemanage"
     state: present
   when: ansible_os_family == "RedHat"
 

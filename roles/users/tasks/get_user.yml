@@ -1,9 +1,0 @@
----
-
-# Usage:
-#
-#- include_tasks: get_user.yml
-#  vars:
-#     active_user: "{ ett item från active_users }"
-#
-# Returnerar: user

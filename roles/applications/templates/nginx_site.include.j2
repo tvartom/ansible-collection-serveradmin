@@ -1,0 +1,102 @@
+#
+# Managed by Ansible!
+#
+{% set path = application.path %}
+
+  {% for name, value  in webinstance.fastcgi_params.webinstance.items() %}
+    set ${{ name }} '{{ webinstance[value] | default('') }}';
+  {% endfor %}
+
+  access_log {{ path }}/log/nginx/{{ webinstance.instance }}-access.log  main;
+  error_log  {{ path }}/log/nginx/{{ webinstance.instance }}-error.log info;
+
+  {% if webinstance.use_custom_nginx_include_file %}
+    include webinstances.d/{{ webinstance.fullname }}_custom.include;
+  {% else %}
+
+    index {% if webinstance.enable_php %}index.php {% endif %}index.html;
+
+    {% if webinstance.root_dir is defined %}
+      root   {{ path }}/{{ webinstance.root_dir }};
+    {% endif %}
+
+    # set max upload size (Exampel 1M, 16M, 4G, 16G)
+    client_max_body_size {{ webinstance.upload_max_filesize }};
+
+    # fastcgi_buffers kan tweakas vid problem.
+    # Följande kommando ger dig storleken på pagesize i linux: getconf PAGESIZE
+    # Den är ofta 4K som standard.
+    # fastcgi_buffers 64 4K;
+
+{% if webinstance.x_robots_tag is defined %}
+### Hantering av headern X-Robots-Tag för sökmotorer
+# Denna gäller på alla, om inget annat anges:
+set $x_robots_tag "{{ webinstance.x_robots_tag.root[webinstance.environment] | default(webinstance.x_robots_tag.root.default | default('')) }}";
+    {% for row in webinstance.x_robots_tag.locations | default([]) if row.filter is not defined
+        or (row.filter.include_environment is defined and webinstance.environment in row.filter.include_environment)
+        or (row.filter.exclude_environment is defined and webinstance.environment not in row.filter.exclude_environment)
+      %}
+      {% if row.comment is defined %}
+        # {{ row.comment }}
+      {% endif %}
+  if ($request_uri ~{% if row.case_insensitive|default(False) %}*{% endif %} "{{ row.regexp }}") {
+    set $x_robots_tag "{{ row.value }}";
+  }
+    {% endfor %}
+add_header  X-Robots-Tag $x_robots_tag;
+### Slut X-Robots-Tag
+{% endif %}
+
+    location / {
+      {% if webinstance.restricted is defined %}
+        auth_basic "{{ webinstance.restricted.caption }}";
+        auth_basic_user_file "auth/{{ webinstance.restricted.file }}";
+      {% endif %}
+
+      {% if webinstance.wordpress_uam|default(False) %}
+        # Make it possible to protect uploaded content with the Wordpress plugin User Access Manager
+        # Source: Translation of the /wp-content/uploads/.htaccess-file.
+        rewrite ^(/wp-content/uploads/[^?]*)$ /index.php?uamfiletype=attachment&uamgetfile=$1 last;
+        rewrite ^(/wp-content/uploads/.*)\?(((?!uamfiletype).)*)$ /index.php?uamfiletype=attachment&uamgetfile=$1&$2 last;
+        rewrite ^(/wp-content/uploads/.*)\?(.*)$ /index.php?uamgetfile=$1&$2 last;
+      {% endif %}
+
+      {{ webinstance.nginx_includes.rootlocation | default('') }}
+
+      {% if webinstance.wordpress|default(False) or webinstance.permalinkhandling|default(False) %}
+        # Make permalinks work in Wordpress!
+        # This is cool because no php is touched for static content.
+        # include the "?$args" part so non-default permalinks doesn't break when using query string
+        try_files $uri $uri/ /index.php?$args;
+      {% endif %}
+
+      {% if webinstance.enable_php %}
+        #https://blog.martinfjordvald.com/2013/04/nginx-config-history-fastcgi_params-versus-fastcgi-conf/
+        location ~ [^/]\.php(/|$) {
+
+           fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+           fastcgi_pass unix:/var/run/php-fpm-{{ webinstance.fullname }}.sock;
+
+           #Pga chroot i  php-fpm
+           #fastcgi_param PATH_TRANSLATED /{{ webinstance.root_dir }}$fastcgi_script_name;
+           #Utan chroot
+           fastcgi_param PATH_TRANSLATED $document_root$fastcgi_script_name;
+
+           fastcgi_index index.php;
+
+           {% for param in webinstance.fastcgi_params.webinstance.keys() %}
+             fastcgi_param {{ param }} ${{ param }};
+           {% endfor %}
+           {% for param in webinstance.fastcgi_params.domaininstance.keys() %}
+             fastcgi_param {{ param }} ${{ param }};
+           {% endfor %}
+
+           include fastcgi_params;
+        }
+      {% endif %}
+
+      {% if webinstance.proxy_port is defined %}
+        proxy_pass http://localhost:{{ webinstance.proxy_port }};
+      {% endif %}
+    }
+  {% endif %}

@@ -1,0 +1,43 @@
+#!/bin/bash
+# Managed by Ansible!
+# Source: https://www.howtoforge.com/accessing_windows_or_samba_shares_using_autofs
+#
+# $Id$
+# This file must be executable to work! chmod 755!
+key="$1"
+# Note: create a cred file for each windows/Samba-Server in your network
+#       which requires password authentification.  The file should contain
+#       exactly two lines:
+#          username=user
+#          password=*****
+#       Please don't use blank spaces to separate the equal sign from the
+#       user account name or password.
+credfile="/etc/auto.cifs.$key"
+# Note: Use cifs instead of smbfs:
+mountopts="-fstype=cifs,file_mode=0644,dir_mode=0755,uid={{ autofs.user }},gid={{ autofs.group }}"
+smbclientopts=""
+for P in /bin /sbin /usr/bin /usr/sbin
+do
+        if [ -x $P/smbclient ]
+        then
+                SMBCLIENT=$P/smbclient
+                break
+        fi
+done
+[ -x $SMBCLIENT ] || exit 1
+if [ -e "$credfile" ]
+then
+        mountopts=$mountopts",credentials=$credfile"
+        smbclientopts="-A "$credfile
+else
+        smbclientopts="-N"
+fi
+$SMBCLIENT $smbclientopts -gL $key 2>/dev/null \
+   | awk -v key="$key" -v opts="$mountopts" -F'|' -- '
+        BEGIN   { ORS=""; first=1 }
+	/Disk/  { if (first) { print opts; first=0 };
+		  gsub(/ /, "\\ ", $2);
+		  sub(/\$/, "\\$", $2);
+		  print " \\\n\t /" $2, "://" key "/" $2 }
+        END     { if (!first) print "\n"; else exit 1 }
+        '

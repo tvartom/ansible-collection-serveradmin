@@ -1,0 +1,42 @@
+---
+- name: Install Midnight commander (APT)
+  become: yes
+  apt:
+    name: mc
+    update_cache: yes
+    cache_valid_time: 600
+    state: latest
+  when: ansible_os_family == "Debian"
+  tags:
+    - bootstrap
+
+- name: Install Midnight commander (YUM)
+  become: yes
+  yum:
+    name: mc
+    update_cache: yes
+    state: latest
+  when: ansible_os_family == "RedHat"
+  tags:
+    - bootstrap
+
+- name: Default mc.ini for all users
+  become: yes
+  template:
+    src: mc.ini
+    dest: /usr/share/mc/mc.ini
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Gather home list
+  shell: 'echo /root && ls --color=never -d1 /home/* /home/system/* | grep -v "system$"'
+  register: home_directory_list
+  changed_when: false
+
+- name: "Remove mc/ini for all users and root"
+  become: yes
+  file:
+    path: "{{ item }}/.config/mc/ini"
+    state: absent
+  loop: "{{ home_directory_list.stdout_lines }}"

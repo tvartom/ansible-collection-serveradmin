@@ -12,6 +12,9 @@
     - "{{ php_package }}-curl"
     - "{{ php_package }}-gd"
     - "{{ php_package }}-mysqlnd" # 2019-12-30 LL Moved from mariadb
+    # För att kunna anropa php-fpm utan nginx:
+    # https://maxchadwick.xyz/blog/getting-the-php-fpm-status-from-the-command-line
+    - fcgi 
 #    update_cache: yes
     state: present
   when: ansible_os_family == "RedHat"
@@ -48,7 +51,7 @@
     name: "{{ php_fpm_service }}"
     enabled: yes
 
-# Role web_instances fixar induviduella pooler för var sida!!!
+# Role webinstances fixar induviduella pooler för var sida!!!
 
 #- name: Use socket instead of tcp
 #  become: yes

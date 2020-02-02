@@ -1,0 +1,101 @@
+---
+- name: "Generate Letsencrypt domain key for domaininstance group"
+  become: yes
+  shell: openssl genrsa 4096 > /etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key
+  args:
+    creates: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+  register: new_key
+
+- name: Generate subjectAltName for CSR
+  become: yes
+  template:
+    src: subjectaltname_domain.txt.j2
+    dest: "{{ application.path }}/letsencrypt/subjectaltname_{{ domaininstance_group.fullname }}-domain.txt"
+    owner: root
+    group: root
+    mode: "u=rw,g=,o="
+  register: subjectaltname
+
+- name: Check if Certificate Signing Request (CSR) exists
+  stat:
+    path: "{{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr"
+  register: csr_exists
+
+# openssl finns på olika ställen: Källan visar denna: /etc/ssl/openssl.cnf
+# använder /etc/pki/tls på CentoOS 7
+# Notationen <() är bash-specefik, därav executable-argumenet: https://groups.google.com/forum/#!topic/ansible-project/K2pixPHXlpI
+- name: Generate Certificate Signing Request (CSR)
+  become: yes
+  shell: "openssl req -new -sha256 -key /etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key -subj \"/\" -reqexts SAN -config <(cat /etc/pki/tls/openssl.cnf {{ application.path }}/letsencrypt/subjectaltname_{{ domaininstance_group.fullname }}-domain.txt) > {{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr"
+  args:
+    executable: /usr/bin/bash
+  when: ((not csr_exists.stat.exists) or subjectaltname.changed or new_key.changed)
+  register: new_csr
+
+- name: Create Letsencrypt-script to create (by ansible) and renew (by cron) cert
+  become: yes
+  template:
+    src: letsencrypt_renew_cert.sh.j2
+    dest: "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance_group.fullname }}.sh"
+    owner: root
+    group: root
+    mode: 0744
+
+- name: "Check if ssl cert is in place and valid for 1h"
+  become: yes
+  shell: openssl x509 -checkend 3600 -noout -in /etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt
+  failed_when: false
+  register: cert_stat
+  changed_when: cert_stat.rc > 0
+
+- name: "Set ssl_ready"
+  set_fact:
+    ssl_ready: "{{ not (new_csr.changed or cert_stat.rc > 0) }}"
+
+- name: Status domaininstance_group
+  debug:
+    msg: "{{ domaininstance_group.fullname }} OK!"
+  when: ssl_ready
+
+### Nginx and Letsencrypt #########################################################################
+
+- block:
+    - name: "Status domaininstance_group"
+      debug:
+        msg: "{{ domaininstance_group.fullname }} ändrad, signerar..."
+
+    - name: "Remove Ngninx files for all domaininstances using this group-cert"
+      become: yes
+      file:
+        path: "/etc/nginx/webinstances.d/{{ domaininstance_fullname }}.conf"
+        state: absent
+      loop: "{{ domaininstance_group.domaininstances }}"
+      loop_control:
+        loop_var: domaininstance_fullname
+
+    - name: "Create site-conf for nginx only for Letsencrypt (temporary)"
+      become: yes
+      template:
+        src: nginx_site_letsencrypt_only.conf.j2
+        dest: "/etc/nginx/webinstances.d/{{ domaininstance_group.fullname }}.conf"
+        owner: root
+        group: root
+        mode: 0644
+      notify: "Reload nginx"
+
+    - name: "Reload nginx"
+      become: yes
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: "Get the certs signed by Letsencrypt"
+      become: yes
+      shell: "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance_group.fullname }}.sh >> {{ application.path }}/log/letsencrypt/{{ domaininstance_group.fullname }}.log 2>&1"
+
+    - name: "Remove temporary Ngninx files domaininstance_group"
+      become: yes
+      file:
+        path: "/etc/nginx/webinstances.d/{{ domaininstance_group.fullname }}.conf"
+        state: absent
+  when: not ssl_ready

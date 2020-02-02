@@ -1,0 +1,120 @@
+#
+# Managed by Ansible!
+#
+#
+{% set https = webinstance.enable_https %}
+{% set only_https = (webinstance.only_https and webinstance.enable_https) %}
+{% set http2 = ' http2' if webinstance.enable_http2 else '' %}
+{% set default_server = ' default_server' if domaininstance.default_server | default(false) else '' %}
+{% set listen_to_ipv6 = webinstance.listen_to_ipv6 %}
+{% set path = application.path %}
+{% set domains = domaininstance.domains %}
+{% set domaininstance_group_fullname = webinstance.fullname+'-group-'+domaininstance.group %}
+{% if domains[1] is defined or only_https %}
+  {% if only_https %}
+
+  # Vidarebefodring för http: Alla http-adresser vidarebefodras till primära https-domänen
+  {% else %}
+
+  # Vidarebefodring för http: Icke primära domäner vidarebefodras till den primära
+  {% endif %}
+
+  server {
+    server_name{{- '         ' -}}
+    {%- for url in domains -%}
+    {%-   if not loop.first or only_https -%}
+    {{-      " " -}}{{- url -}}
+    {%-   endif -%}
+    {%- endfor -%}
+    ;
+
+    {% for port in webinstance.listen_ports_http %}
+      listen    {{ port }}{{ default_server if only_https else '' }};
+      {% if listen_to_ipv6 %}
+        listen    [::]:{{ port }}{{ default_server if only_https else '' }};
+      {% endif %}
+    {% endfor %}
+
+    {% if https %}
+
+      location '/.well-known/acme-challenge' {
+        default_type "text/plain";
+        alias        {{ path }}/letsencrypt/challenges;
+        try_files $uri =404;
+      }
+    {% endif %}
+
+    location / {
+      return 302 http{%- if only_https -%}s{%- endif -%}://{{- domains[0] -}}$request_uri;
+    }
+  }
+{% endif %}
+
+{% if domains[1] is defined and https %}
+  # Vidarebefodring för https: Icke primära domäner vidarebefodras till den primära
+  server {
+    server_name{{- '         ' -}}
+    {%- for url in domains -%}
+    {%-   if not loop.first -%}
+    {{-      " " -}}{{- url -}}
+    {%-   endif -%}
+    {%- endfor -%}
+    ;
+
+    {% for port in webinstance.listen_ports_https %}
+      listen              {{ port }} ssl{{ http2 }};
+      {% if listen_to_ipv6 %}
+        listen              [::]:{{ port }} ssl{{ http2 }};
+      {% endif %}
+    {% endfor %}
+
+    #ssl on; #ssl is defined in listen
+    ssl_certificate     /etc/nginx/ssl/{{ domaininstance_group_fullname }}-signed_chain.crt;
+    ssl_certificate_key /etc/nginx/ssl/{{ domaininstance_group_fullname }}-domain.key;
+
+    location / {
+      return 302 https://{{ domains[0] }}$request_uri;
+    }
+  }
+{% endif %}
+
+  # http/https: Enbart primäradressen
+  server {
+    server_name     {{ domains[0] }};
+
+    {% if not only_https %}
+      {% for port in webinstance.listen_ports_http %}
+        listen    {{ port }}{{ default_server }};
+        {% if listen_to_ipv6 %}
+          listen    [::]:{{ port }}{{ default_server }};
+        {%-   endif -%}
+      {% endfor %}
+    {% endif %}
+
+    {% if https %}
+      {% for port in webinstance.listen_ports_https %}
+        listen              {{ port }} ssl{{ http2 }}{{ default_server }};
+        {% if listen_to_ipv6 %}
+          listen            [::]:{{ port }} ssl{{ http2 }}{{ default_server }};
+        {% endif %}
+      {% endfor %}
+
+      #ssl on; #ssl is defined in listen
+      ssl_certificate     /etc/nginx/ssl/{{ domaininstance_group_fullname }}-signed_chain.crt;
+      ssl_certificate_key /etc/nginx/ssl/{{ domaininstance_group_fullname }}-domain.key;
+    {% endif %}
+
+    {% for name, value in webinstance.fastcgi_params.domaininstance.items() %}
+      set ${{ name }} '{{ domaininstance[value] | default('') }}';
+    {% endfor %}
+
+    {%  if webinstance.nginx_includes.domaininstance is defined -%}
+    {%-   set output = {'text': webinstance.nginx_includes.domaininstance } -%}
+    {%-   for key in webinstance.nginx_includes.domaininstance | regex_findall('<<([^>]*)>>') -%}
+    {{-     output.__setitem__('text', output.text | regex_replace('<<'+key+'>>', domaininstance[key] | default('') )) -}}
+    {%-   endfor -%}
+    {{-   output.text -}}
+    {%- endif %}
+
+    include webinstances.d/{{ webinstance.fullname }}.include;
+  }

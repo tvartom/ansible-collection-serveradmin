@@ -47,7 +47,7 @@
     mode: "u=rwx,g=rx,o=rx"
     state: link
     force: yes
-    
+
 # Orginal på ubuntu: PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 - name: add sass path to path
   become: yes

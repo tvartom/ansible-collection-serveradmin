@@ -1,8 +1,68 @@
 ---
-- hosts: "{{ target }}"
-  gather_facts: yes
+#- hosts: "{{ target }}"
+#  gather_facts: yes
+#  collections:
+#    - tvartom.serveradmin
+#  tasks:
+#    - include_role:
+#        name: lab
+
+
+- name: "Backup dest"
+  hosts: "*"
+
+  connection: local #TODO: ta bort
+
+  gather_facts: false
+  vars:
+    backup_dest: "{{ hostvars[target].backup }}"
   collections:
     - tvartom.serveradmin
   tasks:
-    - include_role:
-        name: lab
+    - block:
+        #- include_role:
+        #    name: backup
+        #    tasks_from: backup_dest
+        - name: "Sätt nyckel"
+          set_fact:
+            backup_dest_public_key: "{{ inventory_hostname }}-key"
+          #when: inventory_hostname == 'ankeborg'
+      when: inventory_hostname in backup_dest.instances | map(attribute='dest') | flatten | map(attribute='host')
+
+- name: "Backup source"
+  hosts: "{{ target }}"
+  connection: local # "{{ connection_type | default('ssh', true) }}"
+  vars:
+    #backup_dest_public_keys: "{{ hostvars['dana']['backup_dest_public_key'] |d() }}"
+    myhosts: "{{ backup.instances | map(attribute='dest') | flatten | map(attribute='host') | list }}"
+    # Tar listan med backup_instances
+    # map(attribute='host'... gör om det till en lista med alla destination-hosts
+    # intersect(... Rensar med hosts som inte det finns hostvars för. (Ej körda, ej i inventory?)
+    # map('extract'... ifrån hostvars hämtas värdet 'backup_dest_public_key' på alla hosts som skapats ovan.
+    # select('defined'... Om nyckeln inte är satt för en host, rensar bort värdet. (Ej kört/misslyckat)
+    backup_dest_public_keys: |-
+      {{-
+        backup.instances
+        | map(attribute='dest') | flatten | map(attribute='host')
+        | intersect(hostvars.keys())
+        | map('extract', hostvars, 'backup_dest_public_key')
+        | select('defined') | list
+      -}}
+
+#    test: "{{ hostvars | map('extract', backup.instances | map(attribute='dest') | flatten | map(attribute='host') | list ) | list }}"
+  tasks:
+    - name: my hosts
+      debug:
+        var: myhosts
+    - name: target
+      debug:
+        var: backup_dest_public_keys
+#    - include_role:
+#        name: backup
+#        tasks_from: backup_source
+
+#    - debug:
+#        var: backup_dest_public_keys
+#    - include_role:
+#        name: backup_source
+

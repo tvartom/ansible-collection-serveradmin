@@ -1,0 +1,136 @@
+---
+- name: Aktuell application
+  debug:
+    var: application
+
+- name: Create group for application
+  become: yes
+  group:
+    name: "{{ application.process_group }}"
+    system: yes
+
+- name: "Hämta info om användaren"
+  getent:
+    database: passwd
+    key: "{{ application.process_user }}"
+    fail_key: false
+
+- name: Create users for application
+  become: yes
+  user:
+    name: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    createhome: yes
+    move_home: no
+    append: yes
+    home: "/home/system/{{ application.process_user }}"
+    system: yes
+  when: getent_passwd[application.process_user] is none
+
+- name: Create DB for for application
+  become: yes
+  mysql_db:
+    name: "{{ application.database.name }}"
+    collation: "{{ application.database.collation | default('utf8mb4_general_ci') }}"
+    encoding: "{{ application.database.encoding | default('utf8mb4') }}"
+    state: present
+    login_user: root
+    login_unix_socket: "/var/lib/mysql/mysql.sock"
+  when: application.database.create | default(false)
+
+- name: Lägg unix användare för access till databas
+  include_role:
+    name: mariadb
+    tasks_from: create_user
+  vars:
+    user:
+      name: "{{ application.process_user }}"
+      is_linux_user: true
+      databases:
+        - database: "{{ application.database.name }}"
+  when: application.database is defined
+
+- name: "Registrera nyckel för Google Cloud på application-användare"
+  include_role:
+    name: google_cloud_sdk
+    tasks_from: gcloud_add_key
+  vars:
+    gcloud_linuxuser: "{{ application.process_user }}"
+    gloud_key: "{{ serveradmin.gcloud_key }}"
+  when: serveradmin.use_gcloud
+
+- name: "Konfigurera git för application-användaren"
+  include_role:
+    name: git
+    tasks_from: config_git_for_user
+  vars:
+    user:
+      name: "{{ application.process_user }}"
+      #fullname: "hela namnet" #Optional: annars använs user.name
+      #email: "Epost" #Optional: annars används user.name @ inventory_hostname
+
+- name: "Create dir for organisation"
+  become: yes
+  file:
+    path: "{{ temp_organisation_path }}"
+    state: directory
+    owner: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_group }}"
+    mode: "u=rwx,g=rx,o=rx"
+  when: (temp_organisation_path in application.path)
+  vars:
+    temp_organisation_path: "/opt/{{ application.organisation }}"
+
+- name: "Create dir for application"
+  become: yes
+  file:
+    path: "{{ application.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( application.process_user, true ) }}"
+    group: "{{ item.group | default( application.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "u=rwx,g=rx,o=rx"
+  when: item.when | default(True)
+  loop:
+    - { path: "" }
+    - { path: "/log" }
+    - { path: "/log/nginx", owner: "{{ nginx_user }}", group: "{{ nginx_group }}", setype: "httpd_sys_rw_content_t" }
+    # För letsencrypt
+    - { path: "/letsencrypt",            when: "{{ application.any_letsencrypt }}" }
+    - { path: "/letsencrypt/challenges", when: "{{ application.any_letsencrypt }}" }
+    - { path: "/log/letsencrypt",        when: "{{ application.any_letsencrypt }}" }
+    # För PHP
+    - { path: "/log/php-fpm", setype: "httpd_sys_rw_content_t", when: "{{ application.any_enable_php }}" }
+    - { path: "/php-fpm",                                       when: "{{ application.any_enable_php }}" }
+    # För deploy
+    - { path: "/repos", when: "{{ application.repos[0] is defined }}" }
+    # För Java
+    - { path: "/webapp",             when: false }
+    # För backup
+#    - { path: "/backup",        when: "{{ application.database is defined }}" }
+#    - { path: "/backup/script", when: "{{ application.database is defined }}" }
+#    - { path: "/log/backup",    when: "{{ application.database is defined }}" }
+
+#- name: Skapa script som backupar databas.
+#  become: yes
+#  template:
+#    src: backup_db.sh.j2
+#    dest: "{{ application.path }}/backup/script/backup_db.sh"
+#    owner: root
+#    group: root
+#    mode: "u=rwx,g=r,o=r"
+#  when: application.database is defined
+
+### Redis #######################################################################
+
+- name: Include Redis
+  include_tasks: redis.yml
+  when: application.enable_redis
+
+### webinstances ################################################################
+
+- name: "Loop over all webinstances for this application"
+  include_tasks: webinstance.yml
+  loop: "{{ application.webinstances.values()|list }}"
+  loop_control:
+    loop_var: webinstance

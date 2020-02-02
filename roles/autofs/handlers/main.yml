@@ -1,0 +1,7 @@
+---
+- name: "Start/Restart/enable autofs service"
+  become: yes
+  service:
+    name: autofs
+    enabled: yes
+    state: restarted

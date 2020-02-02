@@ -1,0 +1,118 @@
+---
+# Usage:
+#
+#- include_tasks: get_application.yml
+#  vars:
+#     application_instance: "{ ett item från application_instances }"
+#
+# Returnerar: application
+
+- name: "Temp variable: fullname"
+  set_fact:
+    temp_application_fullname: "{{ application_instance.environment }}-{{ application_instance.name }}"
+
+- name: "Generate default values for application"
+  set_fact:
+    temp_application_default:
+      #Properties must be set in application_instances:
+      # name:
+      # environment:
+      fullname: "{{ temp_application_fullname }}"
+      process_user: "app-{{ temp_application_fullname }}"
+      process_group: "app-{{ temp_application_fullname }}"
+      enable_redis: false
+      backup_database: []
+      repos: []
+      webinstances: {}
+      desc: ""
+      organisation: "{{ application_instance.organisation | default(organisation.name) }}"
+      path: "/opt/{{ application_instance.organisation | default(organisation.name) }}/{{ temp_application_fullname }}"
+      #Populated properties:
+      any_enable_php: false
+      any_enable_https: false
+      any_letsencrypt: false
+      #Properties that default value is: not defined
+      # [database:]
+
+- name: "Generate default values for webinstance"
+  set_fact:
+    temp_webinstance_default:
+      enable_https: false
+      only_https: true # No effect if enable_https == false
+      enable_http2: true # No effect if enable_https == false
+      listen_to_ipv6: true
+      enable_php: false
+      upload_max_filesize: 1M
+      domains_source: {}
+      fastcgi_params:
+        domaininstance: {}
+        webinstance: {}
+      nginx_includes: {}
+      #  [rootlocation:]
+      domaininstances: []
+      # - domains:
+      #     - "primary domain"
+      #     [- "secondary domain 1"]
+      #     [- "secondary domain 2"]
+      #     [- ...]
+      #   [deafult_server: false]
+      #   [instance: "default"]
+      #   [group: "default"]
+      use_custom_nginx_include_file: false
+      listen_ports_http: [80]
+      listen_ports_https: [443]
+      domaininstance_groups: {}
+      cert_handler: "letsencrypt" # [letsencrypt/selfsigned]
+      php_status_path: "/php-fpm-status" # Do make it public, use suffix .php if php-conf allow it, false or empty to not use.
+      create_root_dir: false
+      #Properties that default value is: not defined
+      # [root_dir: "Ex public_html"]
+      # [restricted:]
+      #   - caption:
+      #   - file:
+      # [wordpress_uam: true]
+      # [wordpress: true]
+      # [permalinkhandling: true]
+      # [proxy_port: 8080]
+      #Populated properties:
+      # fullname: "{{ application.fullname+'-'+webinstance_with_key.key }}"
+      # instance:"{{ webinstance_with_key.key }}"
+
+### Samla information ################################################################
+- name: Hämta värden från applications_default, applications och sätt default-värden
+  set_fact:
+    application: >-
+      {{
+        temp_application_default
+        | combine(
+            (applications_default | combine(applications | default({}), recursive=True))[application_instance.name] | default({})
+            , recursive=True
+          )
+        | combine(application_instance, recursive=True)
+      }}
+
+- name: "Loop over all webinstances for this application"
+  include_tasks: get_webinstance.yml
+  loop: "{{ application.webinstances | dict2items }}"
+  loop_control:
+    loop_var: webinstance_with_key
+
+- set_fact:
+    repo_returns: []
+
+- include_role:
+    name: git
+    tasks_from: get_repo_url
+  vars:
+    repo_url_loop: true
+  loop: "{{ application.repos }}"
+  loop_control:
+    loop_var: repo
+
+- set_fact:
+    application: "{{ application | combine({'repos': repo_returns}) }}"
+
+- name: Applications info
+  set_fact:
+    applications_info: "{{- applications_info | default([]) + [ application ] -}}"
+

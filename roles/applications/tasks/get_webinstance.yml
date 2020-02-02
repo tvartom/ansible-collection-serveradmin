@@ -1,0 +1,55 @@
+---
+- name:
+  set_fact:
+    temp_webinstance: "{{ temp_webinstance_default | combine(webinstance_with_key.value, recursive=True) }}"
+
+- name: "Get domains from database"
+  block:
+    - name: Hämta domännamn från databas
+      include_tasks: get_webinstance_domains_from_sql.yml
+#      vars:
+#        application: "{{ application }}"
+#        temp_webinstance: "{{ temp_webinstance }}"
+    - name: "Set value i"
+      set_fact:
+        temp_webinstance: >-
+          {{- temp_webinstance.__setitem__('domaininstances', domaininstances_result) -}}
+          {{- temp_webinstance -}}
+  when: temp_webinstance.domains_source.sql_domaininstances is defined
+
+# webinstance.domaininstance[?].group används till https-cert
+# Flera domainisntancer kan använda samma cert för sina domäner,
+# inom samma webinstans
+
+- name: "Set fullname, instance and group (webinstance and domaininstances)"
+  set_fact:
+    temp_webinstance: >-
+      {{- temp_webinstance.__setitem__('fullname', application.fullname+'-'+webinstance_with_key.key) -}}
+      {{- temp_webinstance.__setitem__('instance', webinstance_with_key.key) -}}
+      {%- for di in temp_webinstance.domaininstances -%}
+      {%-   if di.instance is not defined -%}
+      {{-     di.__setitem__('instance', 'default'+(('_'+loop.index0|string) if not loop.first else '')) -}}
+      {%-   endif -%}
+      {%-   if di.group is not defined -%}
+      {{-     di.__setitem__('group', di.instance) -}}
+      {%-   endif -%}
+      {{-   di.__setitem__('fullname', temp_webinstance.fullname+'-'+di.instance) -}}
+      {%-   if temp_webinstance.domaininstance_groups[di.group] is not defined -%}
+      {{-     temp_webinstance.domaininstance_groups.__setitem__(di.group, {'fullname': temp_webinstance.fullname+'-group-'+di.group , 'domaininstances': [],'domains': []} ) -}}
+      {%-   endif -%}
+      {{-   temp_webinstance.domaininstance_groups[di.group].domaininstances.append(di.fullname) -}}
+      {{-   temp_webinstance.domaininstance_groups[di.group].domains.extend(di.domains) -}}
+      {%- endfor -%}
+      {{- temp_webinstance -}}
+
+- name: "Set values in application"
+  set_fact:
+    application: >-
+      {{- application.webinstances.__setitem__(webinstance_with_key.key, temp_webinstance) -}}
+      {{- application.__setitem__('any_letsencrypt', application.any_letsencrypt or (temp_webinstance.enable_https and temp_webinstance.cert_handler == 'letsencrypt')) -}}
+      {{- application.__setitem__('any_enable_https', application.any_enable_https or temp_webinstance.enable_https) -}}
+      {{- application.__setitem__('any_enable_php', application.any_enable_php or temp_webinstance.enable_php) -}}
+      {%- for di in temp_webinstance.domaininstances -%}
+      {%- endfor -%}
+      {{- application -}}
+

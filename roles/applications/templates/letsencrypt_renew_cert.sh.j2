@@ -1,0 +1,22 @@
+#!/usr/bin/sh
+#
+# Managed by Ansible!!!
+#
+# Exit on error:
+set -e
+
+echo "Letsencrypt renew {{ domaininstance_group.fullname }}" $(date -u)
+python3 /opt/letsencrypt/acme-tiny/acme_tiny.py \
+	--account-key /opt/letsencrypt/account.key \
+	--csr {{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr \
+	--acme-dir {{ application.path }}/letsencrypt/challenges \
+	> /etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt
+
+# LL 20200114: acme_tiny producerar nu en egen chained. crt istället för pem.
+#	> {{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain-signed.crt
+
+#cat {{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain-signed.crt \
+#	/opt/letsencrypt/intermediate.pem \
+#	> /etc/nginx/ssl/{{ domaininstance_group.fullname }}-chained.pem
+
+systemctl reload nginx.service

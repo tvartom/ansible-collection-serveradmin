@@ -1,0 +1,21 @@
+---
+
+
+# Info:
+# https://owncloud.org/changelog/
+
+php_package: php
+
+nextcloud_tempdir: /tmp/nextcloud
+
+nextcloud_db_create: true
+nextcloud_db_host: localhost
+nextcloud_db:
+  collation: utf8mb4_swedish_ci
+  encoding: utf8mb4
+
+nextcloud_php_timezone: Europe/Stockholm
+nextcloud_php_default_char: UTF-8
+nextcloud_php_memory_limit: 512M
+
+nextcloud_colon: ':'

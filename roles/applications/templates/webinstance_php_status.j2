@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# Managed by Ansible!!!
+#
+
+# https://maxchadwick.xyz/blog/getting-the-php-fpm-status-from-the-command-line
+# https://easyengine.io/tutorials/php/directly-connect-php-fpm/
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+me="$(basename "$0")"
+    echo "Usage:"
+    echo "  $me [\"query_string\"]"
+    echo "query_string:"
+    echo "  full    Show full output"
+    echo "  Formats:"
+    echo "  html"
+    echo "  json"
+    echo "  xml"
+    echo
+    echo "Example:"
+    echo "  $me \"full&json\""
+    exit 0
+fi
+
+sudo -u nginx SCRIPT_NAME=/php-fpm-status \
+  SCRIPT_FILENAME=/php-fpm-status \
+  REQUEST_METHOD=GET \
+  QUERY_STRING=$1 \
+  cgi-fcgi -bind -connect /var/run/php-fpm-cloud_tvartom_com-nextcloud-web.sock

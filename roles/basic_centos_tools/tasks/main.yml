@@ -1,4 +1,11 @@
 ---
+- name: Hämta default-värden
+  set_fact:
+    basic: "{{ basic_default | combine(basic | default({})) }}"
+  tags:
+    - bootstrap
+
+#byobu finns i detta:
 - name: Enable EPEL-repo
   become: yes
   dnf:
@@ -9,29 +16,32 @@
 - name: "Set timezone on server (Stockholm is default)"
   become: yes
   timezone:
-    name: "{{ basic.timezone | default(basic_default.timezone) }}"
+    name: "{{ basic.timezone }}"
+  tags:
+    - bootstrap
 
 - name: Install some basic tools (YUM)
   become: yes
   dnf:
-    name: "{{ basic.package_to_install | default(basic_default.package_to_install) }}"
+    name: "{{ basic.package_to_install }}"
     state: present
   when: ansible_os_family == "RedHat"
 
-##TODO: Bekräfta att denna behövs på CentOS 8
-  # Set (httpd_can_network_connect) flag on and keep it persistent across reboots
-#- name: Install libsemanage to fix selinux in ansible (YUM)
-#  become: yes
-#  yum:
-#    name: "libsemanage-python"
-#    state: present
-#  when: ansible_os_family == "RedHat"
+# Set (httpd_can_network_connect) flag on and keep it persistent across reboots
+- name: Install libsemanage to fix selinux in ansible (YUM)
+  become: yes
+  yum:
+    name: "python3-libsemanage"
+    state: present
+  when: ansible_os_family == "RedHat"
 
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   become: yes
   selinux:
     policy: targeted
     state: permissive
+  tags:
+    - bootstrap
 
 
 - name: "github.com to global known_hosts"
@@ -42,3 +52,37 @@
     name: github.com
     # Generate key: $ ssh-keyscan -H github.com 2> /dev/null
     key: "github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=="
+  tags:
+    - bootstrap
+
+
+
+
+#Source: https://serverfault.com/questions/959026/how-do-i-generate-and-set-the-locale-using-ansible
+
+#- name: Ensure localisation files for '{{ basic.system_locale }}' are available
+#  locale_gen:
+#    name: "{{ basic.system_locale }}"
+#    state: present
+
+#- name: Ensure localisation files for '{{ basic.system_language }}' are available
+#  locale_gen:
+#    name: "{{ basic.system_language }}"
+#    state: present
+
+#- name: Get current locale and language configuration
+#  command: localectl status
+#  register: locale_status
+#  changed_when: false
+
+#- name: Parse 'LANG' from current locale and language configuration
+#  set_fact:
+#    locale_lang: "{{ locale_status.stdout | regex_search('LANG=([^\n]+)', '\\1') | first }}"
+
+#- name: Parse 'LANGUAGE' from current locale and language configuration
+#  set_fact:
+#    locale_language: "{{ locale_status.stdout | regex_search('LANGUAGE=([^\n]+)', '\\1') | default([locale_lang], true) | first }}"
+
+#- name: Configure locale to '{{ basic.system_locale }}' and language to '{{ basic.system_language }}'
+#  command: localectl set-locale LANG={{ basic.system_locale }} LANGUAGE={{ basic.system_language }}
+#  changed_when: locale_lang != basic.system_locale or locale_language != basic.system_language
