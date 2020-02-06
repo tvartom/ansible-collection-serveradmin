@@ -1,6 +1,10 @@
 ---
 ### Install Wordpress ########################################################################################
 
+- name: "Set variable wordpress_database"
+  set_fact:
+    wordpress_database: "{{ application.databases[application.metadata.wordpress.databaseindex | default(0)] }}"
+
 - name: Wordpress - Download and unpack if not present
   become: yes
   unarchive:
@@ -32,7 +36,7 @@
       define( '{{ item.constant }}', '{{ item.value }}' ); // Set by Ansible!
   loop:
     - constant: DB_NAME
-      value: "{{ application.database.name }}"
+      value: "{{ wordpress_database.database }}"
     - constant: DB_USER
       value: "{{ application.process_user }}"
     - constant: DB_PASSWORD
@@ -40,7 +44,7 @@
     - constant: DB_HOST
       value: "localhost:/var/lib/mysql/mysql.sock"
     - constant: DB_CHARSET
-      value: "{{ application.database.charset | default('utf8mb4') }}"
+      value: "{{ wordpress_database.charset | default('utf8mb4') }}"
 
 - name: "Config Wordpress (Variables)"
   become: yes
@@ -53,7 +57,7 @@
       ${{ item.variable }} = {{ item.value }}; // Set by Ansible!
   loop:
     - variable: table_prefix
-      value: "'{{ application.database.prefix | default('wp_') }}'" # Remember quotes
+      value: "'{{ wordpress_database.prefix | default('wp_') }}'" # Remember quotes
 
 - name: "List of key/salt for cookies"
   set_fact:

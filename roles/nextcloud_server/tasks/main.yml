@@ -105,10 +105,11 @@
     mode: "u=rwx,g=rwx,o="
     owner: "{{ nextcloud.user }}"
     group: "{{ nextcloud.group }}"
-  when: item != ""
   loop:
     - "{{ nextcloud_tempdir }}"
-  when: nextcloud_install
+  when:
+    - nextcloud_install
+    - item != ""
   tags:
     - nextcloud
 
@@ -164,7 +165,9 @@
     src: "{{ nextcloud.installdir }}/nextcloud/config/config.php"
     dest: "{{ nextcloud_folder }}/nextcloud/config/config.php"
     remote_src: yes
-  when: nextcloud_install and nextcloud_old_config.stat.exists
+  when:
+    - nextcloud_install
+    - nextcloud_old_config.stat.exists
   tags:
     - nextcloud
 
@@ -199,14 +202,18 @@
     chdir: "{{ nextcloud_installdir }}/nextcloud/"
   register: nextcloud_occ_upgrade
   ignore_errors: true
-  when: nextcloud_install and nextcloud_old_config.stat.exists
+  when:
+    - nextcloud_install
+    - nextcloud_old_config.stat.exists
   tags:
     - nextcloud
 
 - name: "Resultat av occ upgrade"
   debug:
     msg: "{{ nextcloud_occ_upgrade.stdout }}"
-  when: nextcloud_install and nextcloud_old_config.stat.exists
+  when:
+    - nextcloud_install
+    - nextcloud_old_config.stat.exists
   failed_when: nextcloud_occ_upgrade.failed
   tags:
     - nextcloud

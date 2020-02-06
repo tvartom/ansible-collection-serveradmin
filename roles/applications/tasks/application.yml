@@ -30,13 +30,16 @@
 - name: Create DB for for application
   become: yes
   mysql_db:
-    name: "{{ application.database.name }}"
-    collation: "{{ application.database.collation | default('utf8mb4_general_ci') }}"
-    encoding: "{{ application.database.encoding | default('utf8mb4') }}"
+    name: "{{ database.database }}"
+    collation: "{{ database.collation | default('utf8mb4_general_ci') }}"
+    encoding: "{{ database.encoding | default('utf8mb4') }}"
     state: present
     login_user: root
     login_unix_socket: "/var/lib/mysql/mysql.sock"
-  when: application.database.create | default(false)
+  when: database.create | default(false)
+  loop: "{{ application.databases | default([]) }}"
+  loop_control:
+    loop_var: database
 
 - name: Lägg unix användare för access till databas
   include_role:
@@ -46,9 +49,8 @@
     user:
       name: "{{ application.process_user }}"
       is_linux_user: true
-      databases:
-        - database: "{{ application.database.name }}"
-  when: application.database is defined
+      databases: "{{ application.databases }}"
+  when: application.databases is defined
 
 - name: "Registrera nyckel för Google Cloud på application-användare"
   include_role:
@@ -106,20 +108,7 @@
     - { path: "/repos", when: "{{ application.repos[0] is defined }}" }
     # För Java
     - { path: "/webapp",             when: false }
-    # För backup
-#    - { path: "/backup",        when: "{{ application.database is defined }}" }
-#    - { path: "/backup/script", when: "{{ application.database is defined }}" }
-#    - { path: "/log/backup",    when: "{{ application.database is defined }}" }
 
-#- name: Skapa script som backupar databas.
-#  become: yes
-#  template:
-#    src: backup_db.sh.j2
-#    dest: "{{ application.path }}/backup/script/backup_db.sh"
-#    owner: root
-#    group: root
-#    mode: "u=rwx,g=r,o=r"
-#  when: application.database is defined
 
 ### Redis #######################################################################
 

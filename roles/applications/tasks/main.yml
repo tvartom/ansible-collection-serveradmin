@@ -63,15 +63,6 @@
     group: root
     mode: "u=rw,g=r,o=r"
 
-- name: Setup cron-jobb for database backup
-  become: yes
-  template:
-    src: backup_db.cron.j2
-    dest: /etc/cron.d/backup_db
-    owner: root
-    group: root
-    mode: "u=rw,g=r,o=r"
-
 - name: Setup lograte for webinstances (php-fpm och nginx)
   become: yes
   template:

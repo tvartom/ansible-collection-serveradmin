@@ -26,4 +26,4 @@ sudo -u nginx SCRIPT_NAME=/php-fpm-status \
   SCRIPT_FILENAME=/php-fpm-status \
   REQUEST_METHOD=GET \
   QUERY_STRING=$1 \
-  cgi-fcgi -bind -connect /var/run/php-fpm-cloud_tvartom_com-nextcloud-web.sock
+  cgi-fcgi -bind -connect /var/run/php-fpm-{{ webinstance.fullname }}.sock
