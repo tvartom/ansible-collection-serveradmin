@@ -22,7 +22,8 @@
   lineinfile:
     dest: /etc/profile
     state: present
-    regexp: "^umask\s+\d+"
+    regexp: |-
+      ^umask\s+\d+
     insertafter: EOF
     line: "umask 027"
     # create: yes
