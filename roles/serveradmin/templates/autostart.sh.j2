@@ -7,6 +7,7 @@ PATH=$PATH:{{ serveradmin.path }}
 
 {{ serveradmin.path }}/{{ organisation.command_prefix }} || true
 
+umask 027
 
 # Säkerställ att vi avslutar utan dålig exit-kod (Annars kommer vi aldrig mer in på servern...)
 # exit 0 var inte en bra idé av någon anledning
