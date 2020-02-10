@@ -4,6 +4,15 @@ set -e
 {% set dumpfile = 'dumpfile.sql' %}
 {% set database_migration = item.meta %}
 
+{% if database_migration.confirm |  d('',True) != ''  %}
+# Från: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
+read -p "{{ database_migration.confirm }} [y/N]" -n 1 -r
+echo    # (optional) move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
+fi
+{% endif %}
+
 ssh -t {{ database_migration.from_server }} "
 	mysqldump \
 		--events \
