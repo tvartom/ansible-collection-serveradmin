@@ -18,7 +18,8 @@
 #- pause:
 #  tags: test
 
-- name: set umask to 027 global
+- name: "Set global umask to 027"
+  become: yes
   lineinfile:
     dest: /etc/profile
     state: present
