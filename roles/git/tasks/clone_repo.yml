@@ -79,7 +79,7 @@
     key_file: "{{ user_home.stdout ~ '/.ssh/' ~ repo.unique_deploy_key if repo.use_unique_deploy_key else '' }}"
     update: "{{ clone.repo.update | default(true) }}"
     version: "{{ repo.branch | default('HEAD') }}"
-    umask: 027
+    umask: "027"
   ignore_errors: yes
   register: git_clone_result
   tags:
