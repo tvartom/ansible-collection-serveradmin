@@ -1,0 +1,34 @@
+---
+- hosts: "local"
+  connection: "local"
+  gather_facts: yes
+  collections:
+    - tvartom.serveradmin
+  tasks:
+    # Get data from the host with sensible information, (eg password, private key)
+    # This role can also read variables from files, but is not used.
+    - name: "Collect facts"
+      include_role:
+        name: collect_facts
+        tasks_from: collect_facts
+      vars:
+        facts_options:
+          var_files: []# Read variables from files in var/[item].yml
+            #- system
+            #  - webinstances
+            #- users
+          host_vars_from_host: true
+          diskspace_message: false
+
+#    - include_role:
+#        name: mariadb
+#    - include_role:
+#        name: java_and_maven
+    - include_role:
+        name: xdebug
+
+#    - include_role:
+#        name: applications
+#    - include_role:
+#        name: webserver
+
