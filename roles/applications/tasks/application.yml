@@ -3,7 +3,7 @@
   debug:
     var: application
 
-- name: Create group for application
+- name: Create user specific group for application
   become: yes
   group:
     name: "{{ application.process_group }}"
@@ -14,6 +14,7 @@
     database: passwd
     key: "{{ application.process_user }}"
     fail_key: false
+  # Registrerar i getent_passwd
 
 - name: Create users for application
   become: yes
@@ -26,6 +27,15 @@
     home: "/home/system/{{ application.process_user }}"
     system: yes
   when: getent_passwd[application.process_user] is none
+
+- name: "Let nginx join group to to read source-data"
+  become: yes
+  user:
+    name: "{{ nginx_user }}"
+    groups: "{{ application.process_group }}"
+    append: true
+  notify: "Reload nginx"
+
 
 - name: Create DB for for application
   become: yes
@@ -91,13 +101,14 @@
     owner: "{{ item.owner | default( application.process_user, true ) }}"
     group: "{{ item.group | default( application.process_group, true ) }}"
     setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
-    mode: "u=rwx,g=rx,o=rx"
+    mode: "{{ item.mode | default('u=rwx,g=rx,o=') }}"
   when: item.when | default(True)
   loop:
     - { path: "" }
+    # Log, ägs av app-...:app-... nginx kan kan komma åt sin log.
     - { path: "/log" }
-    - { path: "/log/nginx", owner: "{{ nginx_user }}", group: "{{ nginx_group }}", setype: "httpd_sys_rw_content_t" }
-    # För letsencrypt
+    - { path: "/log/nginx", setype: "httpd_sys_rw_content_t" }
+    # För letsencrypt. Script körs av root. nginx behöver komma åt challenges
     - { path: "/letsencrypt",            when: "{{ application.any_letsencrypt }}" }
     - { path: "/letsencrypt/challenges", when: "{{ application.any_letsencrypt }}" }
     - { path: "/log/letsencrypt",        when: "{{ application.any_letsencrypt }}" }

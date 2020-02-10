@@ -128,7 +128,7 @@
   file:
     path: "{{ nextcloud.installdir }}/{{ nextcloud_folder }}"
     state: directory
-    mode: "u=rwx,g=rx,o=rx"
+    mode: "u=rwx,g=rx,o="
     owner: "{{ nextcloud.user }}"
     group: "{{ nextcloud.group }}"
   when: nextcloud_install
@@ -142,7 +142,7 @@
     copy: no
     src: "{{ nextcloud_tempdir }}/{{ nextcloud_archive }}"
     dest: "{{ nextcloud.installdir }}/{{ nextcloud_folder }}"
-    mode: "u=rwX,g=rX,o=rX"
+    mode: "u=rwX,g=rX,o="
     owner: "{{ nextcloud.user }}"
     group: "{{ nextcloud.group }}"
   when: nextcloud_install
@@ -178,7 +178,7 @@
     state: touch
     owner: "{{ nextcloud.user }}"
     group: "{{ nextcloud.group }}"
-    mode: "u=rwx,g=rx,o=rx"
+    mode: "u=rwx,g=rx,o="
   tags:
     - nextcloud
 
@@ -190,7 +190,7 @@
     state: link
     owner: "{{ nextcloud.user }}"
     group: "{{ nextcloud.group }}"
-    mode: "u=rwx,g=rx,o=rx"
+    mode: "u=rwx,g=rx,o="
   tags:
     - nextcloud
 

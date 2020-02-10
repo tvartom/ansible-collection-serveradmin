@@ -45,11 +45,22 @@
   args:
     removes: "{{ php_fpm_pool_path }}/www.conf"
 
+- name: "Fix umask for php"
+  become: yes
+  copy:
+    src: php-fpm.service.d_override.conf
+    dest: /etc/systemd/system/{{ php_fpm_service }}.service.d/override.conf
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
 - name: Autostart php-fpm
   become: yes
   service:
     name: "{{ php_fpm_service }}"
     enabled: yes
+
+
 
 # Role webinstances fixar induviduella pooler för var sida!!!
 

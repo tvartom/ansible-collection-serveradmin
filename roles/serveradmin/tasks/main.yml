@@ -18,6 +18,15 @@
 #- pause:
 #  tags: test
 
+- name: set umask to 027 global
+  lineinfile:
+    dest: /etc/profile
+    state: present
+    regexp: "^umask\s+\d+"
+    insertafter: EOF
+    line: "umask 027"
+    # create: yes
+
 - name: "Create dir"
   become: yes
   file:
