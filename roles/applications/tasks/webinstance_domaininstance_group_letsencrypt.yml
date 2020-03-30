@@ -17,6 +17,7 @@
   register: subjectaltname
 
 - name: Check if Certificate Signing Request (CSR) exists
+  become: yes
   stat:
     path: "{{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr"
   register: csr_exists

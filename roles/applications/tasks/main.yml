@@ -45,6 +45,8 @@
 - name: "Delete unused .conf-files in /etc/nginx/webinstances.d"
   include_tasks: clean_nginx_conf.yml
 
+# Varnar för applications variable redan finns, eftersom vi använt den när vi skapade upp.
+# Detta är safe!
 - name: "Include application"
   include_tasks: application.yml
   loop: "{{ applications_info }}"
@@ -53,6 +55,33 @@
     label: "{{ application.environment|default('') }}-{{ application.name }}"
 
 ### Configfiler för alla applikationer/webinstancer #########################################
+- name: "Install extra packages for all applications"
+  become: yes
+  package:
+    name: >-
+      {{
+        applications_info | map(attribute='linux_packages') | flatten | unique | list
+      }}
+    state: present
+
+# Installera locales från alla webinstances
+# https://github.com/ansible/ansible/issues/44708
+- name: "Check if locales exists"
+  shell: >-
+    locale -a | grep -i "{{ item }}.utf8"
+  register: found_locales
+  changed_when: no
+  failed_when: no
+  loop: >-
+    {{
+      applications_info | map(attribute='locales') | flatten | unique | list
+    }}
+- name: "Create locales"
+  command: >-
+    localedef -i "{{ item.item }}" -f "UTF-8" "{{ item.item }}.UTF-8"
+  when: item.rc != 0
+  loop: "{{ found_locales.results }}"
+
 
 - name: Setup cron-jobb for Letsencrypt
   become: yes
@@ -76,7 +105,7 @@
   become: yes
   template:
     src: list_applications.sh.j2
-    dest: "{{ serveradmin.path }}/{{ organisation.name }}_list_applications"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}_list_applications"
     owner: "{{ serveradmin.process_user }}"
     group: "{{ serveradmin.process_user }}"
     mode: "u=rwx,g=rx,o=rx"

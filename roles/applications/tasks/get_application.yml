@@ -27,6 +27,16 @@
       desc: ""
       organisation: "{{ application_instance.organisation | default(organisation.name) }}"
       path: "/opt/{{ application_instance.organisation | default(organisation.name) }}/{{ temp_application_fullname }}"
+      linux_packages: [] # Installera extra packages
+      #Exempel linux_packages:
+      # - pdftoppm
+      # - "{{ php_package }}-bcmath"
+      # - "{{ 'redhat-package' if ansible_os_family == "RedHat" else 'debian-package' }}"
+      locales: []
+      #Exempel locales:
+      # - sv_SE # Svenska (Sverige)
+      # - nb_NO # Bokmål (Justerad danska för att passa norska) 90% väljer detta i skolan
+      # - nn_NO # Nynorsk (Nytt skriftspråk bygger på norska dialekter) 10% väljer detta i skolan
       #Populated properties:
       any_enable_php: false
       any_enable_https: false

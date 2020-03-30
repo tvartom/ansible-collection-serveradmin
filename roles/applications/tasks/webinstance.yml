@@ -30,7 +30,7 @@
     owner: "{{ item.owner | default( application.process_user, true ) }}"
     group: "{{ item.group | default( application.process_group, true ) }}"
     setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
-    mode: "u=rwx,g=rx,o=rx"
+    mode: "u=rwx,g=rx,o="
   when: item.when | default(True)
   loop:
     - { path: "/{{ webinstance.root_dir | default( webinstance.root_dir|mandatory if webinstance.create_root_dir else None ) }}",                    setype: "httpd_sys_content_t",    when: "{{ webinstance.create_root_dir }}" }

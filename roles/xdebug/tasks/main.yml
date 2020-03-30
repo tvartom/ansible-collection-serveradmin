@@ -23,4 +23,7 @@
       value: 1
     - option: xdebug.remote_autostart
       value: 1
+    # https://xdebug.org/docs/display
+    - option: xdebug.overload_var_dump
+      value: 0
   notify: "Reload php-fpm"

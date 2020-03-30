@@ -1,0 +1,47 @@
+---
+# Usage:
+#
+#- include_tasks: deploy_plugins/deploy_wordpress_download_addon.yml
+#  vars:
+#    addon_type: theme/plugin
+#  loop: "{{ application.metadata.wordpress.themes | d([]) }}"
+#  loop_control:
+#    loop_var: addon
+#
+# Struktur för addon:
+#    addon:
+#      name:
+#      url:
+#      use_dir_in_archive: |d(true)
+#      force: |d(false)
+### Install Wordpress AddOn #########################################################################################
+
+- name: "Check if addon dir exists"
+  become: yes
+  stat:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/{{ addon_type }}s/{{ addon.name }}"
+  register: addon_exists
+  when: not addon.use_dir_in_archive|d(true)
+
+- name: "Create dir for addon"
+  become: yes
+  file:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/{{ addon_type }}s/{{ addon.name }}"
+    state: directory
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o="
+  when: not addon.use_dir_in_archive|d(true)
+
+- name: Download and and unpack addon if not present
+  become: yes
+  unarchive:
+    remote_src: yes
+    src: "{{ addon.url }}"
+    extra_opts: "{{ omit if addon.use_dir_in_archive|d(true) else ['--strip-components=1', '--show-stored-names'] }}"  # Removes root-folder in archive
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/{{ addon_type }}s{{ '' if addon.use_dir_in_archive|d(true) else '/'~addon.name }}"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o="
+    creates: "{{ omit if addon.force|d(false) or not addon.use_dir_in_archive|d(true) else application.path~'/'~application.webinstances[deploy.webinstance].root_dir~'/wp-content/'~addon_type~'s/'~addon.name }}"
+  when: addon.use_dir_in_archive|d(true) or not addon_exists.stat.exists or addon.force|d(false)

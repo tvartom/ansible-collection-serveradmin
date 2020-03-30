@@ -14,7 +14,7 @@
     dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
-    mode: "u=rwX,g=rX,o=rX"
+    mode: "u=rwX,g=rX,o="
     creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-admin"
 
 - name: Create wp-config.php with proper new lines
@@ -25,6 +25,34 @@
     chdir: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"
     creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-config.php"
 
+- name: "Compose settings"
+  set_fact:
+    wordpress_settings:
+      # Remember quotes on string values
+      - constant: DB_NAME
+        value: "'{{ wordpress_database.database }}'"
+      - constant: DB_USER
+        value: "'{{ application.process_user }}'"
+      - constant: DB_PASSWORD
+        value: "''"
+      - constant: DB_HOST
+        value: "'localhost:/var/lib/mysql/mysql.sock'"
+      - constant: DB_CHARSET
+        value: "'{{ wordpress_database.charset | default('utf8mb4') }}'"
+      - variable: table_prefix
+        value: "'{{ wordpress_database.prefix | default('wp_') }}'"
+
+- name: "Add settings from plugins"
+  set_fact:
+    wordpress_settings: >-
+      {{
+        wordpress_settings
+        + application.metadata.wordpress.plugins | d([])
+            | selectattr('settings', 'defined')
+            | map(attribute='settings')
+            | flatten
+      }}
+
 - name: "Config Wordpress (Constants)"
   become: yes
   lineinfile:
@@ -33,18 +61,9 @@
     regexp: |-
       ^\s*define\(\s*('|"){{ item.constant }}("|')
     line: |-
-      define( '{{ item.constant }}', '{{ item.value }}' ); // Set by Ansible!
-  loop:
-    - constant: DB_NAME
-      value: "{{ wordpress_database.database }}"
-    - constant: DB_USER
-      value: "{{ application.process_user }}"
-    - constant: DB_PASSWORD
-      value: ""
-    - constant: DB_HOST
-      value: "localhost:/var/lib/mysql/mysql.sock"
-    - constant: DB_CHARSET
-      value: "{{ wordpress_database.charset | default('utf8mb4') }}"
+      define( '{{ item.constant }}', {{ item.value }} ); // Set by Ansible!
+  when: item.constant is defined
+  loop: "{{ wordpress_settings }}"
 
 - name: "Config Wordpress (Variables)"
   become: yes
@@ -55,9 +74,8 @@
       ^\s*\${{ item.variable }}\s*=
     line: |-
       ${{ item.variable }} = {{ item.value }}; // Set by Ansible!
-  loop:
-    - variable: table_prefix
-      value: "'{{ wordpress_database.prefix | default('wp_') }}'" # Remember quotes
+  when: item.variable is defined
+  loop: "{{ wordpress_settings }}"
 
 - name: "List of key/salt for cookies"
   set_fact:
@@ -94,37 +112,81 @@
     label: "{{ result_row[result_row.ansible_loop_var] }}"
   when: result_row.rc == 0
 
-### Install CiviCRM ########################################################################################
+### Install Themes #########################################################################################
 
-- name: CiviCRM - Download and unpack if not present
+- include_tasks: deploy_plugins/deploy_wordpress_download_addon.yml
+  vars:
+    addon_type: theme
+  loop: "{{ application.metadata.wordpress.themes | d([]) }}"
+  loop_control:
+    loop_var: addon
+
+### Install Plugins #########################################################################################
+
+- include_tasks: deploy_plugins/deploy_wordpress_download_addon.yml
+  vars:
+    addon_type: plugin
+  loop: "{{ application.metadata.wordpress.plugins | d([]) }}"
+  loop_control:
+    loop_var: addon
+
+### Patch and fix for CiviCRM ########################################################################################
+
+- name: "Create dir for civicrm"
   become: yes
-  unarchive:
-    remote_src: yes
-    # extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root wordpress/
-    # https://download.civicrm.org
-    src: "https://download.civicrm.org/civicrm-{{ application.metadata.wordpress.civicrm.version }}-wordpress.zip"
-    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins"
-    owner: "{{ application.process_user }}"
-    group: "{{ application.process_group }}"
-    mode: "u=rwX,g=rX,o=rX"
-    creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm"
-  when: application.metadata.wordpress.civicrm.version is defined
+  file:
+    path: "{{ application.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( application.process_user, true ) }}"
+    group: "{{ item.group | default( application.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "{{ item.mode | default('u=rwx,g=rx,o=') }}"
+  when: item.when | default(True)
+  loop:
+    - path: "/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads"
+      setype: "httpd_sys_rw_content_t"
+
+    # CiviCRM:
+    - path: "/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm"
+      setype: "httpd_sys_rw_content_t"
+      when: "{{ application.metadata.wordpress.civicrm is defined }}"
+
+    - path: "/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/persist"
+      setype: "httpd_sys_rw_content_t"
+      when: "{{ application.metadata.wordpress.civicrm is defined }}"
+
+    - path: "/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/persist/contribute"
+      setype: "httpd_sys_rw_content_t"
+      when: "{{ application.metadata.wordpress.civicrm is defined }}"
+
+    #- path: "/civicrm"
+    #  setype: "httpd_sys_rw_content_t"
+    #  when: "{{ application.metadata.wordpress.civicrm is defined }}"
+
+    #- path: "/civicrm/templates_c/"
+    #  setype: "httpd_sys_rw_content_t"
+    #  when: "{{ application.metadata.wordpress.civicrm is defined }}"
+
+    - path: "/log/civicrm"
+      setype: "httpd_sys_rw_content_t"
+      when: "{{ application.metadata.wordpress.civicrm is defined }}"
 
 - name: Patch CiviCRM
   block:
-  - name: "Install GNU patch (DNF)"
-    become: yes
-    dnf:
-      name: patch
-      state: present
-    when: ansible_os_family == "RedHat"
+    - name: "Install GNU patch (DNF)"
+      become: yes
+      dnf:
+        name: patch
+        state: present
+      when:
+        - ansible_os_family == "RedHat"
 
-  - name: "CiciCRM installer patch for unix socket unix(/var/lib/mysql/mysql.sock)"
-    become: yes
-    patch:
-      src: "civicrm-{{ application.metadata.wordpress.civicrm.version }}.patch"
-      basedir: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins"
-  when: application.metadata.wordpress.civicrm.patch_for_unix_socket | default(false)
+    - name: "CiviCRM installer patch for unix socket unix(/var/lib/mysql/mysql.sock)"
+      become: yes
+      patch:
+        src: "civicrm-{{ application.metadata.wordpress.civicrm.version }}.patch"
+        basedir: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins"
+  when: application.metadata.wordpress.civicrm.patch_for_unix_socket | d(false)
 
 - name: CiviCRM - Localization - Download and unpack if not present
   become: yes
@@ -136,7 +198,98 @@
     dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
-    mode: "u=rwX,g=rX,o=rX"
+    mode: "u=rwX,g=rX,o="
     creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm/l10n"
   when: application.metadata.wordpress.civicrm.localization | default(false)
 
+- name: "Copy civicrm.settings.ph from templates to uploads/civicrm"
+  become: yes
+  copy:
+    src: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm/templates/CRM/common/civicrm.settings.php.template"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/civicrm.settings.php"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o="
+    force: no
+    remote_src: yes
+  when: application.metadata.wordpress.civicrm is defined
+
+- name: "Sätt värden i civicrm.settings.php"
+  become: yes
+  replace:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/civicrm.settings.php"
+    regexp: "{{ item.pattern }}"
+    replace: "{{ item.value }}"
+  loop:
+    - pattern: "%%cms%%"
+      value: WordPress
+
+    # CIVICRM_UF_DSN
+    - pattern: "%%CMSdbUser%%"
+      value: "{{ application.process_user }}"
+    - pattern: "%%CMSdbPass%%"
+      value: ""
+    - pattern: "%%CMSdbHost%%"
+      value: unix(/var/lib/mysql/mysql.sock)
+    - pattern: "%%CMSdbName%%"
+      value: "{{ wordpress_database.database }}"
+
+    - pattern: "%%extraSettings%%"
+      value: |-
+        Additional settings generated by installer:
+        $civicrm_paths['wp.frontend.base']['url'] = 'https://{{ civicrm_maindomain }}/';
+        $civicrm_paths['wp.backend.base']['url'] = 'https://{{ civicrm_maindomain }}/wp-admin/';
+        $civicrm_setting['URL Preferences']['userFrameworkResourceURL'] = 'https://{{ civicrm_maindomain }}/wp-content/plugins/civicrm/civicrm';
+    # CIVICRM_DSN
+    - pattern: "%%dbUser%%"
+      value: "{{ application.process_user }}"
+    - pattern: "%%dbPass%%"
+      value: ""
+    - pattern: "%%dbHost%%"
+      value: unix(/var/lib/mysql/mysql.sock)
+    - pattern: "%%dbName%%"
+      value: "{{ civicrm_database.database }}"
+
+    - pattern: "%%crmRoot%%"
+      value: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm/"
+    - pattern: "%%baseURL%%"
+      value: "https://{{ civicrm_maindomain }}/"
+    - pattern: "%%siteKey%%"
+      value: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+    - pattern: |-
+        %%templateCompileDir%%/mail\.log
+      value: "{{ application.path }}/log/civicrm/mail.log"
+    - pattern: "%%templateCompileDir%%"
+      #value: "{{ application.path }}/civicrm/templates_c/"
+      value: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/templates_c/"
+  vars:
+    civicrm_database: "{{ application.databases[application.metadata.wordpress.civicrm.databaseindex | d(application.metadata.wordpress.databaseindex | d(0))] }}"
+    civicrm_maindomain: "{{ application.webinstances['web'].domaininstances[0].domains[0] }}"
+  when: application.metadata.wordpress.civicrm is defined
+
+# CiviCRM -> Administer -> System Settings -> Directories -> Custom Template Directory = "[civicrm.files]/custom_templates/"
+# (/wp-content/uploads/civicrm/custom_templates)
+- name: ensure custom facts directory exists
+  become: yes
+  file:
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/custom_templates/{{ custom_template.path }}"
+    recurse: yes
+    state: directory
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o="
+  loop: "{{ application.metadata.wordpress.civicrm.custom_templates | d([]) }}"
+  loop_control:
+    loop_var: custom_template
+
+- name: "Create custom templates for CIVICRM"
+  become: yes
+  template:
+    src: "deploy_plugins/wordpress/civicrm/script.extra.tpl.j2"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/custom_templates/{{ custom_template.path }}/{{ custom_template.name }}.extra.tpl"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwX,g=rX,o="
+  loop: "{{ application.metadata.wordpress.civicrm.custom_templates | d([]) }}"
+  loop_control:
+    loop_var: custom_template

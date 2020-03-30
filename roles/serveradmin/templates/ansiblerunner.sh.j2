@@ -30,7 +30,7 @@ source include_common.sh
 setfacl -R -m u:{{ serveradmin.process_user }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ serveradmin.process_user }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}" 
 {% endif %}
 
-sudo -u serveradmin -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) {{ playbook_to_run }}
+sudo -u {{ serveradmin.process_user }} -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) {{ playbook_to_run }}
 
 {% if agent_forwarding %}
 setfacl -R -b "${SSH_AUTH_SOCK%/*}"

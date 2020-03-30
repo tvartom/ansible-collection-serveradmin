@@ -1,13 +1,13 @@
 ---
-
-- name: Gather list of nginx conf
+- name: "Gather list of nginx conf"
   find:
     paths:  /etc/nginx/webinstances.d/
     patterns:
       - "*.conf"
   register: current_ngninx_files
 
-- set_fact:
+- name: "Filter out used nginx confs"
+  set_fact:
     files_to_delete: >-
       {%- set valid_files  = [] -%}
       {%- for application in applications_info -%}

@@ -1,0 +1,12 @@
+{literal}
+<script>
+{{ custom_template.script | d('') }}
+{% if custom_template.script_jquery is defined %}
+	CRM.$(function($) {
+		$(document).ready(function(){
+			{{ custom_template.script_jquery }}
+		});
+	});
+{% endif %}
+</script>
+{/literal}

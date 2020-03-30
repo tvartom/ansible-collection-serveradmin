@@ -60,16 +60,16 @@
   tags:
     - bootstrap
 
-- name: Lista filer (databaskopiering)
+- name: Generate data_migrations
   set_fact:
     serveradmin_files: |-
-      {%- for database_migration in serveradmin.database_migrations | default([]) -%}
+      {%- for data_migration in data_migrations | default([]) -%}
       {{-   serveradmin_files.append({
-        'file': 'database_migration.sh',
-        'dest': 'copy_db_'+database_migration.from_database,
-        'desc': 'Kopiera databasen '+database_migration.from_database+' från '+database_migration.from_server+' till '+database_migration.to_database,
-        'meta': database_migration,
-        'show_on_splash': database_migration.show_on_splash | default(true) }) -}}
+        'file': 'data_migration.sh',
+        'dest': 'data_migration_'+data_migration.name,
+        'desc': 'Kopiera data från '+data_migration.ssh_host,
+        'meta': data_migration,
+        'show_on_splash': data_migration.show_on_splash | default(true) }) -}}
       {%- endfor -%}
       {{- serveradmin_files -}}
 

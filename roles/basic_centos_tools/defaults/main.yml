@@ -9,9 +9,10 @@ basic_default:
     - glibc-langpack-en
     - glibc-langpack-sv
     - perl-Image-ExifTool
-    - joe
+    - joe #texteditor Anders använder
     - unzip
     - bzip2
+    - pv
 
     #- net-tools #ifconfig finns i denna
     #- rsync

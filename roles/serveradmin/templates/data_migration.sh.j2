@@ -1,0 +1,120 @@
+#!/bin/bash
+#
+# Managed by Ansible!
+#
+set -e
+source include_common.sh
+
+{% set data_migration = item.meta %}
+
+{% if data_migration.filesets is defined %}
+{% set agent_forwarding = data_migration.agent_forwarding | d(false) %}
+################## Kopiera filer #########################
+  {% if agent_forwarding %}
+    # https://unix.stackexchange.com/questions/131596/ssh-agent-forwarding-works-but-what-about-sudo-u-username-no-shell-permission
+    # https://linux.die.net/man/1/setfacl
+    setfacl -R -m u:{{ data_migration.file_owner }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ data_migration.file_owner }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}".
+  {% endif %}
+
+  {% for fileset in data_migration.filesets %}
+    echo "{{ fileset.description }}"
+
+    #rsync:
+  #-a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
+  #  -r, --recursive             recurse into directories
+  #  -l, --links                 copy symlinks as symlinks
+  #  -p, --perms                 preserve permissions
+  #  -t, --times                 preserve modification times
+  #  -g, --group                 preserve group
+  #  -o, --owner                 preserve owner (super-user only)
+  #  -D                          same as --devices --specials
+  #    --devices               preserve device files (super-user only)
+  #    --specials              preserve special files
+
+  #  -H, --hard-links     This tells rsync to look for hard-linked files in the transfer and link together the corresponding files on the receiving side. Without this option, hard-linked files in the transfer are treated as though they were separate files.
+  #  -A, --acls           This option causes rsync to update the destination ACLs to be the same as the source ACLs. The option also implies --perms.
+  #  -X, --xattrs         This option causes rsync to update the remote extended attributes to be the same as the local ones.
+
+  #-v, --verbose
+  #-z, --compress              compress file data during the transfer
+    sudo -u {{ data_migration.file_owner }} -i \
+      {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK"{% endif %} \
+      rsync \
+        --recursive \
+        --links \
+        --prune-empty-dirs \
+        {% for exclude in fileset.excludes | d([]) %}--exclude "{{ exclude }}" {% endfor %} \
+        "{{ data_migration.ssh_host }}:{{ fileset.src }}/" "{{ fileset.dest }}/"
+  {% endfor %}
+
+  {% if agent_forwarding %}
+    setfacl -R -b "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}Agentforwarding borttagen för användare {{ data_migration.file_owner }}!${NC}"
+  {% endif %}
+{% endif %}
+
+{% if data_migration.confirm |  d('',True) != ''  %}
+  # Från: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
+  read -p "{{ data_migration.confirm }} [y/N]" -n 1 -r
+  echo    # (optional) move to a new line
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
+  fi
+{% endif %}
+
+{% for database in data_migration.databases | default([]) %}
+  {% set dumpfile = 'dump_'~database.from.name~'.sql' %}
+  ######### Kopiera databas från {{ data_migration.ssh_host }}/{{ database.from.name }}  till localhost/{{ database.to.name }} #########
+  # ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta)
+  time \
+    ssh {{ data_migration.ssh_host }} "
+      mysqldump \
+        {{ '--host='~database.from.host if database.from.host is defined else '' }} \
+        {{ '--user='~database.from.user if database.from.user is defined else '' }} \
+        {% if database.from.password is defined %}--password{{ '='~database.from.password if database.from.password is string else '' }}{% endif %} \
+        {{ '--events'   if database.include_events   | d(true) else '' }} \
+        {{ '--routines' if database.include_routines | d(true) else '' }} \
+        {{ '--triggers' if database.include_triggers | d(true) else '' }} \
+        {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
+        `#--add-drop-database` \
+        --no-create-db \
+        `#--no-data` \
+        --skip-lock-tables \
+        {% for table in database.ignore_tables | d([]) %}--ignore-table={{ database.from.name }}.{{ table }} {% endfor %} \
+        '{{ database.from.name }}' \
+        {% for table in database.include_tables | d([]) %}{{ table }} {% endfor %} \
+        {# | gzip -9 #} " > {{ dumpfile }}
+
+  #	${DB_PORT:+"--protocol=TCP"} ${DB_PORT:+"--port=$DB_PORT"} \
+
+  echo
+  {% if database.from.name != database.to.name %}
+    echo "Clean old db_name from dump-file..."
+    # mysqldump lämnar några spår av databasnamnet, exempelvis i triggers, så byt ut dessa:
+    sed -ri "s/\`{{ database.from.name }}\`/\`{{ database.to.name }}\`/g" {{ dumpfile }}
+  {% endif %}
+
+  {% if database.suffix_on_emailadresses | d('', true) != '' %}
+    echo "Add '{{ database.suffix_on_emailadresses }}' on all email-address to make them useless..."
+    # -i == inplace (in och ut i samma fil)
+    sed -i -r "s/'([^@'\ ]+@[^@'\ ]+)'/'\1{{ database.suffix_on_emailadresses }}'/g" {{ dumpfile }}
+  {% endif %}
+
+  {% for replace in database.replaces | default([]) %}
+    echo "{{ replace.description }}"
+    sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" {{ dumpfile }}
+
+  {% endfor %}
+
+  echo "Drop if exists...({{ database.to.name }})"
+  mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
+
+  echo "Create database..."
+  mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
+
+  echo "Populate local database... (With data)"
+  pv {{ dumpfile }} \
+    {# | gunzip #} \
+      | mysql \
+        {{ '--default-character-set='~database.to.default_character_set if database.to.default_character_set is defined else '' }} \
+        {{ database.to.name }}
+{% endfor %}
