@@ -6,12 +6,6 @@
     - bootstrap
 # Returns: serveradmin
 
-- include_role:
-    name: google_cloud_sdk
-  when: serveradmin.use_gcloud
-  tags:
-    - bootstrap
-
 #- debug:
 #     var: serveradmin
 #  tags: test
@@ -120,17 +114,6 @@
   loop:
     - { path: "" }
     - { path: "/workspace" }
-  tags:
-    - bootstrap
-
-- name: "Register key for Google Cloud on serveradmin-user"
-  include_role:
-    name: google_cloud_sdk
-    tasks_from: gcloud_add_key
-  vars:
-    gcloud_linuxuser: "{{ serveradmin.process_user }}"
-    gloud_key: "{{ serveradmin.gcloud_key }}"
-  when: serveradmin.use_gcloud
   tags:
     - bootstrap
 

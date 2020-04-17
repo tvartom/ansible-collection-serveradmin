@@ -19,37 +19,44 @@
             #- users
           host_vars_from_host: true
           diskspace_message: false
+
     - include_role:
         name: basic_centos_tools
       tags:
         - bootstrap
+
     - include_role:
         name: mc
       tags:
         - bootstrap
+
     - include_role:
         name: git
       tags:
         - bootstrap
+
     - include_role:
         name: users
       tags:
         - bootstrap
+
     - include_role:
         name: mariadb
-#    - include_role:
-#        name: google_cloud_sdk
-#      when: serveradmin.use_gloud
+
     - include_role:
         name: firewall
+
     - include_role:
         name: java_and_maven
+
     - include_role:
         name: serveradmin
       tags:
         - bootstrap
+
     - include_role:
         name: webserver
+
     - include_role:
         name: autofs
       when: autofs is defined

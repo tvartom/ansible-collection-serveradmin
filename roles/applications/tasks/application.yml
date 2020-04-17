@@ -62,15 +62,6 @@
       databases: "{{ application.databases }}"
   when: application.databases is defined
 
-- name: "Registrera nyckel för Google Cloud på application-användare"
-  include_role:
-    name: google_cloud_sdk
-    tasks_from: gcloud_add_key
-  vars:
-    gcloud_linuxuser: "{{ application.process_user }}"
-    gloud_key: "{{ serveradmin.gcloud_key }}"
-  when: serveradmin.use_gcloud
-
 - name: "Konfigurera git för application-användaren"
   include_role:
     name: git

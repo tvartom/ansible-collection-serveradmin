@@ -1,5 +1,4 @@
 ---
-
 #- name: "shell..."
 #  shell: "echo ~serveradmin"
 #  register: shell_out
