@@ -58,7 +58,6 @@ else
 	echo -e "User '$SA_USER' already exists.\n"
 fi
 
-
 mkdir -p "$SA_USER_HOME/.ssh"
 chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
 chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
@@ -93,14 +92,18 @@ echo ""
 echo "5. Press 'Add key'"
 echo ""
 pause 'Press [Enter] when done to continue...'
-exit
+
 # Använder yum som fungerar både på CentOS 7 och 8.
-echo "Install Ansible with pip to get latest version"
+echo "Installing Git and Python3 with pip..."
 yum install git python3 python3-pip
+echo "Installing Ansible with pip to get latest version..."
 sudo -u $SA_USER pip install --user ansible
 
+echo -n "Creating workspace for serveradmin... "
 mkdir -p "$SA_PATH/workspace"
-chown -R serveradmin:serveradmin "$SA_PATH"
+chown -R $SA_USER:$SA_USER "$SA_PATH"
 chmod -R u=rwx,g=rwx,o=rx "$SA_PATH"
+echo -e "Done\n"
 
+echo "Cloning serveradmin-repo..."
 sudo -u $SA_USER git clone $SA_REPO "$SA_PATH/workspace/serveradmin"
