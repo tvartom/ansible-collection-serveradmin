@@ -105,5 +105,13 @@ chown -R $SA_USER:$SA_USER "$SA_PATH"
 chmod -R u=rwx,g=rwx,o=rx "$SA_PATH"
 echo -e "Done\n"
 
-echo "Cloning serveradmin-repo..."
-sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone $SA_REPO "$SA_PATH/workspace/serveradmin"
+SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
+
+if [ ! -d "$SA_PATH_REPO/.git" ]; then
+	echo "Cloning serveradmin-repo..."
+	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone $SA_REPO "$SA_PATH/workspace/serveradmin"
+else
+    cd $SA_REPO_PATH
+    git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull
+fi
+cd ~
