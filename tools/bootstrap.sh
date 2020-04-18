@@ -18,12 +18,15 @@ if [ "$EUID" -ne 0 ]
 fi
 
 echo "### Serveradmin-repository on Github ###"
-read -p "Github username of owner of serveradmin-repository: " REPO_USER
-read -p "Name of ${REPO_USER}'s serveradmin-repository: " REPO_NAME
+read -p "Github username of owner of serveradmin-repository: " SA_REPO_USER
+read -p "Name of ${SA_REPO_USER}'s serveradmin-repository: " SA_REPO_NAME
+SA_REPO="git@github.com:/$SA_REPO_USER/$SA_REPO_NAME.git"
+echo $SA_REPO;
 
+echo ""
 echo "### Serveradmin settings ###"
 SA_USER_DEFAULT="serveradmin"
-read -p "Name of seradmin-user [$SA_USER_DEFAULT]: " SA_USER
+read -p "Name of servadmin-user [$SA_USER_DEFAULT]: " SA_USER
 SA_USER="${SA_USER:-SA_USER_DEFAULT}"
 
 exit
