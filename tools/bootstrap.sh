@@ -44,7 +44,7 @@ SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
 echo ""
 
 SYSTEM_USER_HOME="/home/system"
-echo "Make sure '$SYSTEM_USER_HOME' exists... "
+echo -n "Make sure '$SYSTEM_USER_HOME' exists... "
 mkdir -p "$SYSTEM_USER_HOME"
 chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
 echo -e "Done\n"
