@@ -97,7 +97,7 @@ pause 'Press [Enter] when done to continue...'
 echo "Installing Git and Python3 with pip..."
 yum install git python3 python3-pip
 echo "Installing Ansible with pip to get latest version..."
-sudo -u $SA_USER pip install --user ansible
+sudo -u $SA_USER pip3 install --user ansible
 
 echo -n "Creating workspace for serveradmin... "
 mkdir -p "$SA_PATH/workspace"
