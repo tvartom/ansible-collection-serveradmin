@@ -114,4 +114,3 @@ else
     cd $SA_REPO_PATH
     git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull
 fi
-cd ~
