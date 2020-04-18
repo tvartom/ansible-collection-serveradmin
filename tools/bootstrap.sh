@@ -18,45 +18,75 @@ if [ "$EUID" -ne 0 ]
 fi
 
 echo "### Serveradmin-repository on Github ###"
-read -p "Github username of owner of serveradmin-repository: " SA_REPO_USER
+SA_REPO_HOST="github.com"
+read -p "Username on $SA_REPO_HOST for owner of serveradmin-repository: " SA_REPO_USER
 read -p "Name of ${SA_REPO_USER}'s serveradmin-repository: " SA_REPO_NAME
-SA_REPO="git@github.com:/$SA_REPO_USER/$SA_REPO_NAME.git"
+SA_REPO="git@$SA_REPO_HOST:/$SA_REPO_USER/$SA_REPO_NAME.git"
 echo $SA_REPO;
 
 echo ""
 echo "### Serveradmin settings ###"
+SA_INVENTORY_NAME_DEFAULT="$(hostname)"
+read -p "Name of this server in inventory-file [$SA_INVENTORY_NAME_DEFAULT]: " SA_INVENTORY_NAME
+SA_INVENTORY_NAME="${SA_INVENTORY_NAME:-$SA_INVENTORY_NAME_DEFAULT}"
+
 SA_USER_DEFAULT="serveradmin"
 read -p "Name of servadmin-user [$SA_USER_DEFAULT]: " SA_USER
-SA_USER="${SA_USER:-SA_USER_DEFAULT}"
+SA_USER="${SA_USER:-$SA_USER_DEFAULT}"
+
+$SA_PATH_DEFAULT="/opt/$SA_USER"
+read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
+SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
+
 
 exit
 
-mkdir "/home/system"
+
+SA_USER_HOME="/home/system/$SA_USER"
+
+mkdir -p "$(dirname $SA_USER_HOME)"
 chmod u=rwx,g=rx,o=rx "/home/system"
 
-useradd --system -d /home/system/serveradmin -G wheel,adm serveradmin
+useradd --system -d "$SA_USER_HOME" -G wheel,adm "$SA_USER"
 
-mkdir "/home/system/serveradmin/.ssh"
-chmod u=rwx,g=,o= "/home/system/serveradmin/.ssh"
+mkdir "$SA_USER_HOME/.ssh"
+chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
+chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
 
-#Bara deploy-key ska skapas!
-#    comment: "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname}}"
+SA_DEPLOY_KEY="$SA_USER_HOME/.ssh/deploy_${SA_REPO_HOST}_${SA_REPO_USER}_${SA_REPO_NAME}"
+SA_DEPLOY_KEY_COMMENT="${SA_USER}@${SA_INVENTORY_NAME} $(date +"%Y-%m-%d)"
 
-sudo -u serveradmin \
+sudo -u $SA_USER \
 		ssh-keygen -b 4096 \
 				-t rsa \
 				-q \
 				-N "" \
-				-f "/home/system/serveradmin/.ssh/deploy_github.com_tvartom_devops-homeservers"
-				-C "serveradmin@$(hostname) $(date +"%Y-%m-%d)"
+				-f "$SA_DEPLOY_KEY"
+				-C "$SA_DEPLOY_KEY_COMMENT"
 
+echo "Add this key as a read-only deploy-key:"
+cat "$SA_DEPLOY_KEY.pub"
+echo "1. Log in as '$REPO_NAME' on github.com."
+echo "2. Goto https://$REPO_HOST/$REPO_USER/$REPO_NAME/settings/keys"
+echo "3. Press 'Add deploy key'"
+echo "4. Fill in:"
+echo "     Title:"
+echo "$SA_DEPLOY_KEY_COMMENT"
+echo "     Key: "
+ssh-keygen -y -f "$SA_DEPLOY_KEY"
+echo ""
+echo "5. Press 'Add key'"
+echo ""
+echo "Press enter when done."
+pause
+exit
 # Använder yum som fungerar både på CentOS 7 och 8.
+echo "Install Ansible with pip to get latest version"
+yum install git python3 python3-pip
+sudo -u $SA_USER pip install --user ansible
 
-yum install python3 python3-pip
+mkdir -p "$SA_PATH/workspace"
+chown -R serveradmin:serveradmin "$SA_PATH"
+chmod -R u=rwx,g=rwx,o=rx "$SA_PATH"
 
-sudo -u serveradmin pip install --user ansible
-
-mkdir -p /opt/serveradmin/workspace
-chown -R serveradmin:serveradmin /opt/serveradmin
-chmod -R u=rwx,g=rwx,o=rx /opt/serveradmin
-
+sudo -u $SA_USER git clone $SA_REPO "$SA_PATH/workspace/serveradmin"
