@@ -56,6 +56,7 @@ chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
 SA_DEPLOY_KEY="$SA_USER_HOME/.ssh/deploy_${SA_REPO_HOST}_${SA_REPO_USER}_${SA_REPO_NAME}"
 SA_DEPLOY_KEY_COMMENT="${SA_USER}@${SA_INVENTORY_NAME} $(date +"%Y-%m-%d")"
 
+echo -e "Generating deploy-key..."
 sudo -u $SA_USER \
 		ssh-keygen -b 4096 \
 				-t rsa \
@@ -63,6 +64,7 @@ sudo -u $SA_USER \
 				-N "" \
 				-f "$SA_DEPLOY_KEY" \
 				-C "$SA_DEPLOY_KEY_COMMENT"
+echo -e "Done\n"
 
 echo "Add key as a read-only deploy-key on Github:"
 echo "1. Log in as '$REPO_NAME' on github.com."
