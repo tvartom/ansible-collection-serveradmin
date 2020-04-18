@@ -38,15 +38,11 @@ SA_PATH_DEFAULT="/opt/$SA_USER"
 read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
 SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
 
+SYSTEM_USER_HOME="/home/system"
+mkdir -p "$SYSTEM_USER_HOME"
+chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
 
-exit
-
-
-SA_USER_HOME="/home/system/$SA_USER"
-
-mkdir -p "$(dirname $SA_USER_HOME)"
-chmod u=rwx,g=rx,o=rx "/home/system"
-
+SA_USER_HOME="$SYSTEM_USER_HOME/$SA_USER"
 useradd --system -d "$SA_USER_HOME" -G wheel,adm "$SA_USER"
 
 mkdir "$SA_USER_HOME/.ssh"
@@ -64,8 +60,7 @@ sudo -u $SA_USER \
 				-f "$SA_DEPLOY_KEY"
 				-C "$SA_DEPLOY_KEY_COMMENT"
 
-echo "Add this key as a read-only deploy-key:"
-cat "$SA_DEPLOY_KEY.pub"
+echo "Add key as a read-only deploy-key on Github:"
 echo "1. Log in as '$REPO_NAME' on github.com."
 echo "2. Goto https://$REPO_HOST/$REPO_USER/$REPO_NAME/settings/keys"
 echo "3. Press 'Add deploy key'"
