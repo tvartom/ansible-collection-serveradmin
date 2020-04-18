@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run this script as with:
-# $ curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh | sudo bash
+# $ curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh bootstrap.sh && sudo bash bootstrap.sh
 #
 # You need a serveradmin-repository with settings for this server.
 # E.g.
