@@ -18,7 +18,8 @@ if [ "$EUID" -ne 0 ]
 fi
 echo "### Serveradmin-repository ###"
 read -p "Host [github.com]: " REPO_HOST
-REPO_HOST="${DB_HOST:-github.com}"
+
+REPO_HOST="${REPO_HOST:-github.com}"
 echo $REPO_HOST
 exit
 
