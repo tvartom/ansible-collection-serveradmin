@@ -42,8 +42,9 @@ SYSTEM_USER_HOME="/home/system"
 mkdir -p "$SYSTEM_USER_HOME"
 chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
 
+useradd --system -b "$SYSTEM_HOME" "$SA_USER"
+
 SA_USER_HOME="$SYSTEM_USER_HOME/$SA_USER"
-useradd --system -d "$SA_USER_HOME" -G wheel,adm "$SA_USER"
 
 mkdir "$SA_USER_HOME/.ssh"
 chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
@@ -57,7 +58,7 @@ sudo -u $SA_USER \
 				-t rsa \
 				-q \
 				-N "" \
-				-f "$SA_DEPLOY_KEY"
+				-f "$SA_DEPLOY_KEY" \
 				-C "$SA_DEPLOY_KEY_COMMENT"
 
 echo "Add key as a read-only deploy-key on Github:"
