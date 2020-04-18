@@ -41,13 +41,22 @@ SA_USER="${SA_USER:-$SA_USER_DEFAULT}"
 SA_PATH_DEFAULT="/opt/$SA_USER"
 read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
 SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
+echo ""
 
 SYSTEM_USER_HOME="/home/system"
+echo "Make sure '$SYSTEM_USER_HOME' exists..."
 mkdir -p "$SYSTEM_USER_HOME"
 chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
 
+
 SA_USER_HOME="$SYSTEM_USER_HOME/$SA_USER"
-useradd --system --create-home --home "$SA_USER_HOME" "$SA_USER"
+if ! id -u $SA_USER > /dev/null 2>&1; then
+	echo -n "Creating user '$SA_USER'... "
+	useradd --system --create-home --home "$SA_USER_HOME" "$SA_USER"
+	echo -e "Done\n"
+else
+	echo -e "User '$SA_USER' already exists.\n"
+fi
 
 mkdir "$SA_USER_HOME/.ssh"
 chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
@@ -56,19 +65,23 @@ chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
 SA_DEPLOY_KEY="$SA_USER_HOME/.ssh/deploy_${SA_REPO_HOST}_${SA_REPO_USER}_${SA_REPO_NAME}"
 SA_DEPLOY_KEY_COMMENT="${SA_USER}@${SA_INVENTORY_NAME} $(date +"%Y-%m-%d")"
 
-echo -e "Generating deploy-key..."
-sudo -u $SA_USER \
-		ssh-keygen -b 4096 \
-				-t rsa \
-				-q \
-				-N "" \
-				-f "$SA_DEPLOY_KEY" \
-				-C "$SA_DEPLOY_KEY_COMMENT"
-echo -e "Done\n"
+if [ ! -f "$SA_DEPLOY_KEY" ]; then
+	echo -n "Generating deploy-key... "
+	sudo -u $SA_USER \
+			ssh-keygen -b 4096 \
+					-t rsa \
+					-q \
+					-N "" \
+					-f "$SA_DEPLOY_KEY" \
+					-C "$SA_DEPLOY_KEY_COMMENT"
+	echo -e "Done\n"
+else
+	echo -e "Deploy key already exists.\n"
+fi
 
 echo "Add key as a read-only deploy-key on Github:"
-echo "1. Log in as '$REPO_NAME' on github.com."
-echo "2. Goto https://$REPO_HOST/$REPO_USER/$REPO_NAME/settings/keys"
+echo "1. Log in as '$SA_REPO_NAME' on github.com."
+echo "2. Goto https://$SA_REPO_HOST/$SA_REPO_USER/$SA_REPO_NAME/settings/keys"
 echo "3. Press 'Add deploy key'"
 echo "4. Fill in:"
 echo "     Title:"
