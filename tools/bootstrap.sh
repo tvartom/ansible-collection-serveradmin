@@ -58,7 +58,8 @@ else
 	echo -e "User '$SA_USER' already exists.\n"
 fi
 
-mkdir "$SA_USER_HOME/.ssh"
+
+mkdir -p "$SA_USER_HOME/.ssh"
 chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
 chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
 
