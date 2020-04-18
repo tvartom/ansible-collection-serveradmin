@@ -6,6 +6,10 @@
 # You need a serveradmin-repository with settings for this server.
 # E.g.
 
+function pause(){
+   read -p "$*"
+}
+
 echo "############################################"
 echo "### BOOTSTRAP for Serveradmin by Tvartom ###"
 echo "############################################"
@@ -72,8 +76,7 @@ ssh-keygen -y -f "$SA_DEPLOY_KEY"
 echo ""
 echo "5. Press 'Add key'"
 echo ""
-echo "Press enter when done."
-pause
+pause 'Press [Enter] when done to continue...'
 exit
 # Använder yum som fungerar både på CentOS 7 och 8.
 echo "Install Ansible with pip to get latest version"
