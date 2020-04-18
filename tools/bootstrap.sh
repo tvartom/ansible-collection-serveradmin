@@ -23,7 +23,7 @@ read -p "Name of ${REPO_USER}'s serveradmin-repository: " REPO_NAME
 
 echo "### Serveradmin settings ###"
 SA_USER_DEFAULT="serveradmin"
-read -p "Name of seradmin-user [$SA_USER]: " SA_USER
+read -p "Name of seradmin-user [$SA_USER_DEFAULT]: " SA_USER
 SA_USER="${SA_USER:-SA_USER_DEFAULT}"
 
 exit
