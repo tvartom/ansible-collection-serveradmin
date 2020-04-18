@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run this script as with:
-# $ curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh bootstrap.sh && sudo bash bootstrap.sh
+# $ curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh -o bootstrap.sh && sudo bash bootstrap.sh
 #
 # You need a serveradmin-repository with settings for this server.
 # E.g.
@@ -16,11 +16,16 @@ if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
 fi
-echo "### Serveradmin-repository ###"
-read -p "Host [github.com]: " REPO_HOST < /dev/stdin
 
-REPO_HOST="${REPO_HOST:-github.com}"
-echo $REPO_HOST
+echo "### Serveradmin-repository on Github ###"
+read -p "Github username of owner of serveradmin-repository: " REPO_USER
+read -p "Name of ${REPO_USER}'s serveradmin-repository: " REPO_NAME
+
+echo "### Serveradmin settings ###"
+SA_USER_DEFAULT="serveradmin"
+read -p "Name of seradmin-user [$SA_USER]: " SA_USER
+SA_USER="${SA_USER:-SA_USER_DEFAULT}"
+
 exit
 
 mkdir "/home/system"
