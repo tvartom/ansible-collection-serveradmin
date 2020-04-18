@@ -106,4 +106,4 @@ chmod -R u=rwx,g=rwx,o=rx "$SA_PATH"
 echo -e "Done\n"
 
 echo "Cloning serveradmin-repo..."
-sudo -u $SA_USER git clone $SA_REPO "$SA_PATH/workspace/serveradmin"
+sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone $SA_REPO "$SA_PATH/workspace/serveradmin"
