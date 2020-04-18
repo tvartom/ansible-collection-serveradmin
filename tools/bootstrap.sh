@@ -47,7 +47,7 @@ SYSTEM_USER_HOME="/home/system"
 echo "Make sure '$SYSTEM_USER_HOME' exists..."
 mkdir -p "$SYSTEM_USER_HOME"
 chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
-
+echo -e "Done\n"
 
 SA_USER_HOME="$SYSTEM_USER_HOME/$SA_USER"
 if ! id -u $SA_USER > /dev/null 2>&1; then
