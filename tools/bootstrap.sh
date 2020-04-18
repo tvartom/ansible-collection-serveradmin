@@ -42,7 +42,7 @@ SYSTEM_USER_HOME="/home/system"
 mkdir -p "$SYSTEM_USER_HOME"
 chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
 
-useradd --system -b "$SYSTEM_HOME" "$SA_USER"
+useradd --system --create-home -b "$SYSTEM_HOME" "$SA_USER"
 
 SA_USER_HOME="$SYSTEM_USER_HOME/$SA_USER"
 
@@ -51,7 +51,7 @@ chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
 chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
 
 SA_DEPLOY_KEY="$SA_USER_HOME/.ssh/deploy_${SA_REPO_HOST}_${SA_REPO_USER}_${SA_REPO_NAME}"
-SA_DEPLOY_KEY_COMMENT="${SA_USER}@${SA_INVENTORY_NAME} $(date +"%Y-%m-%d)"
+SA_DEPLOY_KEY_COMMENT="${SA_USER}@${SA_INVENTORY_NAME} $(date +"%Y-%m-%d")"
 
 sudo -u $SA_USER \
 		ssh-keygen -b 4096 \
