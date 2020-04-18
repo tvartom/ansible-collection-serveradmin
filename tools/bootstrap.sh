@@ -112,5 +112,5 @@ if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
     cd $SA_PATH_REPO
-    git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull
+    sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull
 fi
