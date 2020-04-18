@@ -42,9 +42,8 @@ SYSTEM_USER_HOME="/home/system"
 mkdir -p "$SYSTEM_USER_HOME"
 chmod u=rwx,g=rx,o=rx "$SYSTEM_USER_HOME"
 
-useradd --system --create-home -b "$SYSTEM_HOME" "$SA_USER"
-
 SA_USER_HOME="$SYSTEM_USER_HOME/$SA_USER"
+useradd --system --create-home --home "$SA_USER_HOME" "$SA_USER"
 
 mkdir "$SA_USER_HOME/.ssh"
 chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
