@@ -11,7 +11,7 @@
     remote_src: yes
     extra_opts: ['--strip-components=1', '--show-stored-names'] # Removes root wordpress/
     src: "https://wordpress.org/latest.tar.gz"
-    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance | mandatory].root_dir }}"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwX,g=rX,o="
@@ -264,7 +264,7 @@
       value: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/uploads/civicrm/templates_c/"
   vars:
     civicrm_database: "{{ application.databases[application.metadata.wordpress.civicrm.databaseindex | d(application.metadata.wordpress.databaseindex | d(0))] }}"
-    civicrm_maindomain: "{{ application.webinstances['web'].domaininstances[0].domains[0] }}"
+    civicrm_maindomain: "{{ application.webinstances[deploy.webinstance].domaininstances[0].domains[0] }}"
   when: application.metadata.wordpress.civicrm is defined
 
 # CiviCRM -> Administer -> System Settings -> Directories -> Custom Template Directory = "[civicrm.files]/custom_templates/"

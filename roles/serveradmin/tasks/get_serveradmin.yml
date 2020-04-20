@@ -27,36 +27,31 @@
         dest: "ansible_facts_show"
         #desc: "Visa ansible-information om denna server."
         meta:
-          playbook_in_serveradmin_collection: true
-          ansible_playbook: "facts_show.yml"
+          ansible_playbook: "playbook-facts_show.yml"
         bootstrap: true
       - file: ansiblerunner.sh
         dest: "ansible_serveradmin"
         desc: "Kör playbooken 'serveradmin' lokalt på denna server."
         meta:
-          playbook_in_serveradmin_collection: false
           ansible_playbook: "playbook-serveradmin.yml"
         bootstrap: true
       - file: ansiblerunner.sh
         dest: "ansible_applications"
         desc: "Konfigurera alla applikationer lokalt på denna server."
         meta:
-          playbook_in_serveradmin_collection: true
-          ansible_playbook: "applications.yml"
+          ansible_playbook: "playbook-applications.yml"
       - file: ansiblerunner.sh
         dest: "ansible_backup"
         desc: "Konfigurera säkerhetskopiering från denna server till andra."
         meta:
-          playbook_in_serveradmin_collection: true
-          ansible_playbook: "backup.yml"
+          ansible_playbook: "playbook-backup.yml"
           agent_forwarding: true
         when: "{{ backup is defined }}"
       - file: ansiblerunner.sh
         dest: "deploy"
         desc: "Driftsättning av applikation."
         meta:
-          playbook_in_serveradmin_collection: true
-          ansible_playbook: "applications_deploy.yml"
+          ansible_playbook: "playbook-applications_deploy.yml"
   tags:
     - bootstrap
 

@@ -80,8 +80,6 @@
       # [restricted:]
       #   - caption:
       #   - file:
-      # [wordpress_uam: true]
-      # [wordpress: true]
       # [permalinkhandling: true]
       # [proxy_port: 8080]
       #Populated properties:

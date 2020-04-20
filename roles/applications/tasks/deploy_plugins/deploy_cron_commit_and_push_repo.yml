@@ -1,19 +1,17 @@
 - name: "Skapa script för commit and push repo"
   become: yes
   template:
-    src: deploy_cron_commit_and_push_repo.sh.j2
-    dest: "{{ application.path }}/deploy/script/commit_and_push-{{ repo.name }}.sh"
+    src: "deploy_plugins/cron_commit_and_push_repo/cron_commit_and_push_repo.sh.j2"
+    dest: "{{ application.path }}/deploy/script/commit_and_push-{{ deploy.repo | mandatory }}.sh"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwx,g=rx,o=r"
 
-    
 - name: "Setup cron-jobb for commit and push repo"
   become: yes
   template:
-    src: deploy_cron_commit_and_push_repo.cron.j2
-    dest: "/etc/cron.d/commit_and_push-{{ application.environment }}-{{ application.name }}-{{ repo.name }}"
+    src: "deploy_plugins/cron_commit_and_push_repo/cron_commit_and_push_repo.cron.j2"
+    dest: "/etc/cron.d/commit_and_push-{{ application.environment }}-{{ application.name }}-{{ deploy.repo }}"
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"
-   

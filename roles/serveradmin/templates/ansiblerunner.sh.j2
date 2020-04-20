@@ -13,15 +13,15 @@ set -e
 source include_common.sh
 
 
-
-{% if item.meta.playbook_in_serveradmin_collection | default(false) %}
-  {% set playbook_to_run = 'temp_playbook_' ~ item.meta.ansible_playbook %}
+# If playbook doesn't exist in root of serveradmin-repo,
+# Create a playbook that include the playbook from ansible-collection-serveradmin
+if [ -f "{{ serveradmin.path }}/workspace/serveradmin/{{ item.meta.ansible_playbook }}" ]; then
+  PLAYBOOK_TO_RUN="{{ item.meta.ansible_playbook }}"
+else
+  PLAYBOOK_TO_RUN="temp_{{ item.meta.ansible_playbook }}"
   echo -e "---\n- import_playbook: collections/ansible_collections/tvartom/serveradmin/playbooks/{{ item.meta.ansible_playbook }}" \
-      | sudo -u {{ serveradmin.process_user }} tee -a {{ serveradmin.path }}/workspace/serveradmin/{{ playbook_to_run }} > /dev/null
-{% else %}
-  {% set playbook_to_run = item.meta.ansible_playbook %}
-{% endif %}
-
+      | sudo -u {{ serveradmin.process_user }} tee -a "{{ serveradmin.path }}/workspace/serveradmin/$PLAYBOOK_TO_RUN" > /dev/null
+fi
 
 
 {% if agent_forwarding %}
@@ -30,7 +30,7 @@ source include_common.sh
 setfacl -R -m u:{{ serveradmin.process_user }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ serveradmin.process_user }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}" 
 {% endif %}
 
-sudo -u {{ serveradmin.process_user }} -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) {{ playbook_to_run }}
+sudo -u {{ serveradmin.process_user }} -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) "$PLAYBOOK_TO_RUN"
 
 {% if agent_forwarding %}
 setfacl -R -b "${SSH_AUTH_SOCK%/*}"
