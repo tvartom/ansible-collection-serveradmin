@@ -115,3 +115,15 @@ else
 	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules
 fi
 
+PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
+echo -e \
+"---\n"\
+"- import_playbook: collections/ansible_collections/tvartom/serveradmin/playbooks/playbook-serveradmin.yml\n"\
+"  tags:\n"\
+"    - never\n"\
+"    - bootstrap"\
+  | sudo -u $SA_USER tee -a "$SA_PATH_REPO/$PLAYBOOK_TO_RUN" > /dev/null
+
+cd "$SA_PATH_REPO"
+sudo -u "$SA_USER" ansible-playbook --extra-vars "target='$SA_INVENTORY_NAME' connection_type='local'" --tags bootstrap "$PLAYBOOK_TO_RUN"
+
