@@ -2,7 +2,7 @@
 - name: "Create dir for repo in versions"
   become: yes
   file:
-    path: "{{ application.path }}/versions/{{ repo.name }}"
+    path: "{{ application.path }}/versions/{{ deploy.repo_name | mandatory }}"
     state: directory
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
@@ -14,9 +14,9 @@
   set_fact:
     deploy_facts: >-
       {{- deploy_facts | combine({
-        repo.name: {
-            'repo_source': deploy_facts[repo.name].source,
-            'source': application.path+'/versions/'+repo.name+'/'+deploy_facts[repo.name].version
+        deploy.repo_name: {
+            'repo_source': deploy_facts[deploy.repo_name].source,
+            'source': application.path+'/versions/'+deploy.repo_name+'/'+deploy_facts[deploy.repo_name].version
           }
         }
         , recursive=True) -}}
@@ -45,9 +45,9 @@
   
   #-v, --verbose
   #-z, --compress              compress file data during the transfer
-  shell: "rsync -a --delete --exclude \"*.md\" '{{ deploy.markkdown_folder }}'/ \"{{ deploy_facts[repo.name].source }}\""
+  shell: "rsync -a --delete --exclude \"*.md\" '{{ deploy.markkdown_folder }}'/ \"{{ deploy_facts[deploy.repo_name].source }}\""
   args:
-    chdir: "{{ deploy_facts[repo.name].repo_source }}"
+    chdir: "{{ deploy_facts[deploy.repo_name].repo_source }}"
 
 
 # https://stackoverflow.com/questions/26126362/converting-all-files-in-a-folder-to-md-using-pandoc-on-mac
@@ -55,7 +55,7 @@
 - name: Generate html from markdown
   become: yes
   become_user: "{{ application.process_user }}"
-  shell: "find ./ -iname \"*.md\" -type f -exec sh -c 'mkdir -p \"{{ deploy_facts[repo.name].source }}/$(dirname ${0})\" && pandoc -t html -f markdown+pipe_tables -c ../../css/docs.css -s \"${0}\" | sed \"s,\\.md,\\.html,\" > \"{{ deploy_facts[repo.name].source }}/$(dirname ${0})/$(basename ${0%.md}.html)\"' {} \\;"
+  shell: "find ./ -iname \"*.md\" -type f -exec sh -c 'mkdir -p \"{{ deploy_facts[deploy.repo_name].source }}/$(dirname ${0})\" && pandoc -t html -f markdown+pipe_tables -c ../../css/docs.css -s \"${0}\" | sed \"s,\\.md,\\.html,\" > \"{{ deploy_facts[deploy.repo_name].source }}/$(dirname ${0})/$(basename ${0%.md}.html)\"' {} \\;"
   args:
-    chdir: "{{ deploy_facts[repo.name].repo_source }}/{{ deploy.markkdown_folder }}"
+    chdir: "{{ deploy_facts[deploy.repo_name].repo_source }}/{{ deploy.markkdown_folder }}"
     

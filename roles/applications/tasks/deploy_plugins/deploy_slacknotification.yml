@@ -12,22 +12,27 @@
             - title: Server
               value: "{{ inventory_hostname }}"
               short: true
-              
+
             - title: Webbplats
               value: "{{ application.name }}"
               short: true
-              
+
             - title: Miljö
               value: "{{ application.environment }}"
               short: true
 
             - title: Version
               value: >-
-                {%- if deploy.version_link is defined -%}
-                  <{{- deploy.version_link | replace('{tag}', deploy_facts[repo.name].version) -}}|{{- deploy_facts[repo.name].version -}}>
-                {%- else -%}
-                   {{- deploy_facts[repo.name].version -}}
-                {% endif %}
+                {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
+                {%-   if deploy.version_link is defined -%}
+                        <{{- deploy.version_link | replace('{tag}', value.version) -}}|{{- value.version -}}>
+                {%-   else -%}
+                        {{- value.version -}}
+                {%-   endif -%}
+                {%-   if not loop.last -%}
+                        {{- ', ' -}}
+                {%    endif -%}
+                {%- end for -%}
               short: true
 
             - title: Använt diskutrymme
@@ -36,7 +41,13 @@
               short: true
 
             - title: Description
-              value: "{{ deploy_facts[repo.name].tag_description }}"
+              value: "{{ deploy_facts[deploy.repo_name].tag_description }}"
+                {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
+                      {{- value.tag_description -}}
+                {%-   if not loop.last -%}
+                        {{- ', ' -}}
+                {%    endif -%}
+                {%- end for -%}
               short: false
 
 #	SLACKFIELDS+=("{\"title\":\"DB\",\"value\":\"${DEPLOY_DBNAMES[$ENVIRONMENT]}\",\"short\":true}")

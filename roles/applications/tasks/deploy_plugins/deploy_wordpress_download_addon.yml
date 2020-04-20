@@ -19,7 +19,7 @@
 - name: "Check if addon dir exists"
   become: yes
   stat:
-    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/{{ addon_type }}s/{{ addon.name }}"
+    path: "{{ application.path }}/{{ application.webinstances[deploy.webinstance | mandatory].root_dir }}/wp-content/{{ addon_type }}s/{{ addon.name }}"
   register: addon_exists
   when: not addon.use_dir_in_archive|d(true)
 

@@ -8,9 +8,7 @@
     --changeLogFile="{{ deploy.change_log_file }}"
     {{- ' '+item -}}
   args:
-    chdir: "{{ deploy_facts[repo.name].repo_source }}/{{ deploy.change_log_dir }}"
+    chdir: "{{ deploy_facts[deploy.repo_name | mandatory].repo_source }}/{{ deploy.change_log_dir }}"
   loop:
     - "update"
-    - "tag {{ deploy_facts[repo.name].version }}"
-
-    
+    - "tag {{ deploy_facts[deploy.repo_name].version }}"

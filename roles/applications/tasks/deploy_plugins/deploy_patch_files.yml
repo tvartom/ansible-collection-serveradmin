@@ -22,6 +22,6 @@
   #-v, --verbose
   #-z, --compress              compress file data during the transfer
   
-  shell: "rsync -a \"{{ application.path }}/{{ deploy.source_dir }}\"/ \"{{ deploy_facts[repo.name].source }}\""
+  shell: "rsync -a \"{{ application.path }}/{{ deploy.source_dir }}\"/ \"{{ deploy_facts[deploy.repo_name | mandatory].source }}\""
   args:
-    chdir: "{{ application.path }}/repos/{{ repo.name }}"
+    chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"

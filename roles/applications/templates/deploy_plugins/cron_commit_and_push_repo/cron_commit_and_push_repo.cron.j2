@@ -5,10 +5,10 @@
 #
 # Environment: {{ application.environment }}
 # Aplication: {{ application.name }}
-# Repo: {{ repo.name }}
+# Repo: {{ deploy.repo_name }}
 
 
-{{ deploy.cron_time.minute }} {{ deploy.cron_time.hour }} {{ deploy.cron_time.day }} {{ deploy.cron_time.month }} {{ deploy.cron_time.weekday }} {{ application.process_user }} {{ application.path }}/deploy/script/commit_and_push-{{ repo.name }}.sh >> {{ application.path }}/log/deploy/cron_commit_and_push-{{ repo.name }}.log 2>&1
+{{ deploy.cron_time.minute }} {{ deploy.cron_time.hour }} {{ deploy.cron_time.day }} {{ deploy.cron_time.month }} {{ deploy.cron_time.weekday }} {{ application.process_user }} {{ application.path }}/deploy/script/commit_and_push-{{ deploy.repo_name }}.sh >> {{ application.path }}/log/deploy/cron_commit_and_push-{{ repo.name }}.log 2>&1
 
 
 #* * * * *

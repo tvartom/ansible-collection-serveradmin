@@ -1,20 +1,20 @@
 ---
 
-- name: "Skapa /version/repo.name"
+- name: "Skapa /version/deploy.repo_name"
   become: yes
   file:
-    path: "{{ application.path }}/versions/{{ repo.name }}"
+    path: "{{ application.path }}/versions/{{ deploy.repo_name | mandatory }}"
     state: directory
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwx,g=rx,o=rx"
 
-- name: "Uppdatera deploy_facts med [repo.name].source" 
+- name: "Uppdatera deploy_facts med [deploy.repo_name].source" 
   set_fact:
     deploy_facts: >-
       {{- deploy_facts | combine({
-        repo.name: {
-            'source': application.path+'/versions/'+repo.name+'/'+deploy_facts[repo.name].version
+        deploy.repo_name: {
+            'source': application.path+'/versions/'+deploy.repo_name+'/'+deploy_facts[deploy.repo_name].version
           }
         }
         , recursive=True) -}}
@@ -49,9 +49,9 @@
   
   #-v, --verbose
   #-z, --compress              compress file data during the transfer
-  shell: "rsync -a --delete {{ '--exclude-from '+dq+deploy.exclude_list_file+dq+' ' if deploy.exclude_list_file is defined else '' }}'{{ deploy.folder_to_copy }}'/ \"{{ deploy_facts[repo.name].source }}\""
+  shell: "rsync -a --delete {{ '--exclude-from '+dq+deploy.exclude_list_file+dq+' ' if deploy.exclude_list_file is defined else '' }}'{{ deploy.folder_to_copy }}'/ \"{{ deploy_facts[deploy.repo_name].source }}\""
   args:
-    chdir: "{{ deploy_facts[repo.name].repo_source }}"
+    chdir: "{{ deploy_facts[deploy.repo_name].repo_source }}"
   vars:
     dq: >-
       "
