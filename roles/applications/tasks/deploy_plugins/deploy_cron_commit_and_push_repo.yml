@@ -2,7 +2,7 @@
   become: yes
   template:
     src: "deploy_plugins/cron_commit_and_push_repo/cron_commit_and_push_repo.sh.j2"
-    dest: "{{ application.path }}/deploy/script/commit_and_push-{{ deploy.repo_name | mandatory }}.sh"
+    dest: "{{ application.path }}/deploy/script/commit_and_push-{{ deploy.repo | mandatory }}.sh"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwx,g=rx,o=r"
@@ -11,7 +11,7 @@
   become: yes
   template:
     src: "deploy_plugins/cron_commit_and_push_repo/cron_commit_and_push_repo.cron.j2"
-    dest: "/etc/cron.d/commit_and_push-{{ application.environment }}-{{ application.name }}-{{ deploy.repo_name }}"
+    dest: "/etc/cron.d/commit_and_push-{{ application.environment }}-{{ application.name }}-{{ deploy.repo }}"
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"

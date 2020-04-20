@@ -4,7 +4,7 @@
   become_user: "{{ application.process_user }}"
   shell: "git tag | sort -f -r"
   args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo_name | mandatory }}"
+    chdir: "{{ application.path }}/repos/{{ deploy.repo | mandatory }}"
   changed_when: false
   register: tags_stdout
 
@@ -13,7 +13,7 @@
   become_user: "{{ application.process_user }}"
   shell: "git describe --exact-match --abbrev=0"
   args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"
+    chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
   failed_when: >
     git_more_commits.rc != 0
     and
@@ -26,7 +26,7 @@
   become_user: "{{ application.process_user }}"
   shell: "git describe --abbrev=0"
   args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"
+    chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
   register: git_latest_commit
 
 - name: Meny
@@ -62,7 +62,7 @@
       become_user: "{{ application.process_user }}"
       shell: "git log --pretty=format:\"%s (%aN)\" $(git describe --abbrev=0)..HEAD | grep -v \"^Merge branch\""
       args:
-        chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"
+        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
       changed_when: git_new_tag_description.rc == 0
       failed_when: >
         not
@@ -106,14 +106,14 @@
       become_user: "{{ application.process_user }}"
       shell: "git tag -a \"{{ menu_result }}\" -m \"{{ texteditor_result|join('\n') }}\""
       args:
-        chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"
+        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
 
     - name: Pusha nya taggen tillbaka till repot
       become: yes
       become_user: "{{ application.process_user }}"
       shell: "git push origin {{ menu_result }}"
       args:
-        chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"
+        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
   when: create_new_tag|bool
 
 - name: Meny
@@ -151,7 +151,7 @@
   set_fact:
     deploy_facts: >-
       {{- deploy_facts | combine({
-        deploy.repo_name: {
+        deploy.repo: {
             'version': menu_result
           }
         }
@@ -162,24 +162,24 @@
   become: yes
   become_user: "{{ application.process_user }}"
   git:
-    version: "{{ deploy_facts[deploy.repo_name].version }}"
+    version: "{{ deploy_facts[deploy.repo].version }}"
     repo: "{{ repo.url }}"
-    dest: "{{ deploy_facts[deploy.repo_name].source }}"
+    dest: "{{ deploy_facts[deploy.repo].source }}"
 
 - name: Hämta description
   become: yes
   become_user: "{{ application.process_user }}"
   shell: >-
-    git tag -n999 --list "{{ deploy_facts[deploy.repo_name].version }}" | sed -e "s/^{{ deploy_facts[deploy.repo_name].version }} //" -e "s/^    //"
+    git tag -n999 --list "{{ deploy_facts[deploy.repo].version }}" | sed -e "s/^{{ deploy_facts[deploy.repo].version }} //" -e "s/^    //"
   args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo_name }}"
+    chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
   register: git_tag_description
 
 - name: Tag description i deploy_facts
   set_fact:
     deploy_facts: >-
       {{- deploy_facts | combine({
-        deploy.repo_name: {
+        deploy.repo: {
             'tag_description': git_tag_description.stdout
           }
         }

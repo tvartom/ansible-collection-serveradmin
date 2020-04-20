@@ -3,7 +3,7 @@
 - name: "Symlink: replace_existing"
   become: yes
   file:
-    path: "{{ deploy_facts[deploy.repo_name | mandatory].source }}/{{ item.from }}"
+    path: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ item.from }}"
     state: absent
   when: deploy.replace_existing
   loop: "{{ deploy.symlinks }}"
@@ -11,7 +11,7 @@
 - name: "Symlink: replace_existing"
   become: yes
   file:
-    path: "{{ deploy_facts[deploy.repo_name].source }}/{{ item.from }}"
+    path: "{{ deploy_facts[deploy.repo].source }}/{{ item.from }}"
     src: "{{ application.path }}/{{ item.to }}"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"

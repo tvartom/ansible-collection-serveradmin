@@ -41,7 +41,7 @@
               short: true
 
             - title: Description
-              value: "{{ deploy_facts[deploy.repo_name].tag_description }}"
+              value: "{{ deploy_facts[deploy.repo].tag_description }}"
                 {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
                       {{- value.tag_description -}}
                 {%-   if not loop.last -%}
