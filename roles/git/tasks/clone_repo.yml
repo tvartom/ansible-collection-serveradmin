@@ -70,7 +70,7 @@
 # To clone with different key-file:
 # GIT_SSH_COMMAND="ssh -i $KEYFILE_ABS" git clone ...
 
-- name: "Clone repo"
+- name: "Clone repo (with sub-modules recursively)"
   become: yes
   become_user: "{{ clone_repo.user }}"
   git:
@@ -80,6 +80,7 @@
     update: "{{ clone.repo.update | default(true) }}"
     version: "{{ repo.branch | default('HEAD') }}"
     umask: "027"
+    recursive: yes
   ignore_errors: yes
   register: git_clone_result
   tags:
