@@ -25,7 +25,7 @@ echo "### Serveradmin-repository on Github ###"
 SA_REPO_HOST="github.com"
 read -p "Username on $SA_REPO_HOST for owner of serveradmin-repository: " SA_REPO_USER
 read -p "Name of ${SA_REPO_USER}'s serveradmin-repository: " SA_REPO_NAME
-SA_REPO="git@$SA_REPO_HOST:/$SA_REPO_USER/$SA_REPO_NAME.git"
+SA_REPO="git@$SA_REPO_HOST:$SA_REPO_USER/$SA_REPO_NAME.git"
 echo $SA_REPO;
 
 echo ""
@@ -110,12 +110,14 @@ SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
 cd "$SA_PATH"
 if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	echo "Cloning serveradmin-repo..."
-	echo "sudo -u $SA_USER git -c core.sshCommand=\"ssh -i $SA_DEPLOY_KEY\" clone --recursive $SA_REPO \"$SA_PATH/workspace/serveradmin\""
+	# CentOS 8 har git 2.18, och stödjer core.sshCommand
+	#sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 
-	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
+	# Men för att stödja CentOS 7 behöver göra så här:
+	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
 	cd $SA_PATH_REPO
-	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules
+	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git pull --recurse-submodules
 fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
