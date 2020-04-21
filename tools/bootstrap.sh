@@ -110,6 +110,8 @@ SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
 cd "$SA_PATH"
 if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	echo "Cloning serveradmin-repo..."
+	echo "sudo -u $SA_USER git -c core.sshCommand=\"ssh -i $SA_DEPLOY_KEY\" clone --recursive $SA_REPO \"$SA_PATH/workspace/serveradmin\""
+
 	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
 	cd $SA_PATH_REPO
