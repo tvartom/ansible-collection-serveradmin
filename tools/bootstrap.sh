@@ -130,14 +130,17 @@ echo -e "Done\n"
 SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
 
 cd "$SA_PATH"
-if [ ! -d "$SA_PATH_REPO/.git" ]; then
-	echo "Cloning serveradmin-repo..."
-	# git 2.10+ stödjer core.sshCommand
-	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
-else
-	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' pull --recurse-submodules"
-	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' submodule update --force --recursive"
+if [ -d "$SA_PATH_REPO/.git" ]; then
+	echo "Remove serveradmin-repo to make a clean download."
+	rm -r "$SA_PATH_REPO"
 fi
+	echo "Cloning serveradmin-repo..."
+# git 2.10+ stödjer core.sshCommand
+sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH_REPO"
+#else
+#	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' pull --recurse-submodules"
+#	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' submodule update --force --recursive"
+#fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
 echo -e \
