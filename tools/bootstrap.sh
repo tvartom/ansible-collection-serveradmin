@@ -137,6 +137,7 @@ if [ ! -d "$SA_PATH_REPO/.git" ]; then
 else
 	cd $SA_PATH_REPO
 	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules "$SA_PATH/workspace/serveradmin"
+	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" submodule update --recursive "$SA_PATH/workspace/serveradmin"
 fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
