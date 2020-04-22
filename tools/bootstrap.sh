@@ -86,7 +86,10 @@ if [ ! -f "$SA_DEPLOY_KEY" ]; then
 					-C "$SA_DEPLOY_KEY_COMMENT"
 	echo -e "Done\n"
 else
-	echo -e "Deploy key already exists.\n"
+	echo -e "Deploy key already exists with fingerprint: $(ssh-keygen -l -E md5 -f "$SA_DEPLOY_KEY" | grep -Po "(?<=MD5:).{47}").\n"
+	# "
+	SA_DEPLOY_KEY_COMMENT="$(ssh-keygen -l -E md5 -f "$SA_DEPLOY_KEY" | grep -Po "(?<=MD5:.{47} ).*(?= \(RSA\))")"
+	# "
 fi
 
 echo "Add key as a read-only deploy-key on Github:"
@@ -129,11 +132,8 @@ SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
 cd "$SA_PATH"
 if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	echo "Cloning serveradmin-repo..."
-	# CentOS 8 har git 2.18, och stödjer core.sshCommand
+	# git 2.10+ stödjer core.sshCommand
 	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
-
-	# Men för att stödja CentOS 7 behöver göra så här:
-#	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
 	cd $SA_PATH_REPO
 	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules "$SA_PATH/workspace/serveradmin"
