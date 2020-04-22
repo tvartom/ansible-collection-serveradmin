@@ -130,13 +130,13 @@ cd "$SA_PATH"
 if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	echo "Cloning serveradmin-repo..."
 	# CentOS 8 har git 2.18, och stödjer core.sshCommand
-	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
+	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 
 	# Men för att stödja CentOS 7 behöver göra så här:
 #	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
 	cd $SA_PATH_REPO
-	sudo -u git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules
+	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules "$SA_PATH/workspace/serveradmin"
 fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
