@@ -93,9 +93,18 @@ echo "5. Press 'Add key'"
 echo ""
 pause 'Press [Enter] when done to continue...'
 
+echo -n "Install Git..."
+if [ "$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)" = "7" ]; then
+	yum -y install  https://centos7.iuscommunity.org/ius-release.rpm
+	yum -y install  git2u-all
+else
+	yum -y install git
+fi
+echo -e "Done\n"
+
 # Använder yum som fungerar både på CentOS 7 och 8.
-echo "Installing Git and Python3 with pip..."
-yum install git python3 python3-pip
+echo "Installing Python3 with pip..."
+yum -y install python3 python3-pip
 echo "Installing Ansible with pip to get latest version..."
 sudo -u $SA_USER pip3 install --user ansible
 
@@ -111,13 +120,13 @@ cd "$SA_PATH"
 if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	echo "Cloning serveradmin-repo..."
 	# CentOS 8 har git 2.18, och stödjer core.sshCommand
-	#sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
+	sudo -u $SA_USER git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 
 	# Men för att stödja CentOS 7 behöver göra så här:
-	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
+#	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
 	cd $SA_PATH_REPO
-	sudo -u $SA_USER GIT_SSH="ssh -i $SA_DEPLOY_KEY" git pull --recurse-submodules
+	sudo -u git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules
 fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
