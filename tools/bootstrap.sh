@@ -135,9 +135,8 @@ if [ ! -d "$SA_PATH_REPO/.git" ]; then
 	# git 2.10+ stödjer core.sshCommand
 	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
 else
-	cd $SA_PATH_REPO
-	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules "$SA_PATH/workspace/serveradmin"
-	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" submodule update --recursive "$SA_PATH/workspace/serveradmin"
+	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' pull --recurse-submodules"
+	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' submodule update --init --recursive"
 fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
@@ -149,6 +148,5 @@ echo -e \
 "    - bootstrap"\
   | sudo -u $SA_USER tee "$SA_PATH_REPO/$PLAYBOOK_TO_RUN" > /dev/null
 
-cd "$SA_PATH_REPO"
 sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && ansible-playbook --extra-vars \"target='$SA_INVENTORY_NAME' connection_type='local'\" --tags bootstrap '$PLAYBOOK_TO_RUN'"
 
