@@ -58,6 +58,16 @@ else
 	echo -e "User '$SA_USER' already exists.\n"
 fi
 
+usermod -aG adm "$SA_USER"
+usermod -aG wheel "$SA_USER"
+if grep -q "^$SA_USER" "/etc/sudoers"; then
+	echo -e "User '$SA_USER' is already sudoer.\n"
+else
+	echo -n "Make '$SA_USER' sudoer without password.... "
+	echo "$SA_USER	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+	echo -e "Done\n"
+fi
+
 mkdir -p "$SA_USER_HOME/.ssh"
 chown $SA_USER:$SA_USER "$SA_USER_HOME/.ssh"
 chmod u=rwx,g=,o= "$SA_USER_HOME/.ssh"
