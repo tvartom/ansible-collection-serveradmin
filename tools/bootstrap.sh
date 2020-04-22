@@ -146,10 +146,7 @@ PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
 echo -e \
 "---\n"\
 "- import_playbook: collections/ansible_collections/tvartom/serveradmin/playbooks/playbook-serveradmin.yml\n"\
-"  tags:\n"\
-"    - never\n"\
-"    - bootstrap"\
+"  when: \"'bootstrap' in ansible_run_tags" \
   | sudo -u $SA_USER tee "$SA_PATH_REPO/$PLAYBOOK_TO_RUN" > /dev/null
 
 sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && ansible-playbook --extra-vars \"target='$SA_INVENTORY_NAME' connection_type='local'\" --tags bootstrap '$PLAYBOOK_TO_RUN'"
-
