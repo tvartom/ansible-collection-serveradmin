@@ -139,5 +139,5 @@ echo -e \
   | sudo -u $SA_USER tee -a "$SA_PATH_REPO/$PLAYBOOK_TO_RUN" > /dev/null
 
 cd "$SA_PATH_REPO"
-sudo -u "$SA_USER" ansible-playbook --extra-vars "target='$SA_INVENTORY_NAME' connection_type='local'" --tags bootstrap "$PLAYBOOK_TO_RUN"
+su "$SA_USER" - ansible-playbook --extra-vars "target='$SA_INVENTORY_NAME' connection_type='local'" --tags bootstrap "$PLAYBOOK_TO_RUN"
 
