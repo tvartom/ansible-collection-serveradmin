@@ -10,7 +10,7 @@ packages:
     - pv #progressbar for pipe
     #- net-tools #ifconfig finns i denna
     #- rsync
-  CentOS8:
+  RedHat8:
     - glibc-langpack-en
     - glibc-langpack-sv
 
@@ -18,5 +18,4 @@ basic_default:
   timezone: "Europe/Stockholm"
   system_locale: 'sv_SE.UTF-8'
   system_language: 'en_US.UTF-8'
-  package_to_install: "{{ packages.common + packages[distribution ~ distribution_major_version] | d([]) }}"
-
+  package_to_install: "{{ packages.common + packages[ansible_os_family ~ ansible_distribution_major_version] | d([]) }}"
