@@ -18,7 +18,7 @@
   when: temp_webinstance.domains_source.sql_domaininstances is defined
 
 # webinstance.domaininstance[?].group används till https-cert
-# Flera domainisntancer kan använda samma cert för sina domäner,
+# Flera domaininstancer kan använda samma cert för sina domäner,
 # inom samma webinstans
 
 - name: "Set fullname, instance and group (webinstance and domaininstances)"

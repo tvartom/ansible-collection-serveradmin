@@ -6,7 +6,9 @@ php_fpm_pool_path: /etc/php-fpm.d
 nginx_user: nginx
 nginx_group: nginx
 
+webserver_use_letsencrypt: true
 
+default_enable_https: true
 
 applications_default:
   #För att använda denna applikationen,

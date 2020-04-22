@@ -8,7 +8,7 @@
 #byobu finns i detta:
 - name: Enable EPEL-repo
   become: yes
-  dnf:
+  yum:
     name: epel-release
     state: latest
   when: ansible_os_family == "RedHat"
@@ -22,7 +22,7 @@
 
 - name: Install some basic tools (YUM)
   become: yes
-  dnf:
+  yum:
     name: "{{ basic.package_to_install }}"
     state: present
   when: ansible_os_family == "RedHat"

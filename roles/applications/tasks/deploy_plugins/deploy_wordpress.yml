@@ -173,9 +173,9 @@
 
 - name: Patch CiviCRM
   block:
-    - name: "Install GNU patch (DNF)"
+    - name: "Install GNU patch (YUM)"
       become: yes
-      dnf:
+      yum:
         name: patch
         state: present
       when:

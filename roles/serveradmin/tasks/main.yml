@@ -67,9 +67,9 @@
   tags:
     - bootstrap
 
-- name: "Install Python3 and pip (DNF)"
+- name: "Install Python3 and pip (YUM)"
   become: yes
-  dnf:
+  yum:
     name:
       - python3
       - python3-pip
