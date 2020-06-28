@@ -35,12 +35,14 @@ read -p "Name of this server in inventory-file [$SA_INVENTORY_NAME_DEFAULT]: " S
 SA_INVENTORY_NAME="${SA_INVENTORY_NAME:-$SA_INVENTORY_NAME_DEFAULT}"
 
 SA_USER_DEFAULT="serveradmin"
-read -p "Name of servadmin-user [$SA_USER_DEFAULT]: " SA_USER
-SA_USER="${SA_USER:-$SA_USER_DEFAULT}"
+# read -p "Name of servadmin-user [$SA_USER_DEFAULT]: " SA_USER
+# SA_USER="${SA_USER:-$SA_USER_DEFAULT}"
+SA_USER="$SA_USER_DEFAULT"
 
 SA_PATH_DEFAULT="/opt/$SA_USER"
-read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
-SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
+#read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
+#SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
+SA_PATH="$SA_PATH_DEFAULT"
 echo ""
 
 SYSTEM_USER_HOME="/home/system"
