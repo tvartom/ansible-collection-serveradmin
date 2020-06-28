@@ -130,24 +130,23 @@ echo -e "Done\n"
 SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
 
 cd "$SA_PATH"
-if [ ! -d "$SA_PATH_REPO/.git" ]; then
-	echo "Cloning serveradmin-repo..."
-	# git 2.10+ stödjer core.sshCommand
-	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH/workspace/serveradmin"
-else
-	cd $SA_PATH_REPO
-	sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" pull --recurse-submodules "$SA_PATH/workspace/serveradmin"
+if [ -d "$SA_PATH_REPO/.git" ]; then
+	echo "Remove serveradmin-repo to make a clean download."
+	rm -r "$SA_PATH_REPO"
 fi
+	echo "Cloning serveradmin-repo..."
+# git 2.10+ stödjer core.sshCommand
+sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH_REPO"
+#else
+#	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' pull --recurse-submodules"
+#	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' submodule update --force --recursive"
+#fi
 
 PLAYBOOK_TO_RUN="temp_playbook-bootstrap.yml"
 echo -e \
 "---\n"\
 "- import_playbook: collections/ansible_collections/tvartom/serveradmin/playbooks/playbook-serveradmin.yml\n"\
-"  tags:\n"\
-"    - never\n"\
-"    - bootstrap"\
+"  when: \"'bootstrap' in ansible_run_tags\"" \
   | sudo -u $SA_USER tee "$SA_PATH_REPO/$PLAYBOOK_TO_RUN" > /dev/null
 
-cd "$SA_PATH_REPO"
 sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && ansible-playbook --extra-vars \"target='$SA_INVENTORY_NAME' connection_type='local'\" --tags bootstrap '$PLAYBOOK_TO_RUN'"
-

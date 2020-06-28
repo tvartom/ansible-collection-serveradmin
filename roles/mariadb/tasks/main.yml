@@ -62,9 +62,9 @@
   become: yes
   yum:
     name:
-      # - MySQL-python # Python behövs av Ansible
-      # The PyMySQL (Python 2.7 and Python 3.X) or MySQL-python (Python 2.X) module is required."}
-      - "python3-PyMySQL" # MySQL-python finns inte i CentOS 8, funkar denna?
+      # MySQL-python # Python behövs av Ansible
+      # Annars får man: The PyMySQL (Python 2.7 and Python 3.X) or MySQL-python (Python 2.X) module is required."}
+      - "{{ 'python3-PyMySQL' if ansible_distribution_major_version | int > 7 else 'MySQL-python' }}"
     state: "present"
   when: ansible_os_family == "RedHat"
 

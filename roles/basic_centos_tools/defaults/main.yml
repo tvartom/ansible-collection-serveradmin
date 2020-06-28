@@ -1,18 +1,21 @@
 ---
 # defaults file for ansible-role-basic_centos_tools
+packages:
+  common:
+    - byobu
+    - perl-Image-ExifTool
+    - joe #texteditor
+    - unzip
+    - bzip2
+    - pv #progressbar for pipe
+    #- net-tools #ifconfig finns i denna
+    #- rsync
+  RedHat8:
+    - glibc-langpack-en
+    - glibc-langpack-sv
+
 basic_default:
   timezone: "Europe/Stockholm"
   system_locale: 'sv_SE.UTF-8'
   system_language: 'en_US.UTF-8'
-  package_to_install:
-    - byobu
-    - glibc-langpack-en
-    - glibc-langpack-sv
-    - perl-Image-ExifTool
-    - joe #texteditor Anders använder
-    - unzip
-    - bzip2
-    - pv
-
-    #- net-tools #ifconfig finns i denna
-    #- rsync
+  package_to_install: "{{ packages.common + packages[ansible_os_family ~ ansible_distribution_major_version] | d([]) }}"

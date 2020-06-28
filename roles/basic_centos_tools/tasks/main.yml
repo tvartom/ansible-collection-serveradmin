@@ -31,7 +31,8 @@
 - name: Install libsemanage to fix selinux in ansible (YUM)
   become: yes
   yum:
-    name: "python3-libsemanage"
+    # CentOS 8: python3-libsemanage
+    name: "{{ 'python3-libsemanage' if ansible_distribution_major_version | int > 7 else 'libsemanage-python' }}"
     state: present
   when: ansible_os_family == "RedHat"
 
