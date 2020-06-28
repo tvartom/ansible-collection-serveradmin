@@ -93,6 +93,10 @@
     - name: "Get the certs signed by Letsencrypt"
       become: yes
       shell: "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance_group.fullname }}.sh >> {{ application.path }}/log/letsencrypt/{{ domaininstance_group.fullname }}.log 2>&1"
+      register: signed_created
+      retries: 3
+      delay: 5
+      until: signed_created is not failed
 
     - name: "Remove temporary Ngninx files domaininstance_group"
       become: yes
