@@ -67,6 +67,10 @@
       - "{{ 'python3-PyMySQL' if ansible_distribution_major_version | int > 7 else 'MySQL-python' }}"
     state: "present"
   when: ansible_os_family == "RedHat"
+# Alternativ kan vara:
+# this is the required pip package
+# - pip:
+#    name: PyMySQL
 
 - name: "Konfigurera MariaDB Lägg till värden"
   become: yes
@@ -192,6 +196,15 @@
     state: absent
     login_user: root
     login_unix_socket: "/var/lib/mysql/mysql.sock"
+
+- name: Setup lograte for MariaDB
+  become: yes
+  template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/mariadb
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
 
 - name: "Delete anonymous sql server user"
   become: yes
