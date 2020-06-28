@@ -4,5 +4,5 @@ git_default:
     - domain: "github.com"
       user: "git"
       protocol: ssh
-      #port: 2022 (Optional)
+      #port: 22 (Optional)
       use_unique_deploy_key: true

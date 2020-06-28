@@ -16,17 +16,21 @@
 #   repo_return
 #   [repo_returns]
 
+- debug:
+    var: repo
+
 - name: "Returnera repo object"
   set_fact:
     repo_return: >-
-     {%-  set found = {} -%}
-     {%- for git_repo_default in git_default.repos_default if git_repo_default.domain == repo.domain|default() -%}
+     {#- Start looking in git_default.repos_default if any default settings exists for current domain -#}
+     {%- set found = {} -%}
+     {%- for git_repo_default in git_default.repos_default if git_repo_default.domain == repo.domain|mandatory -%}
      {{-   found.__setitem__('repo', git_repo_default) -}}
      {%- endfor -%}
      {%- set output = {'protocol':'[protocol_saknas]', 'domain':'[domain_saknas]', 'path':'[/path_saknas]','port': false, 'use_unique_deploy_key': false} | combine(found.repo | default({})) | combine(repo) -%}
-     {%- set repo_use_user = (output.user+'@' if output.protocol == 'ssh' else '') -%}
-     {%- set repo_use_port = ':' ~ output.port if output.port else '' -%}
-     {{- output.__setitem__('url', output.protocol ~ '://' ~ repo_use_user ~ output.domain ~ repo_use_port ~ output.path ) -}}
+     {%- set repo_url_user = (output.user+'@' if output.protocol == 'ssh' else '') -%}
+     {%- set repo_url_port = ':' ~ output.port if output.port else '' -%}
+     {{- output.__setitem__('url', output.protocol ~ '://' ~ repo_url_user ~ output.domain ~ repo_url_port ~ output.path ) -}}
      {{- output.__setitem__('unique_deploy_key', 'deploy_' ~ output.domain ~ output.path | replace('/','_')) -}}
      {{- output -}}
   tags:
