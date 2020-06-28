@@ -18,6 +18,8 @@
 
 - debug:
     var: repo
+  tags:
+    - always
 
 - name: "Returnera repo object"
   set_fact:
