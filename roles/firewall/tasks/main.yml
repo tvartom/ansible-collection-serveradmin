@@ -2,7 +2,7 @@
 
 - name: Hämta default-värden
   set_fact:
-    firewall_settings: "{{ firewall_default | combine(firewall) }}"
+    firewall_settings: "{{ firewall_default | combine( firewall | default( {} ) ) }}"
 
 - name: Install packages for RedHat-family (YUM)
   become: yes
