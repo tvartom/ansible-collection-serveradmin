@@ -50,6 +50,28 @@
                 {%- end for -%}
               short: false
 
+- name: Skapa Lista med commits
+  set_fact:
+    slack_list_of_commits: >-
+      {%- set o = [] -%}
+      {%- for repo_name, deploy_fact in deploy_facts.items() if deploy_fact.list_of_commits | d("") != "" -%}
+      {{-   o.append({
+              'title': 'Commits för '~repo_name,
+              'value': deploy_fact.list_of_commits,
+              'short': false
+          }) -}}
+      {%- endfor -%}
+      {{- o -}}
+- name: Lista alla nya commits med
+  set_fact:
+    slack_json: >-
+      {{- slack_json.attachments.append({
+          'color': '#dd37e6',
+          'fields': slack_list_of_commits
+          }) -}}
+      {{- slack_json -}}
+  when: slack_list_of_commits|length > 0
+
 #	SLACKFIELDS+=("{\"title\":\"DB\",\"value\":\"${DEPLOY_DBNAMES[$ENVIRONMENT]}\",\"short\":true}")
 
 #	DISKSPACE="$(df / -h | tail -1 | sed -n --regexp-extended 's/^[^\s]+\s+([0-9.]+[MG])\s+([0-9.]+[MG])\s+([0-9.]+[MG])\s+([0-9.]+%)\s+\/$/\2\/\1 (\4)/p')"
