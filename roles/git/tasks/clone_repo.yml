@@ -44,15 +44,25 @@
   tags:
     - always
 
-- name: "Skapa deploy-key för repot på aktuell användare"
+- name: "Get comment from public key if exists or generate if missing"
+  command: >-
+    sed -e "s/ssh-rsa \S* \?//" {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}.pub 2>/dev/null
+    || echo "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname }} $(date +"%Y-%m-%d")"
+  register: deploy_key_comment
+  failed_when: false
+  changed_when: false
+  tags:
+    - always
+
+- name: "Create deploy-key for repo for current user"
   become: yes
   openssh_keypair:
-    comment: "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname}}"
+    comment: "{{ deploy_key_comment.stdout }}"
     owner: "{{ clone_repo.user }}"
     group: "{{ clone_repo.user }}"
     setype: "_default"
     mode: "u=rw,g=,o="
-    path: "{{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
+    path: ""
   register: key_info_unique
   when: repo.use_unique_deploy_key
   tags:
