@@ -52,7 +52,6 @@
     warn: false # Ansible is warning for using sed
   register: deploy_key_comment
   failed_when: false
-  warn: false
   tags:
     - always
 
