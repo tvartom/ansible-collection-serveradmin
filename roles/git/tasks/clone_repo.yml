@@ -48,10 +48,10 @@
   command: >-
     sed -e "s/ssh-rsa \S* \?//" {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}.pub 2>/dev/null
     || echo "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname }} $(date +"%Y-%m-%d")"
+  args:
+    warn: false # Ansible is warning for using sed
   register: deploy_key_comment
   failed_when: false
-  changed_when: false
-  # Ansible is warning for using sed
   warn: false
   tags:
     - always
