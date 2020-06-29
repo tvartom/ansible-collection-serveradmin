@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Run this script as with:
+# Run this script with:
 # $ curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh -o bootstrap.sh && sudo bash bootstrap.sh
 #
 # You need a serveradmin-repository with settings for this server.
@@ -23,7 +23,7 @@ fi
 
 echo "### Serveradmin-repository on Github ###"
 SA_REPO_HOST="github.com"
-read -p "Username on $SA_REPO_HOST for owner of serveradmin-repository: " SA_REPO_USER
+read -p "Username or team on $SA_REPO_HOST for owner of serveradmin-repository: " SA_REPO_USER
 read -p "Name of ${SA_REPO_USER}'s serveradmin-repository: " SA_REPO_NAME
 SA_REPO="git@$SA_REPO_HOST:$SA_REPO_USER/$SA_REPO_NAME.git"
 echo $SA_REPO;
@@ -40,9 +40,10 @@ SA_USER_DEFAULT="serveradmin"
 SA_USER="$SA_USER_DEFAULT"
 
 SA_PATH_DEFAULT="/opt/$SA_USER"
-#read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
-#SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
+# read -p "Path to serveradmin [$SA_PATH_DEFAULT]: " SA_PATH
+# SA_PATH="${SA_PATH:-$SA_PATH_DEFAULT}"
 SA_PATH="$SA_PATH_DEFAULT"
+
 echo ""
 
 SYSTEM_USER_HOME="/home/system"
@@ -90,12 +91,12 @@ if [ ! -f "$SA_DEPLOY_KEY" ]; then
 else
 	echo -e "Deploy key already exists with fingerprint: $(ssh-keygen -l -E md5 -f "$SA_DEPLOY_KEY" | grep -Po "(?<=MD5:).{47}").\n"
 	# "
-	SA_DEPLOY_KEY_COMMENT="$(ssh-keygen -l -E md5 -f "$SA_DEPLOY_KEY" | grep -Po "(?<=MD5:.{47} ).*(?= \(RSA\))")"
+	SA_DEPLOY_KEY_COMMENT="$(sed -e "s/ssh-rsa \S* \?//" "${SA_DEPLOY_KEY}.pub" 2>/dev/null)"
 	# "
 fi
 
 echo "Add key as a read-only deploy-key on Github:"
-echo "1. Log in as '$SA_REPO_NAME' on github.com."
+echo "1. Log in as, or as administrator for '$SA_REPO_NAME' on $SA_REPO_HOST."
 echo "2. Goto https://$SA_REPO_HOST/$SA_REPO_USER/$SA_REPO_NAME/settings/keys"
 echo "3. Press 'Add deploy key'"
 echo "4. Fill in:"
@@ -109,17 +110,16 @@ echo ""
 pause 'Press [Enter] when done to continue...'
 
 echo -n "Install Git..."
-if [ "$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)" = "7" ]; then
-	yum -y install  https://centos7.iuscommunity.org/ius-release.rpm
-	yum -y install  git2u-all
-else
-	yum -y install git
-fi
+# if [ "$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)" = "7" ]; then
+#	yum -y install  https://centos7.iuscommunity.org/ius-release.rpm
+#	yum -y install  git2u-all
+# else
+	dnf -y install git
+# fi
 echo -e "Done\n"
 
-# Använder yum som fungerar både på CentOS 7 och 8.
 echo "Installing Python3 with pip..."
-yum -y install python3 python3-pip
+dnf -y install python3 python3-pip
 echo "Installing Ansible with pip to get latest version..."
 sudo -u $SA_USER pip3 install --user ansible
 
