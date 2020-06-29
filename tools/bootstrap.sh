@@ -152,3 +152,8 @@ echo -e \
   | sudo -u $SA_USER tee "$SA_PATH_REPO/$PLAYBOOK_TO_RUN" > /dev/null
 
 sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && ansible-playbook --extra-vars \"target='$SA_INVENTORY_NAME' connection_type='local'\" --tags bootstrap '$PLAYBOOK_TO_RUN'"
+echo -e "Done\n"
+
+echo "### Bootstrap is done ###"
+echo "1. Logout and relogin."
+echo "2. Run <prefix>_ansible_serveradmin to setup server."
