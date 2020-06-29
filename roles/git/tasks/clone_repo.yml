@@ -51,6 +51,8 @@
   register: deploy_key_comment
   failed_when: false
   changed_when: false
+  # Ansible is warning for using sed
+  warn: false
   tags:
     - always
 
@@ -62,7 +64,7 @@
     group: "{{ clone_repo.user }}"
     setype: "_default"
     mode: "u=rw,g=,o="
-    path: ""
+    path: "{{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
   register: key_info_unique
   when: repo.use_unique_deploy_key
   tags:
