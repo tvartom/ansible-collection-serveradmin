@@ -14,7 +14,7 @@
     missingok
     notifempty
     sharedscripts
-    delaycompress
+    compress
     postrotate
         /bin/kill -SIGUSR1 `cat /run/php-fpm/php-fpm.pid 2>/dev/null` 2>/dev/null || true
     endscript
@@ -27,8 +27,8 @@
     rotate 30
     missingok
     notifempty
-    compress
     sharedscripts
+    compress
     postrotate
         /bin/kill -USR1 `cat /run/nginx.pid 2>/dev/null` 2>/dev/null || true
     endscript
