@@ -6,12 +6,6 @@
     - bootstrap
 # Returns: serveradmin
 
-#- debug:
-#     var: serveradmin
-#  tags: test
-#- pause:
-#  tags: test
-
 - name: "Show IP address on login"
   become: yes
   lineinfile:
