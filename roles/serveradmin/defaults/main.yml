@@ -9,3 +9,5 @@ serveradmin_default:
       protocol: ssh
       #port: 2022 (Optional)
       use_unique_deploy_key: true
+
+applications_devmode: false

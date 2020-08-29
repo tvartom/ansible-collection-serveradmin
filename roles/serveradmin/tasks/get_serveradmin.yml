@@ -16,13 +16,29 @@
 - name: Lista filer
   set_fact:
     serveradmin_files:
-      - { file: splash.sh,    dest: "", desc: "Visa denna meny", mode: "u=rwx,g=rx,o=rx", bootstrap: true }
-      - { file: autostart.sh, path: "/etc/profile.d", owner: root, group: root, mode: "u=rwx,g=rx,o=rx", bootstrap: true  }
-      - { file: pull_devops, dest: "pull_devops", prefix: "", bootstrap: true }
-      - { file: list_certs, desc: "Lista använda certifikat med utgångsdatum."}
-      - { file: cert_warning.sh, prefix: ""}
-      - { file: ansiblerunner_helper.sh, prefix: "", bootstrap: true }
-      - { file: include_common.sh, prefix: "", mode: "u=rwx,g=rx,o=rx", bootstrap: true  }
+      - file: splash.sh
+        dest: ""
+        desc: "Visa denna meny"
+        mode: "u=rwx,g=rx,o=rx"
+      - file: autostart.sh
+        path: "/etc/profile.d"
+        owner: root
+        group: root
+        mode: "u=rwx,g=rx,o=rx"
+      - file: pull_devops
+        dest: "pull_devops"
+        prefix: ""
+      - file: list_certs
+        desc: "Lista använda certifikat med utgångsdatum."
+        when: "{{ 'bootstrap' not in ansible_run_tags }}"
+      - file: cert_warning.sh
+        prefix: ""
+        when: "{{ 'bootstrap' not in ansible_run_tags }}"
+      - file: ansiblerunner_helper.sh
+        prefix: ""
+      - file: include_common.sh
+        prefix: ""
+        mode: "u=rwx,g=rx,o=rx"
       - file: ansiblerunner.sh
         dest: "ansible_facts_show"
         #desc: "Visa ansible-information om denna server."
@@ -31,7 +47,7 @@
         bootstrap: true
       - file: ansiblerunner.sh
         dest: "ansible_serveradmin"
-        desc: "Kör playbooken 'serveradmin' lokalt på denna server."
+        desc: "Konfigurerar denna server, utan applikationer lokalt på denna server."
         meta:
           ansible_playbook: "playbook-serveradmin.yml"
         bootstrap: true
@@ -40,6 +56,7 @@
         desc: "Konfigurera alla applikationer lokalt på denna server."
         meta:
           ansible_playbook: "playbook-applications.yml"
+        when: "{{ 'bootstrap' not in ansible_run_tags }}"
       - file: ansiblerunner.sh
         dest: "ansible_backup"
         desc: "Konfigurera säkerhetskopiering från denna server till andra."
@@ -52,6 +69,7 @@
         desc: "Driftsättning av applikation."
         meta:
           ansible_playbook: "playbook-applications_deploy.yml"
+        when: "{{ 'bootstrap' not in ansible_run_tags and not applications_devmode }}"
   tags:
     - bootstrap
 
@@ -68,12 +86,13 @@
       {%- endfor -%}
       {{- serveradmin_files -}}
 
-- name: "Filtrera alternativ för bootstrap"
-  set_fact:
-    serveradmin_files: "{{ serveradmin_files | selectattr('bootstrap', 'defined') | selectattr('bootstrap') | list }}"
-  tags:
-    - never
-    - bootstrap
+# 2020-08-29 LL Ersatt av serveradmin_files[].when
+#- name: "Filtrera alternativ för bootstrap"
+#  set_fact:
+#    serveradmin_files: "{{ serveradmin_files | selectattr('bootstrap', 'defined') | selectattr('bootstrap') | list }}"
+#  tags:
+#    - never
+#    - bootstrap
 
 - name: Kombinera default-värden och host-värden
   set_fact:
