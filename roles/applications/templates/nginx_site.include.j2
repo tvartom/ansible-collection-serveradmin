@@ -77,9 +77,9 @@ add_header  X-Robots-Tag $x_robots_tag;
            fastcgi_split_path_info ^(.+?\.php)(/.*)$;
            fastcgi_pass unix:/var/run/php-fpm-{{ webinstance.fullname }}.sock;
 
-           #Pga chroot i  php-fpm
+           {# Pga chroot i  php-fpm
            #fastcgi_param PATH_TRANSLATED /{{ webinstance.root_dir }}$fastcgi_script_name;
-           #Utan chroot
+           #Utan chroot #}
            fastcgi_param PATH_TRANSLATED $document_root$fastcgi_script_name;
 
            fastcgi_index index.php;
