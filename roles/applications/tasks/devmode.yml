@@ -1,0 +1,40 @@
+---
+
+- include_role:
+    name: serveradmin
+    tasks_from: get_serveradmin
+# Returns: serveradmin
+
+### Create global folders #######################################################################
+
+- name: "Create global folder for all applications within organisation"
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | d( 'root', true ) }}"
+    group: "{{ item.group | d( 'root', true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
+  when: item.when | default(True)
+  loop:
+    - { path: "/home/{{ applications_devmode_user }}/workspace", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(False) }
+    - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(False) }
+
+### Loop over webinstances ##################################################################
+- name: "Read all applications into applications_info"
+  include_tasks: get_application.yml
+  loop: "{{ application_instances }}"
+  loop_control:
+    loop_var: application_instance
+    label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+
+# Varnar för applications variable redan finns, eftersom vi använt den när vi skapade upp.
+# Detta är safe!
+- name: "Include application"
+  include_tasks: devmode_application.yml
+  loop: "{{ applications_info }}"
+  loop_control:
+    loop_var: application
+    label: "{{ application.environment|default('') }}-{{ application.name }}"
+

@@ -96,7 +96,7 @@
 
 - name: "Clone repo (with sub-modules recursively)"
   # Använd inte become, så att agent forward fungerar, om det är rätt användare. Krävs för devmode
-  become: "{{ ansible_started_by_user != clone_repo.user }}"
+  become: true
   become_user: "{{ clone_repo.user }}"
   git:
     repo: "{{ repo.url }}"
