@@ -134,13 +134,17 @@ source include_common.sh
   {% endfor %}
 
   {% if database.drop_database | d(true) %}
-    echo "Drop if exists...({{ database.to.name }})"
+    echo "Drop database {{ database.to.name }} if exists..."
     mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
 
     echo "Create database..."
     mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
   {% endif %}
 
+  {% for table in database.drop_tables | d([]) %}
+    echo "Drop table {{ table }} if exists.."
+    mysql -NB -e "DROP TABLE IF EXISTS \`{{ database.to.name }}.{{ table }}\`"
+  {% endfor %}
 
   echo "Populate local database..."
   $PIPE_COMMAND {{ dumpfile }} \
