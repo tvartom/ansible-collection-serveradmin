@@ -17,14 +17,14 @@
     group: "{{ backup_info.dest_user.group }}"
     mode: "u=rwx,g=r,o=r"
 
-#- name: Create create_disk_usage_report-*.sh
-#  become: yes
-#  template:
-#    src: "dest_create_disk_usage_report.sh.j2"
-#    dest: "{{ backup_info.dest_user.home }}/create_disk_usage_report-{{ backup_dest_info.name }}.sh"
-#    owner: "{{ backup_info.dest_user.name }}"
-#    group: "{{ backup_info.dest_user.group }}"
-#    mode: "u=rwx,g=r,o=r"
+- name: Create create_disk_usage_report-*.sh
+  become: yes
+  template:
+    src: "dest_create_disk_usage_report.sh.j2"
+    dest: "{{ backup_info.dest_user.home }}/create_disk_usage_report-{{ backup_dest_info.name }}.sh"
+    owner: "{{ backup_info.dest_user.name }}"
+    group: "{{ backup_info.dest_user.group }}"
+    mode: "u=rwx,g=r,o=r"
 
 - name: "Create directories (root, log, run)"
   become: yes

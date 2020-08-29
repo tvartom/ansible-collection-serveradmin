@@ -5,34 +5,36 @@
 # Andringar i denna fil ska goras via Ansible, annars skrivs de over. / Lasse
 #
 
-REPORT_FILE="{{ item.root }}/log/disk_usage_report-{{ item.name }}.txt"
+REPORT_FILE="{{ backupinstance.dest.root }}/log/disk_usage_report-{{ backupinstance.name }}.txt"
 
-cd {{ item.root }}/{{ item.name }}
+PATH="{{ backupinstance.dest.root }}/{{ backupinstance.name }}"
 
-echo "Report" $(date -u) > $REPORT_FILE
+echo "Report" $(date -Iseconds | sed -e "s/T/ /") > $REPORT_FILE
 
-pwd >> $REPORT_FILE
+echo "$PATH" >> $REPORT_FILE
 echo "Growing report:" >> $REPORT_FILE
-# Kommandoanteckningar:
-# Säkerställ rätt ordning genom att ge både .? och .[1-9]? (Undviker ordningen: 0,1,10,11,2,3...)
-# tr ' ' '/n' = Ersätter mellanslag med ny rad
-# egrep '[0-9]+$' = Säkerställer att namnen slutar med siffror, tar bort icke expanderade wildcards. (Om de inte matchar något, expl om monthsago.10 inte finns än)
-# tac = reverse cat, sorterar backlänges
-# tr ' ' '/n' = Återställer ny rad med mellanslag igen
-du -sch $(echo daysago.? weeksago.? monthsago.? monthsago.1? yearsago.? yearsago.[1-9]? | tr ' ' '\n' | egrep '[0-9]+$' | tac | tr '\n' ' ') >> $REPORT_FILE
+#du:
+# -s, --summarize: display only a total for each argument
+# -c, --total: produce a grand total
+# -h, --human-readable: print sizes in human readable format (e.g., 1K 234M 2G)
+#ls
+# -d, --directory: list directories themselves, not their contents
+# -v, --sort=version: natural sort of (version) numbers within text (Not 0,1,10,11,2,3...)
+# -r, --reverse: reverse order while sorting
+du -sch $(ls -dvr "$PATH/*/") >> $REPORT_FILE
 
 echo >> $REPORT_FILE
 echo "Disk usage:" >> $REPORT_FILE
-du -sch $(echo daysago.? weeksago.? monthsago.? monthsago.1? yearsago.? yearsago.[1-9]? | tr ' ' '\n' | egrep '[0-9]+$' | tr '\n' ' ') >> $REPORT_FILE
+du -sch $(ls -dv "$PATH/*/") >> $REPORT_FILE
 
 echo >> $REPORT_FILE
 echo "Snapshot-dates:" >> $REPORT_FILE
 # xarg-anteckningar
 # -n1                 Kör kommandot en gång per rad
-# -I %                Ersätt % med pipad rad i kommanot
-# sh- c "...; ...;"   Starta sh och kör kommandona.
+# -I @                Ersätt @ med pipad rad i kommanot
+# sh -c "...; ...;"   Starta sh och kör kommandona.
 #
 # echo
-# -e                  Gör att \t blir tab
+# -e                  Kan använda \t och \n
 # -n                  Ingen ny rad
-echo daysago.? weeksago.? monthsago.? monthsago.1? yearsago.? yearsago.[1-9]? | tr ' ' '\n' | egrep '[0-9]+$' | xargs -n1 -I % sh -c 'echo -en %"\t"; stat % | grep "Modify";' >> $REPORT_FILE
+(cd "$PATH" && ls -1dv */ | sed -e "s-/--" | xargs -n1 -I @ sh -c 'printf '%-25s' "@"; stat "@" | grep "Modify";')
