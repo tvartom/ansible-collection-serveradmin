@@ -83,7 +83,8 @@
 # GIT_SSH_COMMAND="ssh -i $KEYFILE_ABS" git clone ...
 
 - name: "Clone repo (with sub-modules recursively)"
-  become: yes
+  # Använd inte become, så att agent forward fungerar, om det är rätt användare. Krävs för devmode
+  become: "{{ ansible_started_by_user != clone_repo.user }}"
   become_user: "{{ clone_repo.user }}"
   git:
     repo: "{{ repo.url }}"
