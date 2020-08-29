@@ -63,6 +63,20 @@ source include_common.sh
 
 {% for database in data_migration.databases | default([]) %}
   {% set dumpfile = 'dump_'~database.from.name~'.sql' %}
+  # Does pv exists? (for progressbar)
+  if command -v pv >/dev/null 2>&1; then
+    PIPE_COMMAND="pv"
+    if [ -f "{{ dumpfile }}" ]; then
+      PIPE_COMMAND_DUMP_FILE="pv -s $(stat --printf="%s" {{ dumpfile }})"
+    else
+      PIPE_COMMAND_DUMP_FILE="pv"
+    fi
+  else
+    echo "Note: Install 'pv' to show progressbar.".
+    PIPE_COMMAND="cat"
+    PIPE_COMMAND_DUMP_FILE="cat"
+  fi
+
   ######### Kopiera databas från {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }}  till localhost/{{ database.to.name }} #########
   # ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta)
   time \
@@ -81,7 +95,7 @@ source include_common.sh
         {% for table in database.ignore_tables | d([]) %}--ignore-table={{ database.from.name }}.{{ table }} {% endfor %} \
         '{{ database.from.name }}' \
         {% for table in database.include_tables | d([]) %}{{ table }} {% endfor %} \
-        {% if data_migration.ssh_host is defined %} {{ '"' }} {% endif %} > {{ dumpfile }}
+        {% if data_migration.ssh_host is defined %} {{ '"' }} {% endif %} | $PIPE_COMMAND_DUMP_FILE > {{ dumpfile }}
 
   #	${DB_PORT:+"--protocol=TCP"} ${DB_PORT:+"--port=$DB_PORT"} \
 
@@ -111,7 +125,7 @@ source include_common.sh
   mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
 
   echo "Populate local database... (With data)"
-  pv {{ dumpfile }} \
+  $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
       | mysql \
         {{ '--default-character-set='~database.to.default_character_set if database.to.default_character_set is defined else '' }} \
