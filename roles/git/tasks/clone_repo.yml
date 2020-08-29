@@ -120,12 +120,34 @@
 
 - name: "Config git-repo to use deploy-key"
   become: yes
-  become_user: "{{  clone_repo.user }}"
+  become_user: "{{ clone_repo.user }}"
   git_config:
     name: core.sshCommand
     repo: "{{ clone_repo.dest }}"
     scope: local
     value: "ssh -i {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
+  when: serveradmin.repo.use_unique_deploy_key
+  tags:
+    - always
+
+- 
+- name: "Config git-repo to use deploy-key"
+  become: yes
+  become_user: "{{ clone_repo.user }}"
+  git_config:
+    name: core.sshCommand
+    repo: "{{ clone_repo.dest }}"
+    scope: local
+    value: "ssh -i {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
+  when: serveradmin.repo.use_unique_deploy_key
+  tags:
+    - always
+
+- name: "Config git-repo to use deploy-key on submodules too"
+  become: yes
+  become_user: "{{ clone_repo.user }}"
+  command: >-
+    git submodule foreach --recursive git config core.sshCommand "ssh -i {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
   when: serveradmin.repo.use_unique_deploy_key
   tags:
     - always
