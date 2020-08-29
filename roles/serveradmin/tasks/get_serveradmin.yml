@@ -42,13 +42,11 @@
         #desc: "Visa ansible-information om denna server."
         meta:
           ansible_playbook: "playbook-facts_show.yml"
-        bootstrap: true
       - file: ansiblerunner.sh
         dest: "ansible_serveradmin"
         desc: "Konfigurerar denna server, utan applikationer."
         meta:
           ansible_playbook: "playbook-serveradmin.yml"
-        bootstrap: true
       - file: ansiblerunner.sh
         dest: "ansible_applications"
         desc: "Konfigurera alla applikationer lokalt på denna server."
