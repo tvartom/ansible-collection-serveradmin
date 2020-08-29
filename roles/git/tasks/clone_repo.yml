@@ -52,6 +52,7 @@
     warn: false # Ansible is warning for using sed
   register: deploy_key_comment
   failed_when: false
+  when: repo.use_unique_deploy_key
   tags:
     - always
 
@@ -87,7 +88,7 @@
   git:
     repo: "{{ repo.url }}"
     dest: "{{ clone_repo.dest }}"
-    key_file: "{{ user_home.stdout ~ '/.ssh/' ~ repo.unique_deploy_key if repo.use_unique_deploy_key else '' }}"
+    key_file: "{{ user_home.stdout ~ '/.ssh/' ~ repo.unique_deploy_key if repo.use_unique_deploy_key else omit }}"
     update: "{{ clone.repo.update | default(true) }}"
     version: "{{ repo.branch | default('HEAD') }}"
     umask: "027"
