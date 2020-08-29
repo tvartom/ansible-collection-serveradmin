@@ -62,7 +62,7 @@ source include_common.sh
 {% endif %}
 
 {% for database in data_migration.databases | default([]) %}
-  {% set dumpfile = 'dump_'~database.from.name~'.sql' %}
+  {% set dumpfile = 'dump_'~loop.index~'_'~database.from.name~'.sql' %}
   # Does pv exists? (for progressbar)
   if command -v pv >/dev/null 2>&1; then
     PIPE_COMMAND="pv"
@@ -92,9 +92,9 @@ source include_common.sh
         {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
         `#--add-drop-database` \
         --no-create-db \
-        `#--no-data` \
+        {{ '--no-data' if database.no_data | d(false) else '' }} \
         --skip-lock-tables \
-        {% for table in database.ignore_tables | d([]) %}--ignore-table={{ database.from.name }}.{{ table }} {% endfor %} \
+        {% for table in database.exclude_tables | d([]) %}--ignore-table={{ database.from.name }}.{{ table }} {% endfor %} \
         '{{ database.from.name }}' \
         {% for table in database.include_tables | d([]) %}{{ table }} {% endfor %} \
         {% if data_migration.ssh_host is defined %} {{ '"' }} {% endif %} | $PIPE_COMMAND_DUMP_FILE > {{ dumpfile }}
