@@ -136,10 +136,11 @@ source include_common.sh
   {% if database.drop_database | d(true) %}
     echo "Drop if exists...({{ database.to.name }})"
     mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
+
+    echo "Create database..."
+    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
   {% endif %}
 
-  echo "Create database..."
-  mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
 
   echo "Populate local database..."
   $PIPE_COMMAND {{ dumpfile }} \
