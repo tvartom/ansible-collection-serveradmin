@@ -13,6 +13,7 @@
 #  tags: test
 
 - name: "Show IP address on login"
+  become: yes
   lineinfile:
     path: /etc/issue
     regexp: '\\4'
