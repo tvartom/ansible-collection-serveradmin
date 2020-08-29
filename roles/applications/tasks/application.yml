@@ -1,22 +1,22 @@
 ---
-- name: Aktuell application
+- name: "Current application"
   debug:
     var: application
 
-- name: Create user specific group for application
+- name: "Create user specific group for application"
   become: yes
   group:
     name: "{{ application.process_group }}"
     system: yes
 
-- name: "Hämta info om användaren"
+- name: "Get info about process user"
   getent:
     database: passwd
     key: "{{ application.process_user }}"
     fail_key: false
   # Registrerar i getent_passwd
 
-- name: Create user for application
+- name: "Create process user for application"
   become: yes
   user:
     name: "{{ application.process_user }}"
@@ -36,7 +36,7 @@
     append: true
   notify: "Reload nginx"
 
-- name: Create DB for application
+- name: "Create DB for application"
   become: yes
   mysql_db:
     name: "{{ database.database }}"
@@ -50,7 +50,7 @@
   loop_control:
     loop_var: database
 
-- name: Let linux user have access to application database
+- name: "Let process user (linux) have access to application database"
   include_role:
     name: mariadb
     tasks_from: create_user
@@ -61,7 +61,7 @@
       databases: "{{ application.databases }}"
   when: application.databases is defined
 
-- name: "Konfigurera git för application-användaren"
+- name: "Config för process user"
   include_role:
     name: git
     tasks_from: config_git_for_user
@@ -71,7 +71,7 @@
       #fullname: "hela namnet" #Optional: annars använs user.name
       #email: "Epost" #Optional: annars används user.name @ inventory_hostname
 
-- name: "Create dir for organisation"
+- name: "Create dir in /opt for organisation"
   become: yes
   file:
     path: "{{ temp_organisation_path }}"
@@ -83,7 +83,7 @@
   vars:
     temp_organisation_path: "/opt/{{ application.organisation }}"
 
-- name: "Create dir for application"
+- name: "Create dir in /opt/organisation for application"
   become: yes
   file:
     path: "{{ application.path }}{{ item.path }}"

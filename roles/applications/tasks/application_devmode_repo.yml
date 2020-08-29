@@ -1,5 +1,5 @@
 ---
-- name: Aktuell application in devmode
+- name: "Current application in devmode"
   debug:
     var: application
 
@@ -14,4 +14,10 @@
       update: false
     repo: "{{ repo | combine( { 'use_unique_deploy_key':false } ) }}"
 
-
+- name: "Mount the dev repo in the application repo-place"
+  mount:
+    path: "{{ application.path }}/repos/{{ repo.name }}"
+    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.name }}"
+    opts: "bind,{{ application.process_user }}"
+    state: mounted
+    fstype: none
