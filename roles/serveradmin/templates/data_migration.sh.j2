@@ -77,8 +77,11 @@ source include_common.sh
     PIPE_COMMAND_DUMP_FILE="cat"
   fi
 
-  echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }}  to localhost/{{ database.to.name }} ####"
-  echo "{{ '(Without data)' if database.no_data | d(false) else '(With data)' }}"
+  echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
+  echo "{{ 'Exclude' if database.no_data | d(false) else 'Include' }} data"
+  echo "{{ 'Include' if database.include_events   | d(true) else 'Exclude' }} events"
+  echo "{{ 'Include' if database.include_routines | d(true) else 'Exclude' }} routines"
+  echo "{{ 'Include' if database.include_triggers | d(true) else 'Exclude' }} triggers"
   {% if database.exclude_tables is defined %}
     echo "Exlude tables:"
     {% for table in database.exclude_tables | d([]) %}
@@ -91,9 +94,6 @@ source include_common.sh
       echo "- {{ table }}"
     {% endfor %}
   {% endif %}
-  echo "{{ 'Include' if database.include_events   | d(true) else 'Exclude' }} events"
-  echo "{{ 'Include' if database.include_routines | d(true) else 'Exclude' }} routines"
-  echo "{{ 'Include' if database.include_triggers | d(true) else 'Exclude' }} triggers"
 
   {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
     {% if data_migration.ssh_host is defined %}ssh -C {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
