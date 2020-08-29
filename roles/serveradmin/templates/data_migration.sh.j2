@@ -78,7 +78,9 @@ source include_common.sh
   fi
 
   ######### Kopiera databas från {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }}  till localhost/{{ database.to.name }} #########
+  {% if data_migration.ssh_host is defined %}
   # ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta)
+  {% endif %}
   time \
     {% if data_migration.ssh_host is defined %}ssh {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
         {{ '--host='~database.from.host if database.from.host is defined else '' }} \
