@@ -131,11 +131,12 @@ source include_common.sh
   {% for replace in database.replaces | default([]) %}
     echo "{{ replace.description }}"
     sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" {{ dumpfile }}
-
   {% endfor %}
 
-  echo "Drop if exists...({{ database.to.name }})"
-  mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
+  {% if database.drop_database | d(true) %}
+    echo "Drop if exists...({{ database.to.name }})"
+    mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
+  {% endif %}
 
   echo "Create database..."
   mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
