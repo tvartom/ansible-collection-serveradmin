@@ -29,7 +29,7 @@
   loop:
     - { path: "/etc/nginx/ssl",                                 owner: "root", group: "root", when: webserver_use_letsencrypt }
     - { path: "/etc/nginx/conf.d/{{ organisation.name }}",      owner: "root", group: "root" }
-    - { path: "/home/{{ application_devmode_user }}/workspace", owner: "{{ application_devmode_user }}", group: "{{ application_devmode_user }}" when: applications_devmode | d(False) }
+    - { path: "/home/{{ application_devmode_user }}/workspace", owner: "{{ application_devmode_user }}", group: "{{ application_devmode_user }}", when: applications_devmode | d(False) }
     - { path: "/home/{{ application_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ application_devmode_user }}", group: "{{ application_devmode_user }}", when: applications_devmode | d(False) }
 
 ### Loop over webinstances ##################################################################
