@@ -93,16 +93,15 @@
   tags:
     - bootstrap
 
-#- name: Lägg serveradmin-användare för access till mariadb
-#  include_role:
-#    name: mariadb
-#    tasks_from: create_user
-#  vars:
-#    user:
-#      name: "{{ serveradmin.process_user }}"
-#      is_linux_user: true
-#      databases:
-#        - database: "*"
+- name: "Let serveradmin-user have full access to mariadb"
+  include_role:
+    name: mariadb
+    tasks_from: create_user
+  vars:
+    user:
+      name: "{{ serveradmin.process_user }}"
+      is_linux_user: true
+      sudoer: true
 
 - name: "Create dir"
   become: yes

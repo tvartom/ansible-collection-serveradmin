@@ -9,6 +9,7 @@
 #      name: "användarenamn" #Användarnamnet på användaren (kan vara linux användare)
 #      [password: sätt lösenord, annars default unix_socekt om linux-användare] 
 #      [host: default(localhost)]
+#      [sudoer: default(false)
 #      [databases:
 #        - database: databasename
 #          [table: tablename | default("*")]
