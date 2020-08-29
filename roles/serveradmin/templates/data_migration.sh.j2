@@ -77,11 +77,25 @@ source include_common.sh
     PIPE_COMMAND_DUMP_FILE="cat"
   fi
 
-  ######### Kopiera databas från {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }}  till localhost/{{ database.to.name }} #########
-  {% if data_migration.ssh_host is defined %}
-  # ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta)
+  echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }}  to localhost/{{ database.to.name }} ####"
+  echo "{{ '(Without data)' if database.no_data | d(false) else '(With data)' }}"
+  {% if database.exclude_tables is defined %}
+    echo "Exlude tables:"
+    {% for table in database.exclude_tables | d([]) %}
+      echo "- {{ table }}"
+    {% endfor %}
   {% endif %}
-  time \
+  {% if database.include_tables is defined %}
+    echo "Include tables:"
+    {% for table in database.include_tables | d([]) %}
+      echo "- {{ table }}"
+    {% endfor %}
+  {% endif %}
+  echo "{{ 'Include' if database.include_events   | d(true) else 'Exclude' }} events"
+  echo "{{ 'Include' if database.include_routines | d(true) else 'Exclude' }} routines"
+  echo "{{ 'Include' if database.include_triggers | d(true) else 'Exclude' }} triggers"
+
+  {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
     {% if data_migration.ssh_host is defined %}ssh {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
         {{ '--host='~database.from.host if database.from.host is defined else '' }} \
         {{ '--user='~database.from.user if database.from.user is defined else '' }} \
@@ -126,7 +140,7 @@ source include_common.sh
   echo "Create database..."
   mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
 
-  echo "Populate local database... (With data)"
+  echo "Populate local database..."
   $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
       | mysql \
