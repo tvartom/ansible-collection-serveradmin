@@ -31,10 +31,10 @@
 {% if webinstance.x_robots_tag is defined %}
 ### Hantering av headern X-Robots-Tag för sökmotorer
 # Denna gäller på alla, om inget annat anges:
-set $x_robots_tag "{{ webinstance.x_robots_tag.root[webinstance.environment] | default(webinstance.x_robots_tag.root.default | default('')) }}";
+set $x_robots_tag "{{ webinstance.x_robots_tag.root[application.environment] | default(webinstance.x_robots_tag.root.default | default('')) }}";
     {% for row in webinstance.x_robots_tag.locations | default([]) if row.filter is not defined
-        or (row.filter.include_environment is defined and webinstance.environment in row.filter.include_environment)
-        or (row.filter.exclude_environment is defined and webinstance.environment not in row.filter.exclude_environment)
+        or (row.filter.include_environment is defined and application.environment in row.filter.include_environment)
+        or (row.filter.exclude_environment is defined and application.environment not in row.filter.exclude_environment)
       %}
       {% if row.comment is defined %}
         # {{ row.comment }}
