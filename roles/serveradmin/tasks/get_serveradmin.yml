@@ -71,7 +71,7 @@
         desc: "Initiera git-repos för utveckling."
         meta:
           ansible_playbook: "playbook-applications_devmode.yml"
-          agent_forwarding: true
+          run_as_serveradmin: false
         when: "{{ applications_devmode | d(false) and 'bootstrap' not in ansible_run_tags}}"
 
   tags:
