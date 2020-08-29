@@ -47,7 +47,7 @@
 - name: "Generate default values for webinstance"
   set_fact:
     temp_webinstance_default:
-      enable_https: "{{ webserver_use_letsencrypt && default_enable_https }}"
+      enable_https: "{{ webserver_use_letsencrypt && applications_enable_https_by_default }}"
       only_https: true # No effect if enable_https == false
       enable_http2: true # No effect if enable_https == false
       listen_to_ipv6: true

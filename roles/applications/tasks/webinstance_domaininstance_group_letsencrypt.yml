@@ -68,7 +68,7 @@
     - name: "Remove Ngninx files for all domaininstances using this group-cert"
       become: yes
       file:
-        path: "/etc/nginx/webinstances.d/{{ domaininstance_fullname }}.conf"
+        path: "/etc/nginx/conf.d/{{ organisation.name }}/{{ domaininstance_fullname }}.conf"
         state: absent
       loop: "{{ domaininstance_group.domaininstances }}"
       loop_control:
@@ -78,7 +78,7 @@
       become: yes
       template:
         src: nginx_site_letsencrypt_only.conf.j2
-        dest: "/etc/nginx/webinstances.d/{{ domaininstance_group.fullname }}.conf"
+        dest: "/etc/nginx/conf.d/{{ organisation.name }}/{{ domaininstance_group.fullname }}.conf"
         owner: root
         group: root
         mode: 0644
@@ -101,6 +101,6 @@
     - name: "Remove temporary Ngninx files domaininstance_group"
       become: yes
       file:
-        path: "/etc/nginx/webinstances.d/{{ domaininstance_group.fullname }}.conf"
+        path: "/etc/nginx/conf.d/{{ organisation.name }}/{{ domaininstance_group.fullname }}.conf"
         state: absent
   when: not ssl_ready

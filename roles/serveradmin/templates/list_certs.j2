@@ -8,7 +8,7 @@ set -e
 source include_common.sh
 
 echo -e "${BIYellow}Utgångsdatum för certifikat:${NC}"
-grep -Poh "(?<=ssl_certificate)\s+.*\s*(?=;)" /etc/nginx/webinstances.d/* | grep -o "\S*" | sort | uniq | while read -r cert ; do
+grep -Poh "(?<=ssl_certificate)\s+.*\s*(?=;)" /etc/nginx/conf.d/{{ organisation.name }}/* | grep -o "\S*" | sort | uniq | while read -r cert ; do
    #https://stackoverflow.com/questions/21297853/how-to-determine-ssl-cert-expiration-date-from-a-pem-encoded-certificate
    # 30 dagar/ 60 dagar
    openssl x509 -checkend 5184000 -noout -in "$cert" &> /dev/null && echo -en "${Green}" || echo -en "${Yellow}"

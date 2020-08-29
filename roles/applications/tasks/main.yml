@@ -7,7 +7,7 @@
 # Letsencrypt-script:                "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance_group.fullname }}.sh"
 # Signed chained cert:               "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
 
-# Nginx conf: /etc/nginx/webinstances.d/{{ webinstance.fullname }}.conf
+# Nginx conf: /etc/nginx/conf.d/{{ organisation.name }}/{{ webinstance.fullname }}.conf
 
 - include_role:
     name: serveradmin
@@ -16,23 +16,21 @@
 
 ### Create global folders #######################################################################
 
-- name: "Create /etc/nginx/ssl"
+- name: "Create global folder for all applications within organisation"
   become: yes
   file:
-    path: /etc/nginx/ssl
+    path: "{{ item.path }}"
     state: directory
-    owner: root
-    group: root
-    mode: "u=rwx,g=rx,o=rx"
-
-- name: "Create /etc/nginx/webinstances.d"
-  become: yes
-  file:
-    path: /etc/nginx/webinstances.d
-    state: directory
-    owner: root
-    group: root
-    mode: "u=rwx,g=rx,o=rx"
+    owner: "{{ item.owner | d( 'root', true ) }}"
+    group: "{{ item.group | d( 'root', true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
+  when: item.when | default(True)
+  loop:
+    - { path: "/etc/nginx/ssl",                                 owner: "root", group: "root", when: webserver_use_letsencrypt }
+    - { path: "/etc/nginx/conf.d/{{ organisation.name }}",      owner: "root", group: "root" }
+    - { path: "/home/{{ application_devmode_user }}/workspace", owner: "{{ application_devmode_user }}", group: "{{ application_devmode_user }}" when: applications_devmode | d(False) }
+    - { path: "/home/{{ application_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ application_devmode_user }}", group: "{{ application_devmode_user }}", when: applications_devmode | d(False) }
 
 ### Loop over webinstances ##################################################################
 - name: "Read all applications into applications_info"
@@ -42,7 +40,7 @@
     loop_var: application_instance
     label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
 
-- name: "Delete unused .conf-files in /etc/nginx/webinstances.d"
+- name: "Delete unused .conf-files in /etc/nginx/conf.d/{{ organisation.name }}"
   include_tasks: clean_nginx_conf.yml
 
 # Varnar för applications variable redan finns, eftersom vi använt den när vi skapade upp.
@@ -91,6 +89,7 @@
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"
+  when: webserver_use_letsencrypt
 
 - name: Setup lograte for webinstances (php-fpm och nginx)
   become: yes

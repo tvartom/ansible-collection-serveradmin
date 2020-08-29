@@ -1,7 +1,7 @@
 ---
 - name: "Gather list of nginx conf"
   find:
-    paths:  /etc/nginx/webinstances.d/
+    paths: "/etc/nginx/conf.d/{{ organisation.name }}/"
     patterns:
       - "*.conf"
   register: current_ngninx_files
@@ -13,7 +13,7 @@
       {%- for application in applications_info -%}
       {%-   for name, webinstance in application.webinstances.items() -%}
       {%-     for domaininstance in webinstance.domaininstances -%}
-      {{-       valid_files.append('/etc/nginx/webinstances.d/'+domaininstance.fullname+'.conf') -}}
+      {{-       valid_files.append('/etc/nginx/conf.d/'+organisation.name+'/'+domaininstance.fullname+'.conf') -}}
       {%-     endfor -%}
       {%-   endfor -%}
       {%- endfor -%}

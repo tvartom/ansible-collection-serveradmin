@@ -116,5 +116,5 @@
     {{-   output.text -}}
     {%- endif %}
 
-    include webinstances.d/{{ webinstance.fullname }}.include;
+    include conf.d/{{ organisation.name }}/{{ webinstance.fullname }}.include;
   }

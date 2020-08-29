@@ -14,7 +14,7 @@
 # För att titta på innehåll i signerat cert:
 # $ openssl x509 -noout -text -in /etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt.crt
 
-# Nginx conf: /etc/nginx/webinstances.d/{{ webinstance.fullname }}.conf
+# Nginx conf: /etc/nginx/conf.d/{{ organisation.name }}/{{ webinstance.fullname }}.conf
 
 # PHP-socket:  /var/run/php-fpm-{{ webinstance.fullname }}.sock
 
@@ -78,7 +78,7 @@
   become: yes
   template:
     src: nginx_site.conf.j2
-    dest: /etc/nginx/webinstances.d/{{ domaininstance.fullname }}.conf
+    dest: /etc/nginx/conf.d/{{ organisation.name }}/{{ domaininstance.fullname }}.conf
     owner: root
     group: root
     mode: 0644
@@ -91,7 +91,7 @@
   become: yes
   template:
     src: nginx_site.include.j2
-    dest: "/etc/nginx/webinstances.d/{{ webinstance.fullname }}.include"
+    dest: "/etc/nginx/conf.d/{{ organisation.name }}/{{ webinstance.fullname }}.include"
     owner: root
     group: root
     mode: 0644
@@ -101,7 +101,7 @@
   become: yes
   copy:
     content: ""
-    dest: "/etc/nginx/webinstances.d/{{ webinstance.fullname }}_custom.include"
+    dest: "/etc/nginx/conf.d/{{ organisation.name }}/{{ webinstance.fullname }}_custom.include"
     force: no
     owner: root
     group: root

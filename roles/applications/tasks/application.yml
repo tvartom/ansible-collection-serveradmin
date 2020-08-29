@@ -16,7 +16,7 @@
     fail_key: false
   # Registrerar i getent_passwd
 
-- name: Create users for application
+- name: Create user for application
   become: yes
   user:
     name: "{{ application.process_user }}"
@@ -36,8 +36,7 @@
     append: true
   notify: "Reload nginx"
 
-
-- name: Create DB for for application
+- name: Create DB for application
   become: yes
   mysql_db:
     name: "{{ database.database }}"
@@ -51,7 +50,7 @@
   loop_control:
     loop_var: database
 
-- name: Lägg unix användare för access till databas
+- name: Let linux user have access to application database
   include_role:
     name: mariadb
     tasks_from: create_user
@@ -125,3 +124,13 @@
   loop: "{{ application.webinstances.values()|list }}"
   loop_control:
     loop_var: webinstance
+
+### devmodes ####################################################################
+
+- name: Repos for devmode
+  include_tasks: application_devmode_repo.yml
+  loop: "{{ application.repos }}"
+  loop_control:
+    loop_var: repo
+    label: "{{ repo.name }}"
+  when: application_devmode

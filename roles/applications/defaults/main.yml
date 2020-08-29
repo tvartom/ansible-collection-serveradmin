@@ -8,7 +8,9 @@ nginx_group: nginx
 
 webserver_use_letsencrypt: true
 
-default_enable_https: true
+applications_enable_https_by_default: true
+
+applications_devmode: false
 
 applications_default:
   #För att använda denna applikationen,

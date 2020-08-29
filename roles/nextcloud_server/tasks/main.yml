@@ -232,7 +232,7 @@
   become: yes
   template:
     src: nextcloud.include.nginx.j2
-    dest: "/etc/nginx/webinstances.d/{{ nextcloud.webinstance_fullname }}_custom.include"
+    dest: "/etc/nginx/conf.d/{{ organisation.name }}/{{ nextcloud.webinstance_fullname }}_custom.include"
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"

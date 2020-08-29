@@ -11,7 +11,7 @@
   error_log  {{ path }}/log/nginx/{{ webinstance.instance }}-error.log info;
 
   {% if webinstance.use_custom_nginx_include_file %}
-    include webinstances.d/{{ webinstance.fullname }}_custom.include;
+    include conf.d/{{ organisation.name }}/{{ webinstance.fullname }}_custom.include;
   {% else %}
 
     index {% if webinstance.enable_php %}index.php {% endif %}index.html;
