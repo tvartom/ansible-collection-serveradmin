@@ -71,7 +71,7 @@
 
 # Note 1
 # If problem with Host key verification failed, look in basic_centos_tools where
-	# repository-providers is added to known hosts. (like github.com)
+# repository-providers is added to known hosts. (like github.com)
 
 # Note 2
 # Necessary to pull as other user:
@@ -130,7 +130,6 @@
   tags:
     - always
 
-- 
 - name: "Config git-repo to use deploy-key"
   become: yes
   become_user: "{{ clone_repo.user }}"
