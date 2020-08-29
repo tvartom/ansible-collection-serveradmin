@@ -30,9 +30,9 @@
     - { path: "/etc/nginx/ssl",                                 owner: "root", group: "root", when: webserver_use_letsencrypt }
     - { path: "/etc/nginx/conf.d/{{ organisation.name }}",      owner: "root", group: "root" }
     - { path: "/home/{{ applications_devmode_user }}/workspace", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }
-    - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) 
+    - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }
 
-### Loop over webinstances ##################################################################
+### Loop over application instances ##################################################################
 - name: "Read all applications into applications_info"
   include_tasks: get_application.yml
   loop: "{{ application_instances }}"
