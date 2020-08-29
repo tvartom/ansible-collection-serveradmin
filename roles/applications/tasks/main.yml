@@ -29,6 +29,8 @@
   loop:
     - { path: "/etc/nginx/ssl",                                 owner: "root", group: "root", when: webserver_use_letsencrypt }
     - { path: "/etc/nginx/conf.d/{{ organisation.name }}",      owner: "root", group: "root" }
+    - { path: "/home/{{ applications_devmode_user }}/workspace", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }
+    - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) 
 
 ### Loop over webinstances ##################################################################
 - name: "Read all applications into applications_info"
@@ -106,3 +108,13 @@
     owner: "{{ serveradmin.process_user }}"
     group: "{{ serveradmin.process_user }}"
     mode: "u=rwx,g=rx,o=rx"
+
+- name: "Skapa lista med applikationer"
+  become: yes
+  template:
+    src: devmode_init.sh.j2
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}_devmode_init"
+    owner: "{{ applications_devmode_user }}"
+    group: "{{ applications_devmode_user }}"
+    mode: "u=rwx,g=rw,o=r"
+  when: applications_devmode | d(false)
