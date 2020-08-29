@@ -17,6 +17,8 @@
     path: /etc/issue
     regexp: '\\4'
     line: "IP: \\4\n"
+  tags:
+    - bootstrap
 
 - name: "Create dir"
   become: yes
