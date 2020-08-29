@@ -104,7 +104,7 @@
   become: yes
   template:
     src: list_applications.sh.j2
-    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}_list_applications"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}list_applications"
     owner: "{{ serveradmin.process_user }}"
     group: "{{ serveradmin.process_user }}"
     mode: "u=rwx,g=rx,o=rx"
@@ -113,7 +113,7 @@
   become: yes
   template:
     src: devmode_init.sh.j2
-    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}_devmode_init"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}devmode_init"
     owner: "{{ applications_devmode_user }}"
     group: "{{ applications_devmode_user }}"
     mode: "u=rwx,g=rw,o=r"
