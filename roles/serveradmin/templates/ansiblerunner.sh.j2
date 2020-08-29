@@ -30,7 +30,7 @@ fi
 setfacl -R -m u:{{ serveradmin.process_user }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ serveradmin.process_user }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}" 
 {% endif %}
 
-{% item.meta.run_as_serveradmin | d(true) %}
+{% if item.meta.run_as_serveradmin | d(true) %}
 sudo -u {{ serveradmin.process_user }} -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) "$PLAYBOOK_TO_RUN"
 {% else %}
 ansiblerunner_helper.sh $(whoami) "$PLAYBOOK_TO_RUN"
