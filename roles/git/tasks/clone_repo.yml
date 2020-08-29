@@ -71,7 +71,7 @@
 
 # Note 1
 # If problem with Host key verification failed, look in basic_centos_tools where
-# repository-providers is added to known hosts. (like github.com)
+	# repository-providers is added to known hosts. (like github.com)
 
 # Note 2
 # Necessary to pull as other user:
@@ -149,5 +149,7 @@
   command: >-
     git submodule foreach --recursive git config core.sshCommand "ssh -i {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}"
   when: serveradmin.repo.use_unique_deploy_key
+  args:
+    chdir: "{{ clone_repo.dest }}"
   tags:
     - always
