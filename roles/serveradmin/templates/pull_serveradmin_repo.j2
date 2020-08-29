@@ -9,4 +9,4 @@ source include_common.sh
 
 cd {{ serveradmin.path }}/workspace/serveradmin
 
-sudo -u {{ serveradmin.process_user }} git pull
+sudo -u {{ serveradmin.process_user }} git pull --recurse-submodules
