@@ -4,7 +4,7 @@
 #
 {% set agent_forwarding = item.meta.agent_forwarding | default(false) %}
 # Se till att devops-repot alltid är uppdaterat:
-pull_devops
+{{ organisation.command_prefix }}pull_serveradmin_repo
 
 {% if not agent_forwarding %}
 # Exit on error:

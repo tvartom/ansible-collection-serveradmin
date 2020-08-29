@@ -17,13 +17,12 @@ echo -e "{{ line|replace("`", "\`")|replace('"', '\\"')|replace("$", "\$")|repla
 if id -nG | egrep -cq "(^| ){{ serveradmin.process_group }}( |$)"; then
 	# User belongs to serveradmin-group
 
-	{{ organisation.name }}_list_applications 2>/dev/null | sed 's/^/  /' || true
+	{{ organisation.command_prefix }}list_applications 2>/dev/null | sed 's/^/  /' || true
 
-	cert_warning.sh 5184000 || {{ organisation.name }}_list_certs | sed 's/^/  /' || true
+	cert_warning.sh 5184000 || {{ organisation.command_prefix }}list_certs | sed 's/^/  /' || true
 	echo ""
 
-
-	{{ organisation.name }}_list_backups 2>/dev/null | sed 's/^/  /' && [ "${PIPESTATUS[0]}" = "0" ] && echo "" || true
+	{{ organisation.command_prefix }}list_backups 2>/dev/null | sed 's/^/  /' && [ "${PIPESTATUS[0]}" = "0" ] && echo "" || true
 
 	echo -e "  ${BIYellow}Urval av tillgängliga kommandon:${NC}"
 	{% for file in serveradmin.files if file.when | default(true) %}

@@ -16,6 +16,7 @@
 - name: Lista filer
   set_fact:
     serveradmin_files:
+      - file: pull_serveradmin_repo
       - file: splash.sh
         dest: ""
         desc: "Visa denna meny"
@@ -25,9 +26,6 @@
         owner: root
         group: root
         mode: "u=rwx,g=rx,o=rx"
-      - file: pull_devops
-        dest: "pull_devops"
-        prefix: ""
       - file: list_certs
         desc: "Lista använda certifikat med utgångsdatum."
         when: "{{ 'bootstrap' not in ansible_run_tags }}"
