@@ -12,6 +12,12 @@
 #- pause:
 #  tags: test
 
+- name: "Show IP address on login"
+  lineinfile:
+    path: /etc/issue
+    regexp: '\\4'
+    line: "IP: \4\n"
+
 - name: "Create dir"
   become: yes
   file:
