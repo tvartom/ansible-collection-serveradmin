@@ -143,7 +143,7 @@ source include_common.sh
 
   {% for table in database.drop_tables | d([]) %}
     echo "Drop table {{ table }} if exists.."
-    mysql -NB -e "DROP TABLE IF EXISTS \`{{ database.to.name }}.{{ table }}\`"
+    mysql -NB -e "DROP TABLE IF EXISTS \`{{ database.to.name }}\`.\`{{ table }}\`"
   {% endfor %}
 
   echo "Populate local database..."
