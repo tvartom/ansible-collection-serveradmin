@@ -125,3 +125,12 @@
   loop_control:
     loop_var: webinstance
 
+### devmodes ####################################################################
+
+- name: Repos for devmode
+  include_tasks: devmode_repo.yml
+  loop: "{{ application.repos }}"
+  loop_control:
+    loop_var: repo
+    label: "{{ repo.name }}"
+  when: applications_devmode | d(false)

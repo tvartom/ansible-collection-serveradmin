@@ -3,25 +3,26 @@
   debug:
     var: application
 
-- name: "Create repo object (Avoid recursion in next task)"
-  set_fact:
-    repo_for_devmode: "{{ repo | combine( { 'use_unique_deploy_key':false } ) }}"
+- name: "Create folder for repo"
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | d( 'root', true ) }}"
+    group: "{{ item.group | d( 'root', true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
+  when: item.when | default(True)
+  loop:
+    - { path: "/home/{{ applications_devmode_user }}/workspace/{{ repo.path | basename }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}" }
+    - { path: "{{ application.path }}/repos/{{ repo.name }}", owner: "{{ application.process_user }}", group: "{{ application.process_group }}" }
 
-- name: "Clone repo to devmode-user's workspace"
-  include_role:
-    name: git
-    tasks_from: clone_repo
-  vars:
-    clone_repo:
-      dest: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.name }}"
-      user: "{{ applications_devmode_user }}"
-      update: false
-    repo: "{{ repo_for_devmode }}"
 
 - name: "Mount the dev repo in the application repo-folder"
+  become: yes
   mount:
     path: "{{ application.path }}/repos/{{ repo.name }}"
-    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.name }}"
+    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
     opts: "bind,{{ application.process_user }}"
     state: mounted
     fstype: none
