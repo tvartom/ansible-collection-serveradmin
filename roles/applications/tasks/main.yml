@@ -109,7 +109,7 @@
     group: "{{ serveradmin.process_user }}"
     mode: "u=rwx,g=rx,o=rx"
 
-- name: "Skapa lista med applikationer"
+- name: "Create devmode_init-script"
   become: yes
   template:
     src: devmode_init.sh.j2
