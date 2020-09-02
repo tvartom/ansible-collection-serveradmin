@@ -106,16 +106,17 @@
 - name: "Create dir"
   become: yes
   file:
-    path: "{{ serveradmin.path }}{{ item.path }}"
+    path: "{{ item.path }}"
     state: directory
     owner: "{{ item.owner | default( serveradmin.process_user, true ) }}"
     group: "{{ item.group | default( serveradmin.process_group, true ) }}"
     setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
-    mode: "u=rwx,g=rwx,o=rx"
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
   when: item.when | default(True)
   loop:
-    - { path: "" }
-    - { path: "/repos" }
+    - { path: "{{ serveradmin.path }}"}
+    - { path: "{{ serveradmin.path }}/repos"}
+    - { path: "/home/{{ applications_devmode_user }}/workspace", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }
   tags:
     - bootstrap
 
