@@ -67,9 +67,9 @@
             # comment: 
             path: "/home/{{ applications_devmode_user }}/workspace"
             read_only: no
-            write_list: "{{ application_devmode_user }}"
-            owner: "{{ application_devmode_user }}"
-            group: "{{ application_devmode_user }}"
+            write_list: "{{ applications_devmode_user }}"
+            owner: "{{ applications_devmode_user }}"
+            group: "{{ applications_devmode_user }}"
             setype: httpd_sys_rw_content_t
         samba_users:
           - name: "{{ applications_devmode_user }}"
