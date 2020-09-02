@@ -109,11 +109,11 @@
     group: "{{ serveradmin.process_user }}"
     mode: "u=rwx,g=rx,o=rx"
 
-- name: "Create devmode_init-script"
+- name: "Create init_devmode-script"
   become: yes
   template:
-    src: devmode_init.sh.j2
-    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}devmode_init"
+    src: init_devmode.sh.j2
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}init_devmode"
     owner: "{{ applications_devmode_user }}"
     group: "{{ applications_devmode_user }}"
     mode: "u=rwx,g=rw,o=r"
