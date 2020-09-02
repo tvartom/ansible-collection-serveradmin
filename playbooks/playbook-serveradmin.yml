@@ -59,7 +59,7 @@
 
     - name: "Install samba"
       become: true
-      include_role:
+      import_role:
         name: bertvv.samba
       when: applications_devmode
       vars:
