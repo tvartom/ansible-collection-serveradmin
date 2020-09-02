@@ -74,6 +74,7 @@
         samba_users:
           - name: "{{ applications_devmode_user }}"
             password: "dev"
+        samba_netbios_name: "{{ inventory_hostname }}"
 
     - include_role:
         name: autofs
