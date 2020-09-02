@@ -120,6 +120,15 @@
   tags:
     - bootstrap
 
+- name: Install packages for samba-sharesf
+  become: yes
+  yum:
+    name:
+      - cifs-utils
+    update_cache: no
+    state: latest
+  when: applications_devmode | d(false)
+
 - name: "Create scripts for serveradmin"
   become: yes
   template:

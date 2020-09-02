@@ -18,11 +18,11 @@
     - { path: "{{ application.path }}/repos/{{ repo.name }}", owner: "{{ application.process_user }}", group: "{{ application.process_group }}" }
 
 
-#- name: "Mount the dev repo in the application repo-folder"
-#  become: yes
-#  mount:
-#    path: "{{ application.path }}/repos/{{ repo.name }}"
-#    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
-#    opts: "bind,{{ application.process_user }}"
-#    state: mounted
-#    fstype: none
+- name: "Mount the dev repo in the application repo-folder"
+  become: yes
+  mount:
+    path: "{{ application.path }}/repos/{{ repo.name }}"
+    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+    opts: "iocharset=utf8,sec=ntlm"
+    fstype: cifs
+    state: mounted

@@ -72,7 +72,6 @@
   tags:
     - autofs
 
-
 - name: Automount med credentials
   become: yes
   template:
@@ -98,18 +97,3 @@
   notify: "Start/Restart/enable autofs service"
   tags:
     - autofs
-
-#- name: Gather home list
-#  shell: echo /root && ls -d1 /home/*
-#  register: home_directory_list
-#  changed_when: false
-
-#- name: Use home-file-list...
-#  become: yes
-#  somthing:
-#    path: "{{ item }}/.somefile"
-#    state: absent
-#  with_items: "{{ home_directory_list.stdout_lines }}"
-
-
-#sudo systemctl enable --now autofs

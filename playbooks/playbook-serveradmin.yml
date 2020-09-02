@@ -66,14 +66,15 @@
           - name: "workspace"
             # comment: 
             path: "/home/{{ applications_devmode_user }}/workspace"
-            read_only: no
-            write_list: "{{ applications_devmode_user }}"
+            public: yes
+            browseable: yes
+#            write_list: "{{ applications_devmode_user }}"
             owner: "{{ applications_devmode_user }}"
             group: "{{ applications_devmode_user }}"
             setype: httpd_sys_rw_content_t
         samba_users:
           - name: "{{ applications_devmode_user }}"
-            password: "dev"
+            password: ""
         samba_netbios_name: "{{ inventory_hostname }}"
 
     - include_role:
