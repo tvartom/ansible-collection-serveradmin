@@ -7,6 +7,6 @@
 set -e
 source include_common.sh
 
-cd {{ serveradmin.path }}/workspace/serveradmin
+cd {{ serveradmin.path }}/repos/serveradmin
 
 sudo -u {{ serveradmin.process_user }} git pull --recurse-submodules

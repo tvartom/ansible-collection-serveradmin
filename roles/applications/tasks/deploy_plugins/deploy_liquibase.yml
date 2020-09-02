@@ -1,7 +1,7 @@
 ---
 - name: Kör liquibase  
   shell: >-
-    {{ serveradmin.path }}/workspace/serveradmin/tools/liquibase/liquibase
+    {{ serveradmin.path }}/repos/serveradmin/tools/liquibase/liquibase
     --driver="org.mariadb.jdbc.Driver"
     --username="{{ serveradmin.process_user }}"
     --url="jdbc:mariadb://localhost/{{ application.database }}?localSocket=/var/lib/mysql/mysql.sock&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Europe/Stockholm"

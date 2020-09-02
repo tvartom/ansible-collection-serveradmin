@@ -115,7 +115,7 @@
   when: item.when | default(True)
   loop:
     - { path: "" }
-    - { path: "/workspace" }
+    - { path: "/repos" }
   tags:
     - bootstrap
 
@@ -158,7 +158,7 @@
     tasks_from: clone_repo
   vars:
     clone_repo:
-      dest: "{{ serveradmin.path }}/workspace/serveradmin"
+      dest: "{{ serveradmin.path }}/repos/serveradmin"
       user: "{{ serveradmin.process_user }}"
     repo: "{{ serveradmin.repo }}"
   tags:

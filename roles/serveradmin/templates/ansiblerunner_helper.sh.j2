@@ -9,5 +9,5 @@
 set -e
 source include_common.sh
 
-cd {{ serveradmin.path }}/workspace/serveradmin
+cd {{ serveradmin.path }}/repos/serveradmin
 ansible-playbook --extra-vars "target='{{ target }}' connection_type='local' ansible_started_by_user='$1'" "$2"
