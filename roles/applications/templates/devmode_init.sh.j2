@@ -10,6 +10,6 @@ echo -e "${BIYellow}Clone all repos for development on this server:${NC}"
 
 {% for application in applications_info %}
 	{% for repo in application.repos %}
-		git clone --recurse-submodules {{ repo.url }} "/home/{{ applications_devmode_user }}/workspace/{{ repo.path | basename }}"
+		git clone --recurse-submodules {{ repo.url }} "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
 	{% endfor %}
 {% endfor %}
