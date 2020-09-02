@@ -57,12 +57,11 @@
     - include_role:
         name: webserver
 
-    - name: "Install samba"
-      become: true
-      import_role:
+    - include_role:
         name: bertvv_samba
       when: applications_devmode
       vars:
+        ansible_become: yes
         samba_shares:
           - name: "workspace"
             # comment: 
