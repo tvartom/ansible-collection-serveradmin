@@ -123,13 +123,13 @@ dnf -y install python3 python3-pip
 echo "Installing Ansible with pip to get latest version..."
 sudo -u $SA_USER pip3 install --user ansible
 
-echo -n "Creating workspace for serveradmin... "
-mkdir -p "$SA_PATH/workspace"
+echo -n "Creating /repos for serveradmin... "
+mkdir -p "$SA_PATH/repos"
 chown -R $SA_USER:$SA_USER "$SA_PATH"
 chmod -R u=rwx,g=rwx,o=rx "$SA_PATH"
 echo -e "Done\n"
 
-SA_PATH_REPO="$SA_PATH/workspace/serveradmin"
+SA_PATH_REPO="$SA_PATH/repos/serveradmin"
 
 cd "$SA_PATH"
 if [ -d "$SA_PATH_REPO/.git" ]; then
