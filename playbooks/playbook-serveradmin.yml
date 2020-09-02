@@ -45,6 +45,17 @@
 
     - include_role:
         name: firewall
+      vars:
+        extra_ports: |
+          {{ 
+            [
+              #Samba:
+              {port: 137, protocol: tcp, comment: "Samba: NETBIOS Name Service (netbios-ns)"},
+              {port: 138, protocol: tcp, comment: "Samba: NETBIOS Datagram Service (netbios-dgm)"},
+              {port: 139, protocol: tcp, comment: "Samba: NETBIOS session service (netbios-ssn)"},
+              {port: 445, protocol: tcp, comment: "Samba: if you are using Active Directory (microsoft-ds)"}
+            ] if applications_devmode | d(False) else []
+          }}
 
     - include_role:
         name: java_and_maven
