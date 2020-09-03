@@ -22,7 +22,7 @@
   become: yes
   mount:
     path: "{{ application.path }}/repos/{{ repo.name }}"
-    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
-    opts: "iocharset=utf8,sec=ntlm"
+    src: "//localhost/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+    opts: "iocharset=utf8,sec=ntlm,guest"
     fstype: cifs
     state: mounted
