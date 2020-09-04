@@ -1,5 +1,5 @@
 ---
-- when: not ansible_devmode
+- when: not applications_devmode
   block:
     - name: Lista taggar
       become: yes
