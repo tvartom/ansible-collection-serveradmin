@@ -18,7 +18,7 @@
     owner: "{{ item.owner | d( 'root', true ) }}"
     group: "{{ item.group | d( 'root', true ) }}"
     setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
-    mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=') }}"
   when: item.when | default(True)
   loop:
     - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}" }

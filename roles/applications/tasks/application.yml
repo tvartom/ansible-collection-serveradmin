@@ -9,6 +9,15 @@
     name: "{{ application.process_group }}"
     system: yes
 
+- name: "Adding sudo users to the app-group for reading dir and files"
+  become: yes
+  user:
+    name: "{{ item.name }}"
+    groups: "{{ application.process_group }}"
+    append: yes
+  when: item.sudoer | default(false)
+  loop: "{{ users + [{ name: serveradmin.process_user, sudoer: true }] }}"
+
 - name: "Get info about process user"
   getent:
     database: passwd
