@@ -135,7 +135,7 @@
   browseable = {{ share.browseable | ternary('yes', 'no') }}
 {%     endif %}
 {%     if share.writeable is defined or share.writable is defined or share.write_ok is defined or share.read_only is defined %}
-  writeable = {{ share.writeable | d(share.writable | d(share.write_ok | d(not share.read_only))) | ternary('yes', 'no')}}
+  writeable = {{ share.writeable | d(share.writable | d(share.write_ok | d(not share.read_only | d(true)))) | ternary('yes', 'no')}}
 {%     endif %}
   create mode = {{ share.create_mode|default('0664') }}
   force create mode = {{ share.force_create_mode|default('0664') }}
