@@ -123,6 +123,9 @@
   write list = {{ share.write_list }}
 {%     endif %}
 {%     if share.group is defined %}
+  force user = {{ share.owner }}
+{%     endif %}
+{%     if share.group is defined %}
   force group = {{ share.group }}
 {%     endif %}
 {%     if share.guest_ok is defined %}
@@ -131,8 +134,8 @@
 {%     if share.browseable is defined %}
   browseable = {{ share.browseable | ternary('yes', 'no') }}
 {%     endif %}
-{%     if share.writable is defined %}
-  writable = {{ share.writable }}
+{%     if share.writeable is defined or share.writable is defined or share.write_ok is defined or share.read_only is defined %}
+  writeable = {{ share.writeable | d(share.writable | d(share.write_ok | d(not share.read_only))) | ternary('yes', 'no')}}
 {%     endif %}
   create mode = {{ share.create_mode|default('0664') }}
   force create mode = {{ share.force_create_mode|default('0664') }}
