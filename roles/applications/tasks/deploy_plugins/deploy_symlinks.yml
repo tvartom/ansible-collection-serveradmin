@@ -1,11 +1,11 @@
 ---
 
-- name: "Symlink: replace_existing"
+- name: "Symlink: replace_existing (Remove)"
   become: yes
   file:
     path: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ item.from }}"
     state: absent
-  when: deploy.replace_existing
+  when: deploy.replace_existing and not applications_devmode
   loop: "{{ deploy.symlinks }}"
 
 - name: "Symlink: replace_existing"
