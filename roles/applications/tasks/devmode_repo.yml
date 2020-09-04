@@ -51,11 +51,11 @@
     path: "{{ application.path }}/repos/{{ repo.name }}"
     fstype: overlay
     # Dokumentation: man mount.cifs
-    opts: |
+    opts: |-
       {{
         'noauto,x-systemd.automount'
         ~',lowerdir=' ~ application.path ~ '/devmode/' ~ repo.name
         ~',upperdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-upper'
         ~',workdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-work'
-      }}"
+      }}
     state: mounted
