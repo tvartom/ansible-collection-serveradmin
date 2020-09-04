@@ -25,3 +25,5 @@
   shell: "rsync -a \"{{ application.path }}/{{ deploy.source_dir }}\"/ \"{{ deploy_facts[deploy.repo | mandatory].source }}\""
   args:
     chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
+  # TODO: Fix me:
+  when: not applications_devmode
