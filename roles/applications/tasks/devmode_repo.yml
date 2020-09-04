@@ -21,8 +21,9 @@
 - name: "Mount the dev repo in the application repo-folder"
   become: yes
   mount:
-    path: "{{ application.path }}/repos/{{ repo.name }}"
     src: "//localhost/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
-    opts: "iocharset=utf8,sec=ntlm,guest"
+    path: "{{ application.path }}/repos/{{ repo.name }}"
     fstype: cifs
+    # Dokumentation: man mount.cifs
+    opts: "guest,iocharset=utf8,vers=3,uid={{ application.process_user }},gid={{ application.process_group }},noauto,x-systemd.automount"
     state: mounted

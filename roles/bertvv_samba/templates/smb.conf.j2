@@ -96,51 +96,52 @@
 
 {% if samba_shares|length > 0 %}
 ## Shared directories
-{% for share in samba_shares %}
+{%   for share in samba_shares %}
 [{{ share.name }}]
-{% if share.comment is defined %}
+{%     if share.comment is defined %}
   comment = {{ share.comment }}
-{% endif %}
-{% if share.vfs_objects is defined and share.vfs_objects|length > 0 %}
+{%     endif %}
+{%     if share.vfs_objects is defined and share.vfs_objects|length > 0 %}
   vfs objects = {% for obj in share.vfs_objects %}{{obj.name}} {% endfor %}
 
-{% for obj in share.vfs_objects %}
-{% if obj.options is defined %}
-{% if obj.options|length > 0 %}
-{% for opt in obj.options %}
-  {{ obj.name }}:{{ opt.name }} = {{ opt.value }}
-{% endfor %}
-{% endif %}
-{% endif %}
-{% endfor %}{% endif %}
+{%       for obj in share.vfs_objects %}
+{%         if obj.options is defined %}
+{%           if obj.options|length > 0 %}
+{%             for opt in obj.options %}
+  {{             obj.name }}:{{ opt.name }} = {{ opt.value }}
+{%             endfor %}
+{%           endif %}
+{%         endif %}
+{%       endfor %}
+{%     endif %}
   path = {{ share.path|default([samba_shares_root,share.name]|join('/')) }}
-  public = {{ share.public|default('no') }}
-{% if share.valid_users is defined %}
+  public = {{ share.public | d(false) | ternary('yes', 'no') }}
+{%     if share.valid_users is defined %}
   valid users= {{ share.valid_users }}
-{% endif %}
-{% if share.write_list is defined %}
+{%     endif %}
+{%     if share.write_list is defined %}
   write list = {{ share.write_list }}
-{% endif %}
-{% if share.group is defined %}
+{%     endif %}
+{%     if share.group is defined %}
   force group = {{ share.group }}
-{% endif %}
-{% if share.guest_ok is defined %}
-  guest ok = {{ share.guest_ok }}
-{% endif %}
-{% if share.browseable is defined %}
-  browseable = {{ share.browseable }}
-{% endif %}
-{% if share.writable is defined %}
+{%     endif %}
+{%     if share.guest_ok is defined %}
+  guest ok = {{ share.guest_ok | ternary('yes', 'no') }}
+{%     endif %}
+{%     if share.browseable is defined %}
+  browseable = {{ share.browseable | ternary('yes', 'no') }}
+{%     endif %}
+{%     if share.writable is defined %}
   writable = {{ share.writable }}
-{% endif %}
+{%     endif %}
   create mode = {{ share.create_mode|default('0664') }}
   force create mode = {{ share.force_create_mode|default('0664') }}
   directory mode = {{ share.directory_mode|default('0775') }}
   force directory mode = {{ share.force_directory_mode|default('0775') }}
-{% if share.include_file is defined %}
+{%     if share.include_file is defined %}
   include = {{ samba_configuration_dir }}/{{ share.include_file }}
-{% endif %}
+{%     endif %}
 
-{% endfor %}
+{%   endfor %}
 {% endif%}
 

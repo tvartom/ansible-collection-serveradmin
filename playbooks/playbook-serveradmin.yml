@@ -66,8 +66,11 @@
           - name: "workspace"
             # comment: 
             path: "/home/{{ applications_devmode_user }}/workspace"
-            public: yes
-            browseable: yes
+            public: true
+            browseable: true
+            guest_ok: true
+            writeable: true
+            # ad_only: false
 #            write_list: "{{ applications_devmode_user }}"
             owner: "{{ applications_devmode_user }}"
             group: "{{ applications_devmode_user }}"
