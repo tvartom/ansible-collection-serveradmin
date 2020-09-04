@@ -5,5 +5,3 @@
   shell: "redis-cli -s {{ application.path }}/redis/redis.sock FLUSHALL"
   args:
     chdir: "{{ application.path }}"
- 
-

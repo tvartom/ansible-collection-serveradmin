@@ -1,4 +1,9 @@
 ---
+
+- fail:
+    msg: "deploy_markdown_to_html doesn't support devmode"
+  when: applications_devmode
+
 - name: "Create dir for repo in versions"
   become: yes
   file:

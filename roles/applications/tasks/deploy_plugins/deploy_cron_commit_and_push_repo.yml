@@ -6,6 +6,7 @@
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwx,g=rx,o=r"
+  when: not applications_devmode
 
 - name: "Setup cron-jobb for commit and push repo"
   become: yes
@@ -15,3 +16,4 @@
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"
+  when: not applications_devmode

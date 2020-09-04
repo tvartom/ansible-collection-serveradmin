@@ -53,6 +53,7 @@
   loop_control:
     loop_var: repo
     label: "{{ repo.name }}"
+  when: not applications_devmode
 
 - name: Deploy
   include_tasks: "deploy_plugins/deploy_{{ deploy.plugin }}.yml"

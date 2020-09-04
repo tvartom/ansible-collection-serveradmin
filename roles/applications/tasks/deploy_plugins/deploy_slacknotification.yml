@@ -91,3 +91,4 @@
     body: "{{ slack_json }}"
     #status_code: 201
     body_format: json
+  when: not applications_devmode

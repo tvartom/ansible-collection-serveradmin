@@ -8,6 +8,7 @@
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwx,g=rx,o=rx"
+  when: not applications_devmode
 
 - name: "Uppdatera deploy_facts med [deploy.repo].source" 
   set_fact:
@@ -18,7 +19,7 @@
           }
         }
         , recursive=True) -}}
-
+  when: not applications_devmode
 #- debug:
 #    var: deploy_facts
 #- pause:
@@ -55,3 +56,4 @@
   vars:
     dq: >-
       "
+  when: not applications_devmode

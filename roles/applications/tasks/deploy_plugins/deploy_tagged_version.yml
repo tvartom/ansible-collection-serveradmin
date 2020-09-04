@@ -1,135 +1,137 @@
 ---
-- name: Lista taggar
-  become: yes
-  become_user: "{{ application.process_user }}"
-  shell: "git tag | sort -f -r"
-  args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo | mandatory }}"
-  changed_when: false
-  register: tags_stdout
-
-- name: Ta reda på om det finns commits sen senaste taggning
-  become: yes
-  become_user: "{{ application.process_user }}"
-  shell: "git describe --exact-match --abbrev=0"
-  args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
-  failed_when: >
-    git_more_commits.rc != 0
-    and
-    not (git_more_commits.rc == 128 and git_more_commits.stderr.startswith('fatal: no tag exactly matches'))
-  changed_when: git_more_commits.rc == 128
-  register: git_more_commits
-
-- name: Ta reda på senaste taggning
-  become: yes
-  become_user: "{{ application.process_user }}"
-  shell: "git describe --abbrev=0"
-  args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
-  register: git_latest_commit
-
-- name: Meny
-  include_role:
-    name: commons
-    tasks_from: menu
-  vars:
-    menu:
-      caption: "Välj tag att driftsätta"
-      question: "Välj nummer"
-      options:
-        - name: "Skapa ny tag från senaste commit{{ yamlcolors.NC+' Det finns commits gjorda sen senaste taggen' if git_more_commits.rc == 128 else '' }}" 
-          value: '__CREATE NEW TAG__'
-          option: c
-          default: "{{ git_more_commits.rc == 128 }}"
-
-        - name: "Tag: {{ git_latest_commit.stdout }}{{ yamlcolors.NC+' Denna taggen är även senaste commiten' if git_more_commits.rc == 0 else '' }}"
-          value: "{{ git_latest_commit.stdout }}"
-          option: t
-          default: "{{ git_more_commits.rc == 0 }}"
-
-        - name: "Lista alla taggar"
-          value: '__LIST ALL TAGS__'
-          option: l
-
-- set_fact:
-    create_new_tag: "{{ menu_result == '__CREATE NEW TAG__' }}"
-
-- name: Skapa ny tag
+- when: not ansible_devmode
   block:
-    - name: Skapa tag-description utifrån commit-meddelanden
+    - name: Lista taggar
       become: yes
       become_user: "{{ application.process_user }}"
-      shell: "git log --no-merges --pretty=format:\"%s (%aN)\" $(git describe --abbrev=0)..HEAD"
+      shell: "git tag | sort -f -r"
+      args:
+        chdir: "{{ application.path }}/repos/{{ deploy.repo | mandatory }}"
+      changed_when: false
+      register: tags_stdout
+
+    - name: Ta reda på om det finns commits sen senaste taggning
+      become: yes
+      become_user: "{{ application.process_user }}"
+      shell: "git describe --exact-match --abbrev=0"
       args:
         chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
-      changed_when: git_new_tag_description.rc == 0
       failed_when: >
-        not
-        (
-          git_new_tag_description.rc == 0
-          or
-          (
-            git_new_tag_description.rc == 1
-            and
-            git_new_tag_description.stderr == ""
-            and
-            git_new_tag_description.stdout == ""
-          )
-        )
-      register: git_new_tag_description
-      
-    - name: Texteditor
+        git_more_commits.rc != 0
+        and
+        not (git_more_commits.rc == 128 and git_more_commits.stderr.startswith('fatal: no tag exactly matches'))
+      changed_when: git_more_commits.rc == 128
+      register: git_more_commits
+
+    - name: Ta reda på senaste taggning
+      become: yes
+      become_user: "{{ application.process_user }}"
+      shell: "git describe --abbrev=0"
+      args:
+        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
+      register: git_latest_commit
+
+    - name: Meny
       include_role:
         name: commons
-        tasks_from: texteditor
+        tasks_from: menu
       vars:
-        texteditor:
-          caption: "Editera tag-description"
-          textlines: "{{ git_new_tag_description.stdout_lines }}"
-    
-    # https://www.tutorialkart.com/bash-shell-scripting/bash-date-format-options-examples/
-    - name: Skapa tagnamn
-      set_fact:
-        menu_result: "{{ lookup('pipe', 'date +version-%Y%m%d-%H%M%S') }}"
+        menu:
+          caption: "Välj tag att driftsätta"
+          question: "Välj nummer"
+          options:
+            - name: "Skapa ny tag från senaste commit{{ yamlcolors.NC+' Det finns commits gjorda sen senaste taggen' if git_more_commits.rc == 128 else '' }}" 
+              value: '__CREATE NEW TAG__'
+              option: c
+              default: "{{ git_more_commits.rc == 128 }}"
 
-    - debug:
-        var: texteditor_result
+            - name: "Tag: {{ git_latest_commit.stdout }}{{ yamlcolors.NC+' Denna taggen är även senaste commiten' if git_more_commits.rc == 0 else '' }}"
+              value: "{{ git_latest_commit.stdout }}"
+              option: t
+              default: "{{ git_more_commits.rc == 0 }}"
 
-    - debug:
-        msg: "git tag -a \"{{ menu_result }}\" -m \"{{ texteditor_result|join('\n') }}\""
+            - name: "Lista alla taggar"
+              value: '__LIST ALL TAGS__'
+              option: l
+
+    - set_fact:
+        create_new_tag: "{{ menu_result == '__CREATE NEW TAG__' }}"
+
+    - name: Skapa ny tag
+      block:
+        - name: Skapa tag-description utifrån commit-meddelanden
+          become: yes
+          become_user: "{{ application.process_user }}"
+          shell: "git log --no-merges --pretty=format:\"%s (%aN)\" $(git describe --abbrev=0)..HEAD"
+          args:
+            chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
+          changed_when: git_new_tag_description.rc == 0
+          failed_when: >
+            not
+            (
+              git_new_tag_description.rc == 0
+              or
+              (
+                git_new_tag_description.rc == 1
+                and
+                git_new_tag_description.stderr == ""
+                and
+                git_new_tag_description.stdout == ""
+              )
+            )
+          register: git_new_tag_description
+
+        - name: Texteditor
+          include_role:
+            name: commons
+            tasks_from: texteditor
+          vars:
+            texteditor:
+              caption: "Editera tag-description"
+              textlines: "{{ git_new_tag_description.stdout_lines }}"
+
+        # https://www.tutorialkart.com/bash-shell-scripting/bash-date-format-options-examples/
+        - name: Skapa tagnamn
+          set_fact:
+            menu_result: "{{ lookup('pipe', 'date +version-%Y%m%d-%H%M%S') }}"
+
+        - debug:
+            var: texteditor_result
+
+        - debug:
+            msg: "git tag -a \"{{ menu_result }}\" -m \"{{ texteditor_result|join('\n') }}\""
 
 
-    # https://git-scm.com/book/en/v2/Git-Basics-Tagging
-    - name: Skapa annoterad tag
-      become: yes
-      become_user: "{{ application.process_user }}"
-      shell: "git tag -a \"{{ menu_result }}\" -m \"{{ texteditor_result|join('\n') }}\""
-      args:
-        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
+        # https://git-scm.com/book/en/v2/Git-Basics-Tagging
+        - name: Skapa annoterad tag
+          become: yes
+          become_user: "{{ application.process_user }}"
+          shell: "git tag -a \"{{ menu_result }}\" -m \"{{ texteditor_result|join('\n') }}\""
+          args:
+            chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
 
-    - name: Pusha nya taggen tillbaka till repot
-      become: yes
-      become_user: "{{ application.process_user }}"
-      shell: "git push origin {{ menu_result }}"
-      args:
-        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
-  when: create_new_tag|bool
-
-- name: Meny
-  include_role:
-    name: commons
-    tasks_from: menu
-  vars:
-    menu:
-      caption: "Välj tag att driftsätta"
-      question: "Välj nummer"
-      options: "{{ tags_stdout.stdout_lines }}"
-  when: menu_result == '__LIST ALL TAGS__'
-
-# Ta reda på om det finns commits sen senaste taggning. Troligen exit code > 0 om det finns det. 
-# git describe --exact-match --abbrev=0
-#
+        - name: Pusha nya taggen tillbaka till repot
+          become: yes
+          become_user: "{{ application.process_user }}"
+          shell: "git push origin {{ menu_result }}"
+          args:
+            chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
+      when: create_new_tag|bool
+  
+    - name: Meny
+      include_role:
+        name: commons
+        tasks_from: menu
+      vars:
+        menu:
+          caption: "Välj tag att driftsätta"
+          question: "Välj nummer"
+          options: "{{ tags_stdout.stdout_lines }}"
+      when: menu_result == '__LIST ALL TAGS__'
+  
+  # Ta reda på om det finns commits sen senaste taggning. Troligen exit code > 0 om det finns det. 
+  # git describe --exact-match --abbrev=0
+  #
 
 # Senaste annoterade taggen i current branch:
 # git describe --abbrev=0
@@ -147,43 +149,43 @@
 # git log --pretty=format:"%s (%aN)" | grep -v "^Merge branch"
 
 
-- name: Ange version i deploy_facts
-  set_fact:
-    deploy_facts: >-
-      {{- deploy_facts | combine({
-        deploy.repo: {
-            'version': menu_result
-          }
-        }
-        , recursive=True) -}}
+    - name: Ange version i deploy_facts
+      set_fact:
+        deploy_facts: >-
+          {{- deploy_facts | combine({
+            deploy.repo: {
+                'version': menu_result
+              }
+            }
+            , recursive=True) -}}
 
 
-- name: Checka ut rätt version
-  become: yes
-  become_user: "{{ application.process_user }}"
-  git:
-    version: "{{ deploy_facts[deploy.repo].version }}"
-    repo: "{{ repo.url }}"
-    dest: "{{ deploy_facts[deploy.repo].source }}"
+    - name: Checka ut rätt version
+      become: yes
+      become_user: "{{ application.process_user }}"
+      git:
+        version: "{{ deploy_facts[deploy.repo].version }}"
+        repo: "{{ repo.url }}"
+        dest: "{{ deploy_facts[deploy.repo].source }}"
 
-- name: Hämta description
-  become: yes
-  become_user: "{{ application.process_user }}"
-  shell: >-
-    git tag -n999 --list "{{ deploy_facts[deploy.repo].version }}" | sed -e "s/^{{ deploy_facts[deploy.repo].version }} //" -e "s/^    //"
-  args:
-    chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
-  register: git_tag_description
+    - name: Hämta description
+      become: yes
+      become_user: "{{ application.process_user }}"
+      shell: >-
+        git tag -n999 --list "{{ deploy_facts[deploy.repo].version }}" | sed -e "s/^{{ deploy_facts[deploy.repo].version }} //" -e "s/^    //"
+      args:
+        chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
+      register: git_tag_description
 
-- name: Tag description i deploy_facts
-  set_fact:
-    deploy_facts: >-
-      {{- deploy_facts | combine({
-        deploy.repo: {
-            'tag_description': git_tag_description.stdout
-          }
-        }
-        , recursive=True) -}}
+    - name: Tag description i deploy_facts
+      set_fact:
+        deploy_facts: >-
+          {{- deploy_facts | combine({
+            deploy.repo: {
+                'tag_description': git_tag_description.stdout
+              }
+            }
+            , recursive=True) -}}
 
 
 #- debug:

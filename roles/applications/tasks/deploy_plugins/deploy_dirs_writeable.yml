@@ -11,4 +11,4 @@
     mode: "u=rwX,g=rX,o=rX"
     recurse: yes
   loop: "{{ deploy.dirs }}"
-
+  when: not applications_devmode
