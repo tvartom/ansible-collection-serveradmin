@@ -65,7 +65,7 @@
         desc: "Driftsättning av applikation."
         meta:
           ansible_playbook: "playbook-applications_deploy.yml"
-        when: "{{ 'bootstrap' not in ansible_run_tags and not applications_devmode }}"
+        when: "{{ 'bootstrap' not in ansible_run_tags }}"
 #      - file: ansiblerunner.sh
 #        dest: "ansible_init_devmode"
 #        desc: "Initiera git-repos för utveckling."
