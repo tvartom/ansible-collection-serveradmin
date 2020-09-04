@@ -10,7 +10,7 @@
     system: yes
 
 - debug:
-    msg: "{{ users + [{ name: serveradmin.process_user, sudoer: true }] }}"
+    msg: "{{ users + [{ 'name': serveradmin.process_user, 'sudoer': true }] }}"
 
 - name: "Adding sudo users to the app-group for reading dir and files"
   become: yes
@@ -19,7 +19,7 @@
     groups: "{{ application.process_group }}"
     append: yes
   when: item.sudoer | default(false)
-  loop: "{{ users + [{ name: serveradmin.process_user, sudoer: true }] }}"
+  loop: "{{ users + [{ 'name': serveradmin.process_user, 'sudoer': true }] }}"
 
 - name: "Get info about process user"
   getent:
