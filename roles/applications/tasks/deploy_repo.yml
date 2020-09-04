@@ -26,6 +26,7 @@
       dest: "{{ deploy_facts[repo.name].source }}"
       user: "{{ application.process_user }}"
       update: false
+  when: not applications_devmode
 
 - name: Hämta alla taggar och uppdateringar ifrån repot
   become: yes
@@ -34,6 +35,7 @@
   args:
     chdir: "{{ application.path }}/repos/{{ repo.name }}"
   register: tags_stdout
+  when: not applications_devmode
 
 - name: Checka ut nuvarande branch
   become: yes
@@ -41,6 +43,7 @@
   shell: "git checkout {{ deploy_facts[repo.name].version }}"
   args:
     chdir: "{{ application.path }}/repos/{{ repo.name }}"
+  when: not applications_devmode
 
 # changed_when: not Already on 'master'
 - name: "Lista commit-meddelanden sen senaste pull"
@@ -65,6 +68,7 @@
       )
     )
   register: git_list_of_commits
+  when: not applications_devmode
 
 - name: Lista med commit-meddleande i deploy_facts
   set_fact:
@@ -82,6 +86,7 @@
   shell: "git pull"
   args:
     chdir: "{{ application.path }}/repos/{{ repo.name }}"
+  when: not applications_devmode
 # changed_when: not Already up to date
     
 #setype: httpd_sys_rw_content_t om nginx ska skriva...
