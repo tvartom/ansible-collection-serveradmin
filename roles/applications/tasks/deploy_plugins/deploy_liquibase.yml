@@ -1,4 +1,7 @@
 ---
+- debug:
+    var: deploy_facts
+
 - name: Kör liquibase  
   shell: >-
     {{ serveradmin.path }}/repos/serveradmin/tools/liquibase/liquibase
