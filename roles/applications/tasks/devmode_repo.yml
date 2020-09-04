@@ -3,6 +3,12 @@
   debug:
     var: application
 
+# Script fail if we try to create a folder that is already used as a mountpoint, so check if it exists first:
+- name: "Check mount point"
+  stat:
+    path: "mountpoint {{ application.path }}/repos/{{ repo.name }}"
+  register: mount_point
+
 - name: "Create folder for repo"
   become: yes
   file:
@@ -15,7 +21,7 @@
   when: item.when | default(True)
   loop:
     - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}" }
-    - { path: "{{ application.path }}/repos/{{ repo.name }}", owner: "{{ application.process_user }}", group: "{{ application.process_group }}" }
+    - { path: "{{ application.path }}/repos/{{ repo.name }}", owner: "{{ application.process_user }}", group: "{{ application.process_group }}", when: "{{ not mount_point.stat.exists }}" }
 
 
 - name: "Mount the dev repo in the application repo-folder"
