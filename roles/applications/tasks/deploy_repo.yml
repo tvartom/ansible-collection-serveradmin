@@ -4,6 +4,31 @@
     msg: "{{ repo.url }}"
 #- pause:
 
+- find:
+    path: "{{ application.path }}/devmode/{{ repo.name }}-upper"
+    file_type: "{{ item }}"
+  register: to_delete
+  loop:
+    - file
+    - directory
+  when: applications_devmode
+
+#- find: path=/my/dir
+#    file_type: directory
+#  register: directories
+#  when: applications_devmode
+
+- debug:
+    var: to_delete
+
+- debug:
+    msg: "{{ to_delete | flatten }}"
+- file:
+    state: absent
+    path: "{{ item.path }}"
+  loop: "{{ to_delete | flatten }}"
+  when: applications_devmode
+
 - name: deploy_facts
   set_fact:
     deploy_facts: >-
