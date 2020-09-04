@@ -4,29 +4,20 @@
     msg: "{{ repo.url }}"
 #- pause:
 
-- find:
+- name: "Empty upper-dir directory for repo. (Find)"
+  become: yes
+  find:
     path: "{{ application.path }}/devmode/{{ repo.name }}-upper"
-    file_type: "{{ item }}"
+    file_type: any
   register: to_delete
-  loop:
-    - file
-    - directory
   when: applications_devmode
 
-#- find: path=/my/dir
-#    file_type: directory
-#  register: directories
-#  when: applications_devmode
-
-- debug:
-    var: to_delete
-
-- debug:
-    msg: "{{ to_delete | flatten }}"
-- file:
+- name: "Empty upper-dir directory for repo. (Delete)"
+  become: yes
+  file:
     state: absent
     path: "{{ item.path }}"
-  loop: "{{ to_delete | flatten }}"
+  loop: "{{ to_delete.files }}"
   when: applications_devmode
 
 - name: deploy_facts
