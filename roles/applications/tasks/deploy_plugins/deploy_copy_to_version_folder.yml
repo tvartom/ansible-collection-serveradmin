@@ -20,6 +20,18 @@
         }
         , recursive=True) -}}
   when: not applications_devmode
+
+- name: "Update deploy_facts with [deploy.repo].source for devmode" 
+  set_fact:
+    deploy_facts: >-
+      {{- deploy_facts | combine({
+        deploy.repo: {
+            'source': deploy_facts[deploy.repo].source~'/'~deploy.folder_to_copy
+          }
+        }
+        , recursive=True) -}}
+  when: applications_devmode
+
 #- debug:
 #    var: deploy_facts
 #- pause:
