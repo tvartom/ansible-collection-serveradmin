@@ -5,6 +5,7 @@
 
 # Script fail if we try to create a folder that is already used as a mountpoint, so check if it exists first:
 - name: "Check mount point"
+  become: yes
   stat:
     path: "{{ application.path }}/repos/{{ repo.name }}"
   register: mount_point
