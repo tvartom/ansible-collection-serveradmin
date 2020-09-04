@@ -9,6 +9,9 @@
     name: "{{ application.process_group }}"
     system: yes
 
+- debug:
+    msg: "{{ users + [{ name: serveradmin.process_user, sudoer: true }] }}"
+
 - name: "Adding sudo users to the app-group for reading dir and files"
   become: yes
   user:
