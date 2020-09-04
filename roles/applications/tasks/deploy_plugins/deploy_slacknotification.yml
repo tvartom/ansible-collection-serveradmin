@@ -5,7 +5,7 @@
       attachments:
         - color: "{{ host_color_html | default('#000000') }}"
           fields:
-            - title: Driftsatt av
+            - title: "Deployed by"
               value: "{{ ansible_started_by_user | default(ansible_facts.user_id) }}"
               short: true
 
@@ -13,11 +13,11 @@
               value: "{{ inventory_hostname }}"
               short: true
 
-            - title: Webbplats
+            - title: Application
               value: "{{ application.name }}"
               short: true
 
-            - title: Miljö
+            - title: Environment
               value: "{{ application.environment }}"
               short: true
 
@@ -35,19 +35,19 @@
                 {%- end for -%}
               short: true
 
-            - title: Använt diskutrymme
+            - title: Used discspace
               value: >-
                 {{- diskspace_message -}}
               short: true
 
             - title: Description
               value: "{{ deploy_facts[deploy.repo].tag_description }}"
-                {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
-                      {{- value.tag_description -}}
-                {%-   if not loop.last -%}
-                        {{- ', ' -}}
-                {%    endif -%}
-                {%- end for -%}
+              #  {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
+              #        {{- value.tag_description -}}
+              #  {%-   if not loop.last -%}
+              #          {{- ', ' -}}
+              #  {%    endif -%}
+              #  {%- end for -%}
               short: false
 
 - name: Skapa Lista med commits
