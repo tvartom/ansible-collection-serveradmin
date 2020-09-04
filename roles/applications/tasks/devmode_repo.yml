@@ -4,33 +4,58 @@
     var: application
 
 # Script fail if we try to create a folder that is already used as a mountpoint, so check if it exists first:
-- name: "Check mount point"
+- name: "Check mount point devmode"
+  become: yes
+  stat:
+    path: "{{ application.path }}/devmode/{{ repo.name }}"
+  register: mount_point_devmode
+
+- name: "Check mount point repos"
   become: yes
   stat:
     path: "{{ application.path }}/repos/{{ repo.name }}"
-  register: mount_point
+  register: mount_point_repos
 
 - name: "Create folder for repo"
   become: yes
   file:
     path: "{{ item.path }}"
     state: directory
-    owner: "{{ item.owner | d( 'root', true ) }}"
-    group: "{{ item.group | d( 'root', true ) }}"
+    owner: "{{ item.owner | d( application.process_user, true ) }}"
+    group: "{{ item.group | d( application.process_group, true ) }}"
     setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
     mode: "{{ item.mode | d('u=rwx,g=rx,o=') }}"
   when: item.when | default(True)
   loop:
     - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}" }
-    - { path: "{{ application.path }}/repos/{{ repo.name }}", owner: "{{ application.process_user }}", group: "{{ application.process_group }}", when: "{{ not mount_point.stat.exists }}" }
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}",       when: "{{ not mount_point_devmode.stat.exists }}" }
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}-upper" }
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}-work"  }
+    - { path: "{{ application.path }}/repos/{{ repo.name }}",        when: "{{ not mount_point_repos.stat.exists }}" }
 
 
-- name: "Mount the dev repo in the application repo-folder"
+- name: "Mount the dev repo in the application devmode-folder (cifs)"
   become: yes
   mount:
     src: "//localhost/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
-    path: "{{ application.path }}/repos/{{ repo.name }}"
+    path: "{{ application.path }}/devmode/{{ repo.name }}"
     fstype: cifs
     # Dokumentation: man mount.cifs
     opts: "guest,iocharset=utf8,vers=3,uid={{ application.process_user }},gid={{ application.process_group }},noauto,x-systemd.automount"
+    state: mounted
+
+- name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
+  become: yes
+  mount:
+    src: "overlay"
+    path: "{{ application.path }}/repos/{{ repo.name }}"
+    fstype: overlay
+    # Dokumentation: man mount.cifs
+    opts: |
+      {{
+        'noauto,x-systemd.automount'
+        ~',lowerdir=' ~ application.path ~ '/devmode/' ~ repo.name
+        ~',upperdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-upper'
+        ~',workdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-work'
+      }}"
     state: mounted
