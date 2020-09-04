@@ -79,6 +79,7 @@
           }
         }
         , recursive=True) -}}
+  when: not applications_devmode
 
 - name: Merge ändringar
   become: yes
