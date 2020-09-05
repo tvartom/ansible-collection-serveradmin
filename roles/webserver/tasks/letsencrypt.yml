@@ -13,7 +13,7 @@
   copy:
     src: "acme-tiny"
     dest: "/opt/letsencrypt"
-    directory_mode: o=rwX,g=,o=
+    directory_mode: "o=rwX,g=,o="
 
 #- name: Download cert to put in chained file (To be used with Nginx)
 #  become: yes
@@ -36,6 +36,15 @@
     owner: root
     group: root
     mode: "u=rwx,g=rx,o=rx"
+
+- name: "Create SLL-conf for Nginx"
+  become: yes
+  copy:
+    src: nginx-letsencrypt.conf
+    dest: /etc/nginx/conf.d/nginx-letsencrypt.conf
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
 
 # https://cipherli.st/
 - name: "Warning"
