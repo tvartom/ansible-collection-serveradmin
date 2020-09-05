@@ -1,13 +1,13 @@
 ---
 
-- name: "Remove existing"
+- name: "Deploy Symlink root dir (Remove)"
   become: yes
   file:
     path: "{{application.path }}/{{ application.webinstances[deploy.webinstance | mandatory].root_dir }}"
     state: absent
 
 
-- name: "Symlink: root dir"
+- name: "Deploy Symlink root dir (Create)"
   become: yes
   file:
     path: "{{application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"

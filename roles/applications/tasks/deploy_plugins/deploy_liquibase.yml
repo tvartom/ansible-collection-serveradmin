@@ -1,8 +1,8 @@
 ---
-- debug:
-    var: deploy_facts
+#- debug:
+#    var: deploy_facts
 
-- name: Kör liquibase  
+- name: "Deploy Run Liquibase"
   shell: >-
     {{ serveradmin.path }}/repos/serveradmin/tools/liquibase/liquibase
     --driver="org.mariadb.jdbc.Driver"
