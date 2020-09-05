@@ -1,0 +1,21 @@
+---
+
+- debug:
+    var: serveradmin
+
+- debug:
+    var: deploy_facts
+
+- debug:
+    var: deploy
+
+- debug:
+    var: application_instances
+
+- debug: application
+
+#- name: "Returnerar application"
+#  include_tasks: get_application.yml
+#  vars:
+#     application_instance: "{{ menu_result }}"
+  # Returns: application
