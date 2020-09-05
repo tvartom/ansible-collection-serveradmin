@@ -11,6 +11,19 @@
   set_fact:
     temp_application_fullname: "{{ application_instance.environment }}-{{ application_instance.name }}"
 
+- name: "Temp varibale: organisation"
+  set_fact:
+    temp_application_organisation: >-
+      {{
+        application_instance.organisation | d(
+          applications[application_instance.name].organisation) | d(
+            applications_default[application_instance.name].organisation) | d(
+              organisation.name
+            )
+          )
+        )
+      }}
+
 - name: "Generate default values for application"
   set_fact:
     temp_application_default:
@@ -25,8 +38,8 @@
       repos: []
       webinstances: {}
       desc: ""
-      organisation: "{{ application_instance.organisation | default(organisation.name) }}"
-      path: "/opt/{{ application_instance.organisation | default(organisation.name) }}/{{ temp_application_fullname }}"
+      organisation: "{{ temp_application_organisation }}"
+      path: "/opt/{{ temp_application_organisation }}/{{ temp_application_fullname }}"
       linux_packages: [] # Installera extra packages
       #Exempel linux_packages:
       # - pdftoppm
@@ -73,7 +86,7 @@
       listen_ports_https: [443]
       domaininstance_groups: {}
       cert_handler: "letsencrypt" # [letsencrypt/selfsigned]
-      php_status_path: "/php-fpm-status" # Do make it public, use suffix .php if php-conf allow it, false or empty to not use.
+      php_status_path: "/php-fpm-status" # To make it public, use suffix .php if php-conf allow it, false or empty to not use.
       create_root_dir: false
       #Properties that default value is: not defined
       # [root_dir: "Ex public_html"]
@@ -89,13 +102,15 @@
 ### Samla information ################################################################
 - name: Hämta värden från applications_default, applications och sätt default-värden
   set_fact:
+    # temp_application_default    From above
+    # ?applications_default[name] From /applications/defaults/main.yml with predefined applications
+    # ?applications[name]         From group_vars/all.yml (Can also be declared i gorup_vars/* or host_vars)
+    # application_instance        From host_vars
     application: >-
       {{
         temp_application_default
-        | combine(
-            (applications_default | combine(applications | default({}), recursive=True))[application_instance.name] | default({})
-            , recursive=True
-          )
+        | combine(applications_default[application_instance.name] | d({}), recursive=True)
+        | combine(applications[application_instance.name] | d({}), recursive=True)
         | combine(application_instance, recursive=True)
       }}
 
