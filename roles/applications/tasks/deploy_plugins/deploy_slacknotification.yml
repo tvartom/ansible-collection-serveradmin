@@ -25,14 +25,15 @@
             - title: Version
               value: >-
                 {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
+                {{-   key }}:{{ ' ' -}}
                 {%-   if deploy.version_links[key] is defined -%}
                         <{{- deploy.version_links[key] | replace('{tag}', value.version) -}}|{{- value.version -}}>
                 {%-   else -%}
                         {{- value.version -}}
                 {%-   endif -%}
                 {%-   if not loop.last -%}
-                        {{- ', ' -}}
-                {%    endif -%}
+                        {{- "\n" -}}
+                {%-    endif -%}
                 {%- endfor -%}
               short: true
 
