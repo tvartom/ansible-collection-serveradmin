@@ -32,11 +32,13 @@
         }) -}}
         {%- endfor -%}
         {{- output -}}
+  # Returns menu_result
 
 - name: "Returnerar application"
   include_tasks: get_application.yml
   vars:
      application_instance: "{{ menu_result }}"
+  # Returns: application
 
 - name: "Applikation"
   debug:

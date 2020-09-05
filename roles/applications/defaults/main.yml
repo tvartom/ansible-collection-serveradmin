@@ -14,13 +14,14 @@ applications_enable_https_by_default: true
 applications_devmode: false
 
 applications_default:
-  #För att använda denna applikationen,
-  # i host_vars:
+  # To use this applikationen,
+  # in host_vars:
   #application_instances:
   #  - name: defaultnoresponse
-  #    environment: "system"
+  #    environment: system
   defaultnoresponse:
     desc: "Servern ger tomt svar på anrop till ip eller okänd domän."
+    organisation: serveradmin
     webinstances:
       web:
         domaininstances:
@@ -32,6 +33,27 @@ applications_default:
         cert_handler: "selfsigned"
         nginx_includes:
           rootlocation: "return 444;"
+
+  # To use this applikationen,
+  # in host_vars:
+  #application_instances:
+  #  - name: devmode_infopagee
+  #    environment: system
+  devmode_infopage:
+    desc: "Devmode infopage as default response."
+    organisation: serveradmin
+    webinstances:
+      web:
+        domaininstances:
+          - domains: ["_"]
+            default_server: true
+        enable_https: true
+        enable_http2: false
+        only_https: false
+        cert_handler: "selfsigned"
+    deploy:
+      - plugin: devmode_infopage
+        webinstance: web
 
   #För att använda denna applikationen,
   # i host_vars:
@@ -69,6 +91,7 @@ applications_default:
     deploy:
       - plugin: nextcloud
         webinstance: web
+
   wordpress:
     webinstances:
       web:
