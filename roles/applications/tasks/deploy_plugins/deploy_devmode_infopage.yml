@@ -15,8 +15,11 @@
 - debug:
     var: application
 
-#- name: "Returnerar application"
-#  include_tasks: get_application.yml
-#  vars:
-#     application_instance: "{{ menu_result }}"
-  # Returns: application
+- name: "Create infopage"
+  become: yes
+  template:
+    src: "deploy_plugins/devmode_infopage/index.html.j2"
+    dest: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/index.html"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_user }}"
+    mode: "u=rwx,g=rx,o="

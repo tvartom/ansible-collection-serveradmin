@@ -51,6 +51,8 @@ applications_default:
         enable_http2: false
         only_https: false
         cert_handler: "selfsigned"
+        root_dir: public_html
+        create_root_dir: true
     deploy:
       - plugin: devmode_infopage
         webinstance: web
