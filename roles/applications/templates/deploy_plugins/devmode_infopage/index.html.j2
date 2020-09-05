@@ -13,7 +13,7 @@
           {%- for domaininstance in webinstance.domaininstances -%}
             # {{ domaininstance.fullname }}{{ "\n" -}}
             {%- for domain in domaininstance.domains -%}
-              {{- ansible_facts.default_ipv4.address }}	{{- domain }}{{ "\n" -}}
+              {{- ansible_facts.default_ipv4.address }}	{{ domain }}{{ "\n" -}}
             {%- endfor -%}
           {%- endfor -%}
         {%- endfor -%}
