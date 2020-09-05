@@ -18,7 +18,7 @@
 
 - name: "Read all applications into applications_info (Restore current application)"
   set_fact:
-    current_application: "{{ current_application }}"
+    application: "{{ current_application }}"
 
 
 - debug:
