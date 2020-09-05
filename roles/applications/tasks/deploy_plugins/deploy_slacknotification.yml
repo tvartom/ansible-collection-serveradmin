@@ -1,5 +1,6 @@
 ---
-- set_fact:
+- name: "Build JSON for Slack"
+  set_fact:
     slack_json:
       text: "*{{ application.environment }}-{{ application.name }} deployed by {{ ansible_started_by_user | default(ansible_facts.user_id) }}!*"
       attachments:
@@ -32,7 +33,7 @@
                 {%-   if not loop.last -%}
                         {{- ', ' -}}
                 {%    endif -%}
-                {%- end for -%}
+                {%- endfor -%}
               short: true
 
             - title: Used discspace
@@ -41,16 +42,16 @@
               short: true
 
             - title: Description
-              value: "{{ deploy_facts[deploy.repo].tag_description }}"
-              #  {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
-              #        {{- value.tag_description -}}
-              #  {%-   if not loop.last -%}
-              #          {{- ', ' -}}
-              #  {%    endif -%}
-              #  {%- end for -%}
+              value: >-
+                {%- for (key, value) in deploy_facts.items() if value.tag_description is defined -%}
+                      {{- value.tag_description -}}
+                {%-   if not loop.last -%}
+                        {{- ', ' -}}
+                {%    endif -%}
+                {%- endfor -%}
               short: false
 
-- name: Skapa Lista med commits
+- name: "Generate list of commits for Slack"
   set_fact:
     slack_list_of_commits: >-
       {%- set o = [] -%}
@@ -62,7 +63,9 @@
           }) -}}
       {%- endfor -%}
       {{- o -}}
-- name: Lista alla nya commits med
+  when: not applications_devmode
+
+- name: "Attach list of commits to JSON for Slack"
   set_fact:
     slack_json: >-
       {{- slack_json.attachments.append({
@@ -71,6 +74,7 @@
           }) -}}
       {{- slack_json -}}
   when: slack_list_of_commits|length > 0
+  when: not applications_devmode
 
 #	SLACKFIELDS+=("{\"title\":\"DB\",\"value\":\"${DEPLOY_DBNAMES[$ENVIRONMENT]}\",\"short\":true}")
 
@@ -84,7 +88,7 @@
 #	SLACK_JSON="{\"text\":\"$SLACK_MESSAGE\",\"attachments\":[{\"color\":\"#2eb886\",\"fields\":[$(join_by , "${SLACKFIELDS[@]}")]}]}"
 #- name: "Post till Slack"
 #  shell: "curl -X POST -H 'Content-type: application/json' --data \"{{ slack_json|to_json }}\" {{ deploy.service_hook }}"
-- name: "Posta till Slack"
+- name: "Post to Slack"
   uri:
     url: "{{ deploy.service_hook }}"
     method: POST
@@ -92,3 +96,8 @@
     #status_code: 201
     body_format: json
   when: not applications_devmode
+
+- name: "Debug output of JSON for Slack in devmode"
+  debug:
+    var: slack_json
+  when: applications_devmode
