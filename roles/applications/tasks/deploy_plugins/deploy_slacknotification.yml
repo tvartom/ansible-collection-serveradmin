@@ -32,7 +32,7 @@
                         {{- value.version -}}
                 {%-   endif -%}
                 {%-   if not loop.last -%}
-                        {{- '\n' -}}
+                        {{- newline -}}
                 {%-    endif -%}
                 {%- endfor -%}
               short: true
@@ -51,6 +51,8 @@
                 {%    endif -%}
                 {%- endfor -%}
               short: false
+  vars:
+    newline: "{{ '\n' }}"
 
 - name: "Generate list of commits for Slack"
   set_fact:
