@@ -6,15 +6,15 @@
   <body>
     <h1>Server is in devmode</h1>
     <pre>
-      {% for application_instance in applications_info %}
-        {% for (key, webinstance) in application_instance.webinstances.items() %}
-          {% for domaininstance in webinstance.domaininstances %}
-            {% for domain in domaininstance.domains %}
-              {{ domain }}
-            {% endfor %}
-          {% endfor %}
-        {% endfor %}
-      {% endfor %}
+      {% for application_instance in applications_info -%}
+        {%- for (key, webinstance) in application_instance.webinstances.items() -%}
+          {%- for domaininstance in webinstance.domaininstances -%}
+            {%- for domain in domaininstance.domains -%}
+              {{- domain }}{{ "\n" }}
+            {%- endfor -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endfor -%}
     </pre>
   </body>
 </html>
