@@ -27,7 +27,7 @@
         {%- set output = [] -%}
         {%- for instance in application_instances -%}
         {{-   output.append({
-          'name': instance.name+yamlcolors.NC+' ('+instance.environment+')',
+          'name': instance.name~((yamlcolors.NC~' ('+instance.environment+')') if instance.environment is defined else ''),
           'value': instance
         }) -}}
         {%- endfor -%}
