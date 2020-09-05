@@ -18,9 +18,9 @@ applications_default:
   # in host_vars:
   #application_instances:
   #  - name: defaultnoresponse
-  #    environment: system
   defaultnoresponse:
     desc: "Servern ger tomt svar på anrop till ip eller okänd domän."
+    environment: system
     organisation: serveradmin
     webinstances:
       web:
@@ -38,9 +38,9 @@ applications_default:
   # in host_vars:
   #application_instances:
   #  - name: devmode_infopagee
-  #    environment: system
   devmode_infopage:
     desc: "Devmode infopage as default response."
+    environment: system
     organisation: serveradmin
     webinstances:
       web:
