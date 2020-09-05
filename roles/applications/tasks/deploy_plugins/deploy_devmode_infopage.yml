@@ -11,7 +11,7 @@
 #     40     loop_var: application_instance
 #     41     label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
 - debug:
-    var: application_instance
+    var: applications_info
 
 
 - debug:
