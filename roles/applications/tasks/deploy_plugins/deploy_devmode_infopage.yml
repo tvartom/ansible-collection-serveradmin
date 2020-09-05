@@ -12,7 +12,8 @@
 - debug:
     var: application_instances
 
-- debug: application
+- debug:
+    var: application
 
 #- name: "Returnerar application"
 #  include_tasks: get_application.yml
