@@ -33,15 +33,14 @@
     - { path: "{{ application.path }}/devmode/{{ repo.name }}-work"  }
     - { path: "{{ application.path }}/repos/{{ repo.name }}",        when: "{{ not mount_point_repos.stat.exists }}" }
 
-
-- name: "Mount the dev repo in the application devmode-folder (cifs)"
+- name: "Mount the dev repo in the application devmode-folder (bindfs)"
   become: yes
   mount:
-    src: "//localhost/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+    src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
     path: "{{ application.path }}/devmode/{{ repo.name }}"
-    fstype: cifs
-    # Dokumentation: man mount.cifs
-    opts: "guest,iocharset=utf8,vers=3,uid={{ application.process_user }},gid={{ application.process_group }},noauto,x-systemd.automount"
+    fstype: fuse.bindfs
+    # Dokumentation: man bindfs
+    opts: "ro,force-user={{ application.process_user }},force-group={{ application.process_group }}"
     state: mounted
 
 - name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
@@ -53,8 +52,7 @@
     # Dokumentation: man mount.cifs
     opts: |-
       {{
-        'noauto,x-systemd.automount'
-        ~',lowerdir=' ~ application.path ~ '/devmode/' ~ repo.name
+        'lowerdir=' ~ application.path ~ '/devmode/' ~ repo.name
         ~',upperdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-upper'
         ~',workdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-work'
       }}
