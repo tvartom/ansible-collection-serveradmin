@@ -6,11 +6,14 @@
   <body>
     <h1>Server is in devmode</h1>
     <pre>
+# {{ organisation.name }}
       {% for application_instance in applications_info -%}
+        {# {{ application_instance.name }} ({{ application_instance.environment }}) #}
         {%- for (key, webinstance) in application_instance.webinstances.items() -%}
           {%- for domaininstance in webinstance.domaininstances -%}
+            # {{ domaininstance.fullname }}
             {%- for domain in domaininstance.domains -%}
-              {{- domain }}{{ "\n" }}
+              {{- ansible_facts.default_ipv4.address }}	{{- domain }}{{ "\n" -}}
             {%- endfor -%}
           {%- endfor -%}
         {%- endfor -%}
