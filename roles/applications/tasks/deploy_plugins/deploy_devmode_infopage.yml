@@ -3,13 +3,17 @@
 - set_fact:
     current_application: "{{ application }}"
 
+- set_fact:
+    application_info: "{{ [] }}"
+
 ### Loop over application instances ##################################################################
-#     36 - name: "Read all applications into applications_info"
-#     37   include_tasks: get_application.yml
-#     38   loop: "{{ application_instances }}"
-#     39   loop_control:
-#     40     loop_var: application_instance
-#     41     label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+- name: "Read all applications into applications_info"
+  include_tasks: get_application.yml
+  loop: "{{ application_instances }}"
+  loop_control:
+    loop_var: application_instance
+    label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+
 - debug:
     var: applications_info
 
