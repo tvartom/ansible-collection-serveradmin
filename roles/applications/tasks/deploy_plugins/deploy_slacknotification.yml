@@ -32,7 +32,7 @@
                         {{- value.version -}}
                 {%-   endif -%}
                 {%-   if not loop.last -%}
-                        {{- newline -}}
+                        {{- '\n' -}}
                 {%-    endif -%}
                 {%- endfor -%}
               short: true
