@@ -25,8 +25,8 @@
             - title: Version
               value: >-
                 {%- for (key, value) in deploy_facts.items() if value.version is defined -%}
-                {%-   if deploy.version_link is defined -%}
-                        <{{- deploy.version_link | replace('{tag}', value.version) -}}|{{- value.version -}}>
+                {%-   if deploy.version_links[key] is defined -%}
+                        <{{- deploy.version_links[key] | replace('{tag}', value.version) -}}|{{- value.version -}}>
                 {%-   else -%}
                         {{- value.version -}}
                 {%-   endif -%}
