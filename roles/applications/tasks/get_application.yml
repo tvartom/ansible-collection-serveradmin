@@ -13,9 +13,9 @@
       {{
         application_instance.environment | d(
           applications[application_instance.name].environment | d(
-            applications_default[application_instance.name].environment | mandatory('Environment must be specified for application')
+            applications_default[application_instance.name].environment
           )
-        )
+        ) | mandatory('Environment must be specified for application '~application_instance.name)
       }}
 
 - name: "Temp variable: fullname"
