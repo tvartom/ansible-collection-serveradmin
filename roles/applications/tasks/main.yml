@@ -37,6 +37,7 @@
   copy:
     content: "include conf.d/{{ organisation.name }}/*.conf;"
     dest: "/etc/nginx/conf.d/{{ organisation.name }}.conf"
+    mode: "u=rw,g=r,o=r"
   notify: "Reload nginx"
 
 ### Loop over application instances ##################################################################
