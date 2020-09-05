@@ -5,6 +5,20 @@
   collections:
     - tvartom.serveradmin
   tasks:
+   - name: "Collect facts"
+     include_role:
+       name: collect_facts
+       tasks_from: collect_facts
+     vars:
+       facts_options:
+         var_files: []# Read variables from files in var/[item].yml
+           #- system
+           #  - webinstances
+           #- users
+         host_vars_from_host: false
+         diskspace_message: true
+ 
+
     - include_role:
         name: applications
         tasks_from: deploy
