@@ -1,18 +1,25 @@
 ---
 
-- set_fact:
+- name: "Read all applications into applications_info (Save current application)"
+  set_fact:
     current_application: "{{ application }}"
 
-- set_fact:
+- name: "Read all applications into applications_info (Reset applications_info)"
+  set_fact:
     application_info: "{{ [] }}"
 
 ### Loop over application instances ##################################################################
-- name: "Read all applications into applications_info"
+- name: "Read all applications into applications_info (Loop all applicaitons-instances)"
   include_tasks: get_application.yml
   loop: "{{ application_instances }}"
   loop_control:
     loop_var: application_instance
     label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+
+- name: "Read all applications into applications_info (Restore current application)"
+  set_fact:
+    current_application: "{{ current_application }}"
+
 
 - debug:
     var: applications_info
@@ -43,5 +50,3 @@
     mode: "u=rwx,g=rx,o="
 
 
-- set_fact:
-    current_application: "{{ current_application }}"
