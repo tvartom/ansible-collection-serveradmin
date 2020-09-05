@@ -7,9 +7,20 @@
 #
 # Returnerar: application
 
+- name: "Temp variable: environment"
+  set_fact:
+    temp_application_environment: >-
+      {{
+        application_instance.environment | d(
+          applications[application_instance.name].environment) | d(
+            applications_default[application_instance.name].environment | mandatory('Environment must be specified for application')
+          )
+        )
+      }}
+
 - name: "Temp variable: fullname"
   set_fact:
-    temp_application_fullname: "{{ application_instance.environment }}-{{ application_instance.name }}"
+    temp_application_fullname: "{{ temp_application_environment }}-{{ application_instance.name }}"
 
 - name: "Temp varibale: organisation"
   set_fact:
