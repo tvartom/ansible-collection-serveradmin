@@ -11,6 +11,7 @@ packages:
     #- net-tools #ifconfig finns i denna
     #- rsync
     - fuse-overlayfs # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
+    - https://github.com/tvartom/rpms/raw/master/centos8/bindfs/bindfs-1.14.3-2.el8.x86_64.rpm
   RedHat8:
     - glibc-langpack-en
     - glibc-langpack-sv
