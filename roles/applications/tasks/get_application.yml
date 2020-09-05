@@ -12,7 +12,7 @@
     temp_application_environment: >-
       {{
         application_instance.environment | d(
-          applications[application_instance.name].environment) | d(
+          applications[application_instance.name].environment | d(
             applications_default[application_instance.name].environment | mandatory('Environment must be specified for application')
           )
         )
@@ -27,8 +27,8 @@
     temp_application_organisation: >-
       {{
         application_instance.organisation | d(
-          applications[application_instance.name].organisation) | d(
-            applications_default[application_instance.name].organisation) | d(
+          applications[application_instance.name].organisation | d(
+            applications_default[application_instance.name].organisation | d(
               organisation.name
             )
           )
