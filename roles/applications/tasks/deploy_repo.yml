@@ -9,6 +9,7 @@
   find:
     path: "{{ application.path }}/devmode/{{ repo.name }}-upper"
     file_type: any
+    hidden: yes
   register: to_delete
   when: applications_devmode
 
