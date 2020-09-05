@@ -35,7 +35,7 @@
 - name: "Nginx include for organisation"
   become: yes
   copy:
-    content: "include conf.d/{{ organisation.name }}/*.conf;"
+    content: "include /etc/nginx/conf.d/{{ organisation.name }}/*.conf;"
     dest: "/etc/nginx/conf.d/{{ organisation.name }}.conf"
     mode: "u=rw,g=r,o=r"
   notify: "Reload nginx"
