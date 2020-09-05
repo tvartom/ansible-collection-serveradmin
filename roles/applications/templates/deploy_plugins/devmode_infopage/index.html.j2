@@ -11,7 +11,7 @@
         {# {{ application_instance.name }} ({{ application_instance.environment }}) #}
         {%- for (key, webinstance) in application_instance.webinstances.items() -%}
           {%- for domaininstance in webinstance.domaininstances -%}
-            # {{ domaininstance.fullname }}
+            # {{ domaininstance.fullname }}{{ "\n" -}}
             {%- for domain in domaininstance.domains -%}
               {{- ansible_facts.default_ipv4.address }}	{{- domain }}{{ "\n" -}}
             {%- endfor -%}
