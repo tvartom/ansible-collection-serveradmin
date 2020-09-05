@@ -1,5 +1,19 @@
 ---
 
+- set_fact:
+    current_application: "{{ application }}"
+
+### Loop over application instances ##################################################################
+#     36 - name: "Read all applications into applications_info"
+#     37   include_tasks: get_application.yml
+#     38   loop: "{{ application_instances }}"
+#     39   loop_control:
+#     40     loop_var: application_instance
+#     41     label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+- debug:
+    var: application_instance
+
+
 - debug:
     var: serveradmin
 
@@ -23,3 +37,7 @@
     owner: "{{ application.process_user }}"
     group: "{{ application.process_user }}"
     mode: "u=rwx,g=rx,o="
+
+
+- set_fact:
+    current_application: "{{ current_application }}"
