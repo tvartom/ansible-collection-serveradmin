@@ -127,7 +127,7 @@
     name: "morgangraphics_nvm"
   vars:
     ansible_user: "{{ application.process_user }}"
-    #ansible_remote_tmp: "/tmp/.ansible"
+    ansible_remote_tmp: "/tmp/.ansible"
     ansible_become: yes
     default: true # Make this version default
     nodejs_version: "{{ application.nodejs_version }}"
