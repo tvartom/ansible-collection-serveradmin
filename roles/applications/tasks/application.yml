@@ -126,12 +126,13 @@
   include_role:
     name: "morgangraphics_nvm"
   vars:
+    #include_role doesn't accept become, use variable. Even tmp-directory is necessary
+    ansible_become: yes
     ansible_user: "{{ application.process_user }}"
     ansible_remote_tmp: "/tmp/.ansible"
-    ansible_become: yes
     default: true # Make this version default
     nodejs_version: "{{ application.nodejs_version }}"
-    nvm_install: "git"
+    #nvm_install: "git"
     nvm_profile: ".bashrc"
   when: application.nodejs_version is defined
 
