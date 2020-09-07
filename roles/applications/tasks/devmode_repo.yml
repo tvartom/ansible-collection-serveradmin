@@ -51,9 +51,8 @@
     fstype: overlay
     # Dokumentation: man mount.cifs
     opts: |-
-      {{
-        'lowerdir=' ~ application.path ~ '/devmode/' ~ repo.name
-        ~',upperdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-upper'
-        ~',workdir=' ~ application.path ~ '/devmode/' ~ repo.name ~ '-work'
-      }}
+      x-systemd.after={{ application.path }}/devmode/{{ repo.name }}  {#- Wait for the bindfs to mount Doumentation: https://www.freedesktop.org/software/systemd/man/systemd.mount.html -#}
+      ,lowerdir={{ application.path }}/devmode/{{ repo.name }}        {#- The main content of this mount -#}
+      ,upperdir={{ application.path }}/devmode/{{ repo.name }}-upper  {#- Where changes from delpoy-script, the webapp it self etc i written. Cleared by _deploy -#}
+      ,workdir={{ application.path }}/devmode/{{ repo.name }}-work    {#- Demanded by overlayfs -#}
     state: mounted
