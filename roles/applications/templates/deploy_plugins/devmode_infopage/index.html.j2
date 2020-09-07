@@ -40,5 +40,14 @@
     </pre>
 </details>
 
+<details>
+  <summary>Mount</summary>
+    <h3>fstab</h3>
+    <pre>
+//{{ ansible_facts.default_ipv4.address }}/workspace /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} cifs guest,uid={{ applications_devmode_user }},iocharset=utf8,noauto,x-systemd.automount 0 0
+    </pre>
+</details>
+
+
   </body>
 </html>
