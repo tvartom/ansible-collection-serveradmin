@@ -75,9 +75,9 @@
             group: "{{ applications_devmode_user }}"
             setype: httpd_sys_rw_content_t
             create_mode: '0660'
-            force_create_mode: '0660'
+            #force_create_mode: '0660'
             directory_mode: '0770'
-            force_directory_mode: '0770'
+            #force_directory_mode: '0770'
         samba_users:
           - name: "{{ applications_devmode_user }}"
             password: ""

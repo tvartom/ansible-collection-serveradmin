@@ -78,6 +78,10 @@
   nt pipe support = no
 {% endif %}
 
+{# https://www.samba.org/samba/docs/current/man-html/smb.conf.5.html#UNIXEXTENSIONS #}
+  unix extensions = {{ samba_unix_extensions | d(true) | ternary('yes', 'no') }}
+
+
 {% if samba_global_include is defined %}
   include = {{ samba_configuration_dir }}/{{ samba_global_include }}
 {% endif %}
@@ -137,10 +141,21 @@
 {%     if share.writeable is defined or share.writable is defined or share.write_ok is defined or share.read_only is defined %}
   writeable = {{ share.writeable | d(share.writable | d(share.write_ok | d(not share.read_only | d(true)))) | ternary('yes', 'no')}}
 {%     endif %}
-  create mode = {{ share.create_mode|default('0664') }}
-  force create mode = {{ share.force_create_mode|default('0664') }}
-  directory mode = {{ share.directory_mode|default('0775') }}
-  force directory mode = {{ share.force_directory_mode|default('0775') }}
+
+{%      if share.create_mask is defined or share.create_mode is defined %}
+  create mask = {{ share.create_mask | d(share.create_mode | default('0744') ) }}
+{%      end if %}
+{%      if share.force_create_mode is defined %}
+  force create mode = {{ share.force_create_mode|default('0000') }}
+{%      endif %}
+
+{%      if share.directory_mask is defined or share.directory_mode is defined %}
+  directory mask = {{ share.directory_mask | d(share.directory_mode | default('0755') ) }}
+{%      end if %}
+{%      if share.force_directory_mode is defined %}
+  force directory mode = {{ share.force_directory_mode|default('0000') }}
+{%      endif %}
+
 {%     if share.include_file is defined %}
   include = {{ samba_configuration_dir }}/{{ share.include_file }}
 {%     endif %}
