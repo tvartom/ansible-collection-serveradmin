@@ -144,14 +144,14 @@
 
 {%      if share.create_mask is defined or share.create_mode is defined %}
   create mask = {{ share.create_mask | d(share.create_mode | default('0744') ) }}
-{%      end if %}
+{%      endif %}
 {%      if share.force_create_mode is defined %}
   force create mode = {{ share.force_create_mode|default('0000') }}
 {%      endif %}
 
 {%      if share.directory_mask is defined or share.directory_mode is defined %}
   directory mask = {{ share.directory_mask | d(share.directory_mode | default('0755') ) }}
-{%      end if %}
+{%      endif %}
 {%      if share.force_directory_mode is defined %}
   force directory mode = {{ share.force_directory_mode|default('0000') }}
 {%      endif %}
