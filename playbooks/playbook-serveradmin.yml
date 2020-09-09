@@ -95,8 +95,6 @@
               owner: "{{ applications_devmode_user }}"
               async: true
               fsid: root
-            - test: fdf
-            - owner: serveradmin
 
     - include_role:
         name: autofs
