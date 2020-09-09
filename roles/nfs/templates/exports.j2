@@ -17,9 +17,9 @@
 {% for export in nfs.exports | d([]) %}
 {{ ( '# '~export.comment ) if export.comment is defined else '' }}
 {{ export.path }}	{{ export.host | d( ansible_facts.default_ipv4.network ~ "/24" ) }}(
-{{- export.secure | d( not (export.insecure|d(true)) ) | tenary('secure', 'insecure') -}}
-,{{ export.rw | d( not (export.ro|d(true)) ) | tenary('rw', 'ro') -}}
-,{{ export.async | d( not (export.sync|d(false)) ) | tenary('async', 'sync') -}}
+{{- export.secure | d( not (export.insecure|d(true)) ) | ternary('secure', 'insecure') -}}
+,{{ export.rw | d( not (export.ro|d(true)) ) | ternary('rw', 'ro') -}}
+,{{ export.async | d( not (export.sync|d(false)) ) | ternary('async', 'sync') -}}
 {%- if export.owner is defined -%}
 ,all_squash,anonuid={{ export.owner }}{{ ( ',anongid=' ~ export.group ) if export.group is defined else '' -}}
 {%- endif -%}
