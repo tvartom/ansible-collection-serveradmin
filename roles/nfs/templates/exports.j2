@@ -23,5 +23,6 @@
 {%- if export.owner is defined -%}
 ,all_squash,anonuid={{ export.owner }}{{ ( ',anongid=' ~ export.group ) if export.group is defined else '' -}}
 {%- endif -%}
+{{- (',fsid='~export.fsid) if export.fsid is defined else '' -}}
 )
 {% endfor %}

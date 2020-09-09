@@ -8,6 +8,26 @@
     state: present
   when: ansible_os_family == "RedHat"
 
+- name: "Get uid for owner of exports"
+  getent:
+    database: passwd
+    key: "{{ item.owner }}"
+  loop: "{{ nfs.exports }}"
+  when: item.owner is defined
+
+- name: "Get uid for group of exports"
+  getent:
+    database: group
+    key: "{{ item.group }}"
+  loop: "{{ nfs.exports }}"
+  when: item.group is defined
+
+- debug:
+    msg:
+      - "user id {{ getent_passwd }}"
+      - "group id {{ getent_group }}"
+
+
 - name: "Create /etc/exports for NFS"
   become: yes
   template:

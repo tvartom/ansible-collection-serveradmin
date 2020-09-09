@@ -95,6 +95,7 @@
               owner: "{{ applications_devmode_user }}"
               group: "{{ applications_devmode_user }}"
               async: true
+              fsid: root
 
     - include_role:
         name: autofs
