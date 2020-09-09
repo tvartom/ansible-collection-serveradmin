@@ -9,12 +9,14 @@
 
 
 - name: Let key be secret
+  become: yes
   file:
     path: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
     mode: "u=rw,g=,o="
 
 
 - name: Let cert be readable for anyone.
+  become: yes
   file:
     path: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
     mode: "u=rw,g=r,o=r"
