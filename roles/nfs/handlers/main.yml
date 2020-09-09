@@ -1,2 +1,7 @@
 ---
 
+# See:
+# man exportfs
+
+- name: "Reload NFS"
+  command: 'exportfs -ra'

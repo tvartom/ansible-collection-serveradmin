@@ -64,7 +64,7 @@
         ansible_become: yes
         samba_shares:
           - name: "workspace"
-            # comment: 
+            comment: "Workspace for devmode"
             path: "/home/{{ applications_devmode_user }}/workspace"
             public: true
             browseable: true
@@ -89,21 +89,12 @@
       vars:
         nfs:
           exports:
-            - name: "workspace"
-              # comment: 
+            - comment: "Workspace for devmode"
               path: "/home/{{ applications_devmode_user }}/workspace"
-              public: true
-              browseable: true
-              guest_ok: true
-              writeable: true
-#              write_list: "{{ applications_devmode_user }}"
+              rw: true
               owner: "{{ applications_devmode_user }}"
               group: "{{ applications_devmode_user }}"
-              setype: httpd_sys_rw_content_t
-              create_mode: '0640'
-              #force_create_mode: '0660'
-              directory_mode: '0750'
-              #force_directory_mode: '0770'
+              async: true
 
     - include_role:
         name: autofs

@@ -8,8 +8,6 @@
     state: present
   when: ansible_os_family == "RedHat"
 
-
-
 - name: "Create /etc/exports for NFS"
   template:
     src: exports.j2
@@ -18,3 +16,10 @@
     group: root
     mode: 0644
   notify: "Reload NFS"
+
+- name: "Ensure NFS is running"
+  service:
+    name: "nfs-server"
+    state: started
+    enabled: yes
+  when: nfs.exports | length

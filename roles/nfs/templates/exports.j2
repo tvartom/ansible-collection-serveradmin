@@ -2,7 +2,9 @@
 # Managed by Ansible!
 #
 # /etc/exports: the access control list for filesystems which may be exported
-#   to NFS clients.  See exports(5).
+#   to NFS clients.  See man exports
+#
+#
 #
 # Example for NFSv2 and NFSv3:
 # /srv/homes       hostname1(rw,sync,no_subtree_check) hostname2(ro,sync,no_subtree_check)
@@ -13,5 +15,13 @@
 #
 
 {% for export in nfs.exports | d([]) %}
-{{ {{ ansible_facts.default_ipv4.network }}/24
+{{ ( '# '~export.comment ) if export.comment is defined else '' }}
+{{ export.path }}	{{ export.host | d( ansible_facts.default_ipv4.network ~ "/24" }}(
+{{- export.secure | d( not (export.insecure|d(true)) ) | tenary('secure', 'insecure') -}}
+,{{ export.rw | d( not (export.ro|d(true)) ) | tenary('rw', 'ro') -}}
+,{{ export.async | d( not (export.sync|d(false)) ) | tenary('async', 'sync') -}}
+{%- if export.owner is defined -%}
+,all_squash,anonuid={{ export.owner }}{{ ( ',anongid=' ~ export.group ) if export.group is defined else '' -}}
+{%- endif -%}
+)
 {% endfor %}
