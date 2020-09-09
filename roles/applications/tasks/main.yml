@@ -1,7 +1,7 @@
 ---
 # Cert files:
 # Account key:                       /opt/letsencrypt/account.key
-# Letsencrypt domain key:            "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+# Domain key:                        "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
 # subjectAltName for CSR:            "{{ application.path }}/letsencrypt/subjectaltname_{{ domaininstance_group.fullname }}-domain.txt"
 # Certificate Signing Request (CSR): "{{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr"
 # Letsencrypt-script:                "{{ application.path }}/letsencrypt/letsencrypt-renew-{{ domaininstance_group.fullname }}.sh"
@@ -27,7 +27,7 @@
     mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
   when: item.when | default(True)
   loop:
-    - { path: "/etc/nginx/ssl",                                 owner: "root", group: "root", when: webserver_use_letsencrypt }
+    - { path: "/etc/nginx/ssl",                                 owner: "root", group: "root", when: "{{ webserver_use_ssl }}" }
     - { path: "/etc/nginx/conf.d/{{ organisation.name }}",      owner: "root", group: "root" }
     - { path: "/home/{{ applications_devmode_user }}/workspace", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }
     - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }

@@ -58,7 +58,7 @@
   when: not webinstance.enable_php
   notify: "Reload php-fpm"
 
-### Lets encrypt #######################################################################
+### SSL and Lets encrypt ################################################################
 
 #- name: Lets encrypt
 #  include_tasks: webinstance_letsencrypt.yml

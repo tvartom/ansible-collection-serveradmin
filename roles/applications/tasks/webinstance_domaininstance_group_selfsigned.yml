@@ -5,3 +5,16 @@
   args:
     creates: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
 # and "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+
+
+
+- name: Let key be secret
+  file:
+    path: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-domain.key"
+    mode: "u=rw,g=,o="
+
+
+- name: Let cert be readable for anyone.
+  file:
+    path: "/etc/nginx/ssl/{{ domaininstance_group.fullname }}-signed_chain.crt"
+    mode: "u=rw,g=r,o=r"
