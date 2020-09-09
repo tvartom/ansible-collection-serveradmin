@@ -4,8 +4,8 @@
 
 - include: php.yml
 
-- include: letsencrypt.yml
-  when: webserver_use_letsencrypt
+- include: ssl_and_letsencrypt.yml
+  when: webserver_use_ssl
 
 - include: sendmail.yml
 

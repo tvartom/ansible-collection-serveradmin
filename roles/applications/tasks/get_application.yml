@@ -71,7 +71,7 @@
 - name: "Generate default values for webinstance"
   set_fact:
     temp_webinstance_default:
-      enable_https: "{{ webserver_use_letsencrypt and applications_enable_https_by_default }}"
+      enable_https: "{{ webserver_use_ssl and applications_enable_https_by_default }}"
       only_https: true # No effect if enable_https == false
       enable_http2: true # No effect if enable_https == false
       listen_to_ipv6: true
@@ -96,7 +96,7 @@
       listen_ports_http: [80]
       listen_ports_https: [443]
       domaininstance_groups: {}
-      cert_handler: "letsencrypt" # [letsencrypt/selfsigned]
+      cert_handler: "{{ 'letsencrypt' if webserver_use_letsencrypt else 'selfsigned' }}" # [letsencrypt/selfsigned]
       php_status_path: "/php-fpm-status" # To make it public, use suffix .php if php-conf allow it, false or empty to not use.
       create_root_dir: false
       #Properties that default value is: not defined

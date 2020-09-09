@@ -5,4 +5,6 @@ php_fpm_service: php-fpm
 php_fpm_pool_path: /etc/php-fpm.d
 nginx_user: nginx
 
-webserver_use_letsencrypt: true
+webserver_use_ssl: true
+webserver_use_letsencrypt: "{{ webserver_use_ssl }}"
+webserver_generate_dhparam: "{{ not ( applications_devmode | d(false) ) and webserver_use_ssl }}"
