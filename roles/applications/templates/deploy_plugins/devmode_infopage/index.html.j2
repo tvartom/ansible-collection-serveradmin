@@ -26,7 +26,7 @@
     <pre>
 # {{ organisation.name }}{{ "\n" -}}
 {{- ansible_facts.default_ipv4.address }}	{{ inventory_hostname }}{{ "\n\n" -}}
-      {%- for application_instance in applications_info if not applicatiocn_instance.name == 'devmode_infopage' -%}
+      {%- for application_instance in applications_info if not application_instance.name == 'devmode_infopage' -%}
         {#- {{ application_instance.name }} ({{ application_instance.environment }}) -#}
         {%- for (key, webinstance) in application_instance.webinstances.items() -%}
           {%- for domaininstance in webinstance.domaininstances -%}
