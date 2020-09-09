@@ -21,7 +21,7 @@
 ,{{ export.rw | d( not (export.ro|d(true)) ) | ternary('rw', 'ro') -}}
 ,{{ export.async | d( not (export.sync|d(false)) ) | ternary('async', 'sync') -}}
 {%- if export.owner is defined -%}
-,all_squash,anonuid={{ export.owner }}{{ ( ',anongid=' ~ export.group ) if export.group is defined else '' -}}
+,all_squash,anonuid={{ getent_passwd[export.owner][1] }},anongid={{ getent_passwd[export.owner][2] -}}
 {%- endif -%}
 {{- (',fsid='~export.fsid) if export.fsid is defined else '' -}}
 )
