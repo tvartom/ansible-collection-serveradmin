@@ -15,18 +15,10 @@
   loop: "{{ nfs.exports }}"
   when: item.owner is defined
 
-- name: "Get uid for group of exports"
-  getent:
-    database: group
-    key: "{{ item.group }}"
-  loop: "{{ nfs.exports }}"
-  when: item.group is defined
-
 - debug:
-    msg:
-      - "user id {{ getent_passwd }}"
-      - "group id {{ getent_group }}"
+    var: "getent_passwd"
 
+- fail:
 
 - name: "Create /etc/exports for NFS"
   become: yes

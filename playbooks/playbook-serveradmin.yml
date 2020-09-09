@@ -93,9 +93,10 @@
               path: "/home/{{ applications_devmode_user }}/workspace"
               rw: true
               owner: "{{ applications_devmode_user }}"
-              group: "{{ applications_devmode_user }}"
               async: true
               fsid: root
+            - test: fdf
+            - owner: serveradmin
 
     - include_role:
         name: autofs
