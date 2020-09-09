@@ -8,17 +8,18 @@
     state: present
   when: ansible_os_family == "RedHat"
 
-- block:
-  - name: "Get uid for owner of exports"
-    getent:
-      database: passwd
-      key: "{{ item }}"
-  - set_fact:
-      nfs_exports_owner: "{{ nfs_exports_owner | d({}) | combine({ item : { 'uid': getent_passwd[item][1], 'gid': getent_passwd[item][2] }})" 
-  loop: "{{ nfs.exports | selectattr('owner', 'defined') | map(attribute='owner') | unique | list }}"
+- name: "Get uid for owner of exports"
+  getent:
+    database: passwd
+#    key: "{{ item }}"
+
+
+#- set_fact:
+#    nfs_exports_owner: "{{ nfs_exports_owner | d({}) | combine({ item : { 'uid': getent_passwd[item][1], 'gid': getent_passwd[item][2] }})" 
+#  loop: "{{ nfs.exports | selectattr('owner', 'defined') | map(attribute='owner') | unique | list }}"
 
 - debug:
-    var: "nfs_exports_owner"
+    var: "getent_passwd"
 
 - fail:
 
