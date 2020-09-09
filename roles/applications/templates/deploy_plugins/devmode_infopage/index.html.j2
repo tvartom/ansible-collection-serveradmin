@@ -44,7 +44,14 @@
   <summary>Mount</summary>
     <h3>fstab</h3>
     <pre>
+{% if applications_devmode_samba | d(true) %}
+# Devmode workspace with Samba (Cifs)
 //{{ ansible_facts.default_ipv4.address }}/workspace /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} cifs guest,uid={{ applications_devmode_user }},gid={{ applications_devmode_user }},iocharset=utf8,noauto,x-systemd.automount 0 0
+{% endif %}
+{% applications_devmode_nfs | d(false) %}
+# Devmode workspace with NFS
+{{ ansible_facts.default_ipv4.address }}:/ /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} nfs4 uid={{ applications_devmode_user }},gid={{ applications_devmode_user }},noauto,x-systemd.automount 0 0
+{% endif %}
     </pre>
 </details>
 
