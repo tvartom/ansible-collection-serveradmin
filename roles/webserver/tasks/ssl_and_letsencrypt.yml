@@ -1,0 +1,67 @@
+---
+### Letsencrypt ###
+- name: "Create /opt/letsencrypt"
+  become: yes
+  file:
+    path: /opt/letsencrypt
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+  when: webserver_use_letsencrypt
+
+- name: Install acme-tiny-script
+  become: yes
+  copy:
+    src: "acme-tiny"
+    dest: "/opt/letsencrypt"
+    directory_mode: "o=rwX,g=,o="
+  when: webserver_use_letsencrypt
+
+#- name: Download cert to put in chained file (To be used with Nginx)
+#  become: yes
+#  get_url:
+#    url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
+#    dest: /opt/letsencrypt/intermediate.pem
+#    mode: u=rw,g=r,o=r
+#  when: webserver_use_letsencrypt
+
+- name: "Generate Letsencrypt account key"
+  become: yes
+  shell: openssl genrsa 4096 > /opt/letsencrypt/account.key
+  args:
+    creates: /opt/letsencrypt/account.key
+  when: webserver_use_letsencrypt
+
+### Common SSL ###
+- name: "Create /etc/nginx/ssl"
+  become: yes
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: "Create SLL-conf for Nginx"
+  become: yes
+  template:
+    src: nginx-ssl.conf.j2
+    dest: /etc/nginx/conf.d/nginx-ssl.conf
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+### Generate dhparam ###
+# https://cipherli.st/
+- name: "Warning"
+  debug:
+    msg: "If dhparam.pem does not exists, it will be created now. It takes a long time."
+  when: webserver_generate_dhparam
+
+- name: Generate a stronger DHE parameter (This is going to take a long time)
+  become: yes
+  shell: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 4096
+  args:
+    creates: /etc/nginx/ssl/dhparam.pem
+  when: webserver_generate_dhparam
