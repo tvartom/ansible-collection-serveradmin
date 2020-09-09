@@ -1,0 +1,20 @@
+---
+
+- name: "Install NFS (YUM)"
+  become: yes
+  yum:
+    name:
+      - nfs-utils
+  state: present
+  when: ansible_os_family == "RedHat"
+
+
+
+- name: "Create /etc/exports for NFS"
+  template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: 0644
+  notify: "Reload NFS"
