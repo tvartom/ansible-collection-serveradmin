@@ -53,7 +53,7 @@
 # Devmode workspace with NFS
 # For Ubuntu
 # sudo apt-get install nfs-common
-{{ ansible_facts.default_ipv4.address }}:/ /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} nfs4 rw,noauto,x-systemd.automount,soft 0 0
+{{ ansible_facts.default_ipv4.address }}:/ /home/{{ applications_devmode_user }}/workspace_{{ organisation.name }} nfs4 rw,noauto,x-systemd.automount,soft 0 0
 {% endif %}
     </pre>
 </details>

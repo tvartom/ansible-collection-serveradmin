@@ -13,6 +13,9 @@ applications_enable_https_by_default: true
 
 applications_devmode: false
 
+applications_devmode_samba: true
+applications_devmode_nfs: false
+
 applications_default:
   # To use this applikationen,
   # in host_vars:
