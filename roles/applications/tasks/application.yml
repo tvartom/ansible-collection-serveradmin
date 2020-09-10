@@ -85,7 +85,10 @@
       databases:
          - database: "{{ item.0.database }}"
            privileges: "{{ item.1.privileges | d(None) }}"
-  loop: "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | subelements('extrausers') }}"
+  with_subelements:
+        - "{{ application.databases | d([]) | selectattr('extrausers', 'defined') }}"
+        - extrausers
+  # loop: "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | subelements('extrausers') }}"
 
 ### Git Config  ########################################################################################################
 - name: "Config Git för application process user"
