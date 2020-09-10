@@ -1,0 +1,11 @@
+---
+
+- name: "Create files from templates"
+  become: yes
+  template:
+    dest: "{{ deploy_facts[item.repo | d(deploy.repo) | mandatory].source }}/{{ item.dest }}"
+    src: "{{ item.src }}"
+    owner: "{{ item.owner | d(application.process_user) }}"
+    group: "{{ item.group | d(application.process_group) }}"
+    mode: "{{ item.mode |d('u=rw,g=r,o=') }}"
+  loop: "{{ deploy.templates }}"
