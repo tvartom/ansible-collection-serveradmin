@@ -80,14 +80,16 @@
     tasks_from: create_user
   vars:
     user:
-      name: "{{ item.1.user }}"
-      host: "{{ item.1.host | d('localhost') }}"
+      name: "{{ databaseuser.1.user }}"
+      host: "{{ databaseuser.1.host | d('localhost') }}"
       databases:
-         - database: "{{ item.0.database }}"
-           privileges: "{{ item.1.privileges | d(None) }}"
+         - database: "{{ databaseuser.0.database }}"
+           privileges: "{{ databaseuser.1.privileges | d(None) }}"
   with_subelements:
         - "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | list }}"
         - extrausers
+  loop_control:
+    loop_var: databaseuser
   # loop: "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | subelements('extrausers') }}"
 
 ### Git Config  ########################################################################################################
