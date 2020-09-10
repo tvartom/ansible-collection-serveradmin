@@ -9,6 +9,7 @@
   stat:
     path: "{{ application.path }}/devmode/{{ repo.name }}"
   register: mount_point_devmode
+  when: applications_devmode_use_overlayfs
 
 - name: "Check mount point repos"
   become: yes
@@ -28,21 +29,28 @@
   when: item.when | default(True)
   loop:
     - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}" }
-    - { path: "{{ application.path }}/devmode/{{ repo.name }}",       when: "{{ not mount_point_devmode.stat.exists }}" }
-    - { path: "{{ application.path }}/devmode/{{ repo.name }}-upper" }
-    - { path: "{{ application.path }}/devmode/{{ repo.name }}-work"  }
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}",       when: "{{ applications_devmode_use_overlayfs and not mount_point_devmode.stat.exists }}" }
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}-upper", when: "{{ applications_devmode_use_overlayfs }}" }
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}-work",  when: "{{ applications_devmode_use_overlayfs }}" }
     - { path: "{{ application.path }}/repos/{{ repo.name }}",        when: "{{ not mount_point_repos.stat.exists }}" }
 
 - name: "Mount the dev repo in the application devmode-folder (bindfs)"
   become: yes
   mount:
     src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
-    path: "{{ application.path }}/devmode/{{ repo.name }}"
+    path: >-
+      {%- applications_devmode_use_overlayfs -%}
+        {{ application.path }}/devmode/{{ repo.name }}
+      {%- else -%}
+        {{ application.path }}/repos/{{ repo.name }}
+      {%- endif -%}
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
-    opts: "ro,force-user={{ application.process_user }},force-group={{ application.process_group }}"
+    opts: "{{ applications_devmode_use_overlayfs | ternary('ro', 'rw') }},force-user={{ application.process_user }},force-group={{ application.process_group }}"
     state: remounted
 
+# Overlay doen't support changes in lowerdirs, editing files works, but changeing folders doesn't.
+# TODO: To use it, changes should trigger a remount in some way, or with cron-job.
 - name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
   become: yes
   mount:
@@ -56,3 +64,4 @@
       ,upperdir={{ application.path }}/devmode/{{ repo.name }}-upper  {#- Where changes from delpoy-script, the webapp it self etc i written. Cleared by _deploy -#}
       ,workdir={{ application.path }}/devmode/{{ repo.name }}-work    {#- Demanded by overlayfs -#}
     state: remounted
+  when: applications_devmode_use_overlayfs
