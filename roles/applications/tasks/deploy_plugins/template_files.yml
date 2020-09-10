@@ -7,8 +7,17 @@
     state: directory
     owner: "{{ item.owner | d(application.process_user) }}"
     group: "{{ item.group | d(application.process_group) }}"
-    mode: "{{ item.mode |d('u=rwx,g=rx,o=') }}"
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=') }}"
   loop: "{{ deploy.templates }}"
+
+# https://github.com/ansible/ansible/issues/56243
+- name: "Workaround template-bug on mounted devices ('invalid selinux context' issue)"
+  file:
+    path: "{{ deploy_facts[item.repo | d(deploy.repo) | mandatory].source }}/{{ item.dest }}"
+    state: touch
+    owner: "{{ item.owner | d(application.process_user) }}"
+    group: "{{ item.group | d(application.process_group) }}"
+    mode: "{{ item.mode | d('u=rw,g=r,o=') }}"
 
 - name: "Create files from templates"
   become: yes
@@ -17,5 +26,5 @@
     src: "{{ item.src }}"
     owner: "{{ item.owner | d(application.process_user) }}"
     group: "{{ item.group | d(application.process_group) }}"
-    mode: "{{ item.mode |d('u=rw,g=r,o=') }}"
+    mode: "{{ item.mode | d('u=rw,g=r,o=') }}"
   loop: "{{ deploy.templates }}"
