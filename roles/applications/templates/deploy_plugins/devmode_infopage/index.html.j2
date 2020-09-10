@@ -14,7 +14,7 @@
         {#- {{ application_instance.name }} ({{ application_instance.environment }}) -#}
         {%- for (key, webinstance) in application_instance.webinstances.items() -%}
           {%- for domaininstance in webinstance.domaininstances -%}
-            <li>{{ domaininstance.fullname }} <a href="//{{ domaininstance.domains[0] }}" target="_blank">{{ domaininstance.domains[0] }}></a></li>
+            <li>{{ domaininstance.fullname }} <a href="//{{ domaininstance.domains[0] }}" target="_blank">{{ domaininstance.domains[0] }}</a></li>
           {%- endfor -%}
         {%- endfor -%}
       {%- endfor -%}

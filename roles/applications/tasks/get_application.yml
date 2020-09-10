@@ -72,7 +72,7 @@
   set_fact:
     temp_webinstance_default:
       enable_https: "{{ webserver_use_ssl and applications_enable_https_by_default }}"
-      only_https: true # No effect if enable_https == false
+      only_https: "{{ webserver_use_letsencrypt }}" # No effect if enable_https == false, false if we don't have real certs.
       enable_http2: true # No effect if enable_https == false
       listen_to_ipv6: true
       enable_php: false
@@ -149,4 +149,3 @@
 - name: Applications info
   set_fact:
     applications_info: "{{- applications_info | default([]) + [ application ] -}}"
-
