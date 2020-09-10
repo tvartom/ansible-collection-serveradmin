@@ -41,7 +41,7 @@
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
     opts: "ro,force-user={{ application.process_user }},force-group={{ application.process_group }}"
-    state: mounted
+    state: remounted
 
 - name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
   become: yes
@@ -55,4 +55,4 @@
       ,lowerdir={{ application.path }}/devmode/{{ repo.name }}        {#- The main content of this mount -#}
       ,upperdir={{ application.path }}/devmode/{{ repo.name }}-upper  {#- Where changes from delpoy-script, the webapp it self etc i written. Cleared by _deploy -#}
       ,workdir={{ application.path }}/devmode/{{ repo.name }}-work    {#- Demanded by overlayfs -#}
-    state: mounted
+    state: remounted
