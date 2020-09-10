@@ -12,12 +12,14 @@
 
 # https://github.com/ansible/ansible/issues/56243
 - name: "Workaround template-bug on mounted devices ('invalid selinux context' issue)"
+  become: yes
   file:
     path: "{{ deploy_facts[item.repo | d(deploy.repo) | mandatory].source }}/{{ item.dest }}"
     state: touch
     owner: "{{ item.owner | d(application.process_user) }}"
     group: "{{ item.group | d(application.process_group) }}"
     mode: "{{ item.mode | d('u=rw,g=r,o=') }}"
+  loop: "{{ deploy.templates }}"
 
 - name: "Create files from templates"
   become: yes
