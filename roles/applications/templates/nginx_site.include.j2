@@ -89,6 +89,9 @@ add_header  X-Robots-Tag $x_robots_tag;
 
            fastcgi_index index.php;
 
+           {% for param in webinstance.fastcgi_params.application.keys() %}
+             fastcgi_param {{ param }} ${{ param }};
+           {% endfor %}
            {% for param in webinstance.fastcgi_params.webinstance.keys() %}
              fastcgi_param {{ param }} ${{ param }};
            {% endfor %}
