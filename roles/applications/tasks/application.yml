@@ -86,7 +86,7 @@
          - database: "{{ item.0.database }}"
            privileges: "{{ item.1.privileges | d(None) }}"
   with_subelements:
-        - "{{ application.databases | d([]) | selectattr('extrausers', 'defined') }}"
+        - "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | list }}"
         - extrausers
   # loop: "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | subelements('extrausers') }}"
 
