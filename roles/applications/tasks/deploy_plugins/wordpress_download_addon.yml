@@ -1,7 +1,7 @@
 ---
 # Usage:
 #
-#- include_tasks: deploy_plugins/deploy_wordpress_download_addon.yml
+#- include_tasks: deploy_plugins/wordpress_download_addon.yml
 #  vars:
 #    addon_type: theme/plugin
 #  loop: "{{ application.metadata.wordpress.themes | d([]) }}"

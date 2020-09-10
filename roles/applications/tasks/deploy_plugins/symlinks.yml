@@ -1,4 +1,8 @@
 ---
+- name: "WARNING! WARNING! WARNING! WARNING! "
+  debug:
+    msg: "WARNING!! symlink-plugin used without applications_devmode_use_overlayfs. This will write to the repo."
+  when: applications_devmode_use_overlayfs
 
 - name: "Deploy Symlinks (Remove)"
   become: yes

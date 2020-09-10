@@ -58,7 +58,7 @@
 #  when: not applications_devmode
 
 - name: Deploy
-  include_tasks: "deploy_plugins/deploy_{{ deploy.plugin }}.yml"
+  include_tasks: "deploy_plugins/{{ deploy.plugin }}.yml"
   when: >
     deploy.filter is not defined
     or (deploy.filter.include_environment is defined and application.environment in deploy.filter.include_environment)
