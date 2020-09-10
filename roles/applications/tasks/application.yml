@@ -3,6 +3,8 @@
   debug:
     var: application
 
+### Application process user ##########################################################################
+
 - name: "Create user specific group for application"
   become: yes
   group:
@@ -45,7 +47,9 @@
     append: true
   notify: "Reload nginx"
 
-- name: "Create DB for application"
+### Databases ###############################################################################################
+
+- name: "Create databases for application"
   become: yes
   mysql_db:
     name: "{{ database.database }}"
@@ -59,7 +63,7 @@
   loop_control:
     loop_var: database
 
-- name: "Let process user (linux) have access to application database"
+- name: "Let application process (linux)-user have access to application databases"
   include_role:
     name: mariadb
     tasks_from: create_user
@@ -70,7 +74,21 @@
       databases: "{{ application.databases }}"
   when: application.databases is defined
 
-- name: "Config för process user"
+- name: "Create extra users for databases"
+  include_role:
+    name: mariadb
+    tasks_from: create_user
+  vars:
+    user:
+      name: "{{ item.1.user }}"
+      host: "{{ item.1.host | d('localhost') }}"
+      databases:
+         - database: "{{ item.0.database }}"
+           privileges: "{{ item.1.privileges | d(None) }}"
+  loop: "{{ application.databases | d([]) | selectattr('extrausers', 'defined') | subelements('extrausers') }}"
+
+### Git Config  ########################################################################################################
+- name: "Config Git för application process user"
   include_role:
     name: git
     tasks_from: config_git_for_user
@@ -79,6 +97,8 @@
       name: "{{ application.process_user }}"
       #fullname: "hela namnet" #Optional: annars använs user.name
       #email: "Epost" #Optional: annars används user.name @ inventory_hostname
+
+### Directories #########################################################################################################
 
 - name: "Create dir in /opt for organisation"
   become: yes
@@ -152,7 +172,7 @@
   loop_control:
     loop_var: webinstance
 
-### devmodes ####################################################################
+### devmode ####################################################################
 
 - name: Repos for devmode
   include_tasks: devmode_repo.yml
