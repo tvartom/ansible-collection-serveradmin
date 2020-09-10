@@ -81,6 +81,7 @@
       fastcgi_params:
         domaininstance: {}
         webinstance: {}
+        application: {}
       nginx_includes: {}
       #  [rootlocation:]
       domaininstances: []

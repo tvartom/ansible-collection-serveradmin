@@ -7,6 +7,11 @@
     set ${{ name }} '{{ webinstance[value] | default('') }}';
   {% endfor %}
 
+  {% for name, value  in webinstance.fastcgi_params.application.items() %}
+    set ${{ name }} '{{ application[value] | default('') }}';
+  {% endfor %}
+
+
   access_log {{ path }}/log/nginx/{{ webinstance.instance }}-access.log  main;
   error_log  {{ path }}/log/nginx/{{ webinstance.instance }}-error.log info;
 
