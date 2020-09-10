@@ -42,7 +42,7 @@
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
     opts: "{{ applications_devmode_use_overlayfs | ternary('ro', 'rw') }},force-user={{ application.process_user }},force-group={{ application.process_group }}"
-    state: remounted
+    state: mounted
 
 # Overlay doen't support changes in lowerdirs, editing files works, but changeing folders doesn't.
 # TODO: To use it, changes should trigger a remount in some way, or with cron-job.
@@ -58,5 +58,5 @@
       ,lowerdir={{ application.path }}/devmode/{{ repo.name }}        {#- The main content of this mount -#}
       ,upperdir={{ application.path }}/devmode/{{ repo.name }}-upper  {#- Where changes from delpoy-script, the webapp it self etc i written. Cleared by _deploy -#}
       ,workdir={{ application.path }}/devmode/{{ repo.name }}-work    {#- Demanded by overlayfs -#}
-    state: remounted
+    state: mounted
   when: applications_devmode_use_overlayfs
