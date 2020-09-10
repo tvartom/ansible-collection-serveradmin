@@ -19,7 +19,7 @@
   become: yes
   become_user: "{{ serveradmin.process_user }}"
   shell: >-
-    environment={{ application.environment }}; mysql -N -B -e"{{ temp_webinstance.domains_source.sql_domaininstances|replace('`','\\`')|replace(double_quote,double_quote+single_quote+double_quote+single_quote+double_quote) }}" {{ application.database }}
+    environment={{ application.environment }}; mysql -N -B -e"{{ temp_webinstance.domains_source.sql_domaininstances|replace('`','\\`')|replace(double_quote,double_quote+single_quote+double_quote+single_quote+double_quote) }}" {{ application.databases[0].database }}
   register: domaininstances_stdout_json
   changed_when: false
 

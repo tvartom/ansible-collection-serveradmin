@@ -66,7 +66,7 @@
       any_enable_https: false
       any_letsencrypt: false
       #Properties that default value is: not defined
-      # [database:]
+      # [databases:]
 
 - name: "Generate default values for webinstance"
   set_fact:
