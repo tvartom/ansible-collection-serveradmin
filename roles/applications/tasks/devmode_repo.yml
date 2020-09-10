@@ -38,12 +38,7 @@
   become: yes
   mount:
     src: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
-    path: >-
-      {%- applications_devmode_use_overlayfs -%}
-        {{ application.path }}/devmode/{{ repo.name }}
-      {%- else -%}
-        {{ application.path }}/repos/{{ repo.name }}
-      {%- endif -%}
+    path: "{{ application.path }}/{{ applications_devmode_use_overlayfs | ternary('devmode', 'repos') }}/{{ repo.name }}"
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
     opts: "{{ applications_devmode_use_overlayfs | ternary('ro', 'rw') }},force-user={{ application.process_user }},force-group={{ application.process_group }}"
