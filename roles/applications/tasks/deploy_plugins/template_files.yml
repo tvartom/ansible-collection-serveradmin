@@ -1,5 +1,15 @@
 ---
 
+- name: "Create directories for templates"
+  become: yes
+  file:
+    path: "{{ ( deploy_facts[item.repo | d(deploy.repo) | mandatory].source ~ '/' ~ item.dest ) | dirname }}"
+    state: directory
+    owner: "{{ item.owner | d(application.process_user) }}"
+    group: "{{ item.group | d(application.process_group) }}"
+    mode: "{{ item.mode |d('u=rwx,g=rx,o=') }}"
+  loop: "{{ deploy.templates }}"
+
 - name: "Create files from templates"
   become: yes
   template:
