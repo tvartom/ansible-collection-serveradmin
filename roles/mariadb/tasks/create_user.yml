@@ -101,6 +101,5 @@
 - name: "Ge access till databaser (och tables)"
   become: yes
   command: >-
-    mysql -u root -e "GRANT {{ item.privileges | default('ALL PRIVILEGES') }} ON {{ item.database }}.{{ item.table | default('*') }} TO '{{ user_temp.name }}'@'{{ user_temp.host }}';"
+    mysql -u root -e "GRANT {{ item.privileges | default('ALL PRIVILEGES', true) }} ON {{ item.database }}.{{ item.table | default('*') }} TO '{{ user_temp.name }}'@'{{ user_temp.host }}';"
   loop: "{{ user_temp.databases }}"
-
