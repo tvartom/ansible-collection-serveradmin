@@ -7,9 +7,9 @@
   shell: >-
     {#- Expose path to repos as environment variables -#}
     {% for key, value in deploy_facts.items() -%}
-    repo_{{ key }}_source="{{ value.source }}";repo_{{ key }}_root="{{ value.root }}";
+    repo_{{ key }}_source="{{ value.source }}";repo_{{ key }}_path="{{ value.path }}";
     {%- endfor -%}
     {#- Run script: -#}
-    {{- deploy_facts[deploy.repo].root }}/{{ deploy.script }}
+    {{- deploy_facts[deploy.repo].path }}/{{ deploy.script }}
   args:
     chdir: "{{ application.path }}/repos/{{ deploy.repo }}/{{ deploy.chdir | d('') }}"
