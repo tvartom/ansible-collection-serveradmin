@@ -1,0 +1,15 @@
+---
+# Run a script in (the root of) a repo.
+
+- name: "Run script"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: >-
+    {#- Expose path to repos as environment variables -#}
+    {% for key, value in deploy_facts.items() -%}
+    repo_{{ key }}_source="{{ value.source }}";repo_{{ key }}_root="{{ value.root }}";
+    {%- endfor -%}
+    {#- Run script: -#}
+    {{- deploy_facts[plugin.repo].root }}/{{ plugin.script }}
+  args:
+    chdir: "{{ application.path }}/repos/{{ plugin.repo }}/{{ plugin.chdir | d('') }}"
