@@ -14,9 +14,9 @@ packages:
     disable_gpg_check: true
     when: "{{ applications_devmode }}"
   - name: glibc-langpack-en
-    when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version == 8 }}"
+    when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int 8 }}"
   - name: glibc-langpack-sv
-    when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version == 8 }}"
+    when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int 8 }}"
 
 current_packages: >-
     {{
