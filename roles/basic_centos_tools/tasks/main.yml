@@ -20,12 +20,22 @@
   tags:
     - bootstrap
 
-- name: Install some basic tools (YUM)
+- name: Install some basic tools (DNF)
   become: yes
-  yum:
+  dnf:
     name: "{{ basic.package_to_install }}"
     state: present
   when: ansible_os_family == "RedHat"
+
+- name: Install some basic tools with disabled GPG-check (DNF)
+  become: yes
+  dnf:
+    name: "{{ basic.package_to_install_unsafe }}"
+    state: present
+    disable_gpg_check: true
+  when: ansible_os_family == "RedHat"
+
+
 
 # Set (httpd_can_network_connect) flag on and keep it persistent across reboots
 - name: Install libsemanage to fix selinux in ansible (YUM)

@@ -1,23 +1,27 @@
 ---
 # defaults file for ansible-role-basic_centos_tools
 packages:
-  common:
-    - byobu
-    - perl-Image-ExifTool
-    - joe #texteditor
-    - unzip
-    - bzip2
-    - pv #progressbar for pipe
-    #- net-tools #ifconfig finns i denna
-    #- rsync
-    - fuse-overlayfs # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
-    - https://github.com/tvartom/rpms/raw/master/centos8/bindfs/bindfs-1.14.3-2.el8.x86_64.rpm
-  RedHat8:
-    - glibc-langpack-en
-    - glibc-langpack-sv
+  - name: byobu
+  - name: perl-Image-ExifTool
+  #- name: joe #texteditor
+  - name: unzip
+  - name: bzip2
+  - name: pv #progressbar for pipe
+  #- name: net-tools #ifconfig finns i denna
+  #- name: rsync
+  - name: fuse-overlayfs # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
+  - name: https://github.com/tvartom/rpms/raw/master/centos8/bindfs/bindfs-1.14.3-2.el8.x86_64.rpm
+    disable_gpg_check: false
+    when: "{{ applications_devmode }}"
+  - name: glibc-langpack-en
+    when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version == 8 }}"
+  - name: glibc-langpack-sv
+    when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version == 8 }}"
 
 basic_default:
   timezone: "Europe/Stockholm"
   system_locale: 'sv_SE.UTF-8'
   system_language: 'en_US.UTF-8'
-  package_to_install: "{{ packages.common + packages[ansible_os_family ~ ansible_distribution_major_version] | d([]) }}"
+  package_to_install: "{{        packages | selectattr('when') | selectattr('disable_gpg_check', 'undefined') | map(attribute='name') | list }}"
+  package_to_install_unsafe: "{{ packages | selectattr('when') | selectattr('disable_gpg_check', 'defined'  ) | map(attribute='name') | list }}"
+
