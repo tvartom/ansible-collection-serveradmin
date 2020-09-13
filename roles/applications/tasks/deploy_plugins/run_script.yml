@@ -10,6 +10,6 @@
     repo_{{ key }}_source="{{ value.source }}";repo_{{ key }}_root="{{ value.root }}";
     {%- endfor -%}
     {#- Run script: -#}
-    {{- deploy_facts[plugin.repo].root }}/{{ plugin.script }}
+    {{- deploy_facts[deploy.repo].root }}/{{ deploy.script }}
   args:
-    chdir: "{{ application.path }}/repos/{{ plugin.repo }}/{{ plugin.chdir | d('') }}"
+    chdir: "{{ application.path }}/repos/{{ deploy.repo }}/{{ deploy.chdir | d('') }}"
