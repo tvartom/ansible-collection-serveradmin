@@ -20,7 +20,6 @@
     deploy_facts: >-
       {{- deploy_facts | combine({
         deploy.repo: {
-            'repo_source': deploy_facts[deploy.repo].source,
             'source': application.path+'/versions/'+deploy.repo+'/'+deploy_facts[deploy.repo].version
           }
         }
@@ -52,7 +51,7 @@
   #-z, --compress              compress file data during the transfer
   shell: "rsync -a --delete --exclude \"*.md\" '{{ deploy.markkdown_folder }}'/ \"{{ deploy_facts[deploy.repo].source }}\""
   args:
-    chdir: "{{ deploy_facts[deploy.repo].repo_source }}"
+    chdir: "{{ deploy_facts[deploy.repo].root }}"
 
 
 # https://stackoverflow.com/questions/26126362/converting-all-files-in-a-folder-to-md-using-pandoc-on-mac
@@ -62,5 +61,5 @@
   become_user: "{{ application.process_user }}"
   shell: "find ./ -iname \"*.md\" -type f -exec sh -c 'mkdir -p \"{{ deploy_facts[deploy.repo].source }}/$(dirname ${0})\" && pandoc -t html -f markdown+pipe_tables -c ../../css/docs.css -s \"${0}\" | sed \"s,\\.md,\\.html,\" > \"{{ deploy_facts[deploy.repo].source }}/$(dirname ${0})/$(basename ${0%.md}.html)\"' {} \\;"
   args:
-    chdir: "{{ deploy_facts[deploy.repo].repo_source }}/{{ deploy.markkdown_folder }}"
+    chdir: "{{ deploy_facts[deploy.repo].root }}/{{ deploy.markkdown_folder }}"
     

@@ -4,22 +4,22 @@
     msg: "{{ repo.url }}"
 #- pause:
 
-- name: "Empty upper-dir directory for repo. (Find)"
-  become: yes
-  find:
-    path: "{{ application.path }}/devmode/{{ repo.name }}-upper"
-    file_type: any
-    hidden: yes
-  register: to_delete
-  when: applications_devmode
+- block:
+  - name: "Empty upper-dir directory for repo. (Find)"
+    become: yes
+    find:
+      path: "{{ application.path }}/devmode/{{ repo.name }}-upper"
+      file_type: any
+      hidden: yes
+    register: to_delete
 
-- name: "Empty upper-dir directory for repo. (Delete)"
-  become: yes
-  file:
-    state: absent
-    path: "{{ item.path }}"
-  loop: "{{ to_delete.files }}"
-  when: applications_devmode
+  - name: "Empty upper-dir directory for repo. (Delete)"
+    become: yes
+    file:
+      state: absent
+      path: "{{ item.path }}"
+    loop: "{{ to_delete.files }}"
+  when: applications_devmode and applications_devmode_use_overlayfs
 
 - name: deploy_facts
   set_fact:
@@ -29,7 +29,7 @@
             repo.name: {
               'version': repo.branch|default('master'),
               'source': application.path+'/repos/'+repo.name,
-              'repo_source': application.path+'/repos/'+repo.name 
+              'root': application.path+'/repos/'+repo.name 
             }
          }) -}}
 
