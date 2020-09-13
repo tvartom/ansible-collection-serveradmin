@@ -11,17 +11,24 @@ packages:
   #- name: rsync
   - name: fuse-overlayfs # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
   - name: https://github.com/tvartom/rpms/raw/master/centos8/bindfs/bindfs-1.14.3-2.el8.x86_64.rpm
-    disable_gpg_check: false
+    disable_gpg_check: true
     when: "{{ applications_devmode }}"
   - name: glibc-langpack-en
     when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version == 8 }}"
   - name: glibc-langpack-sv
     when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version == 8 }}"
 
+current_packages: >-
+    {{
+      (
+        (packages | selectattr('when', 'undefined') | list)
+        + (packages | selectattr('when', 'defined') | selectattr('when') | list)
+      ) | list
+    }}
+
 basic_default:
   timezone: "Europe/Stockholm"
   system_locale: 'sv_SE.UTF-8'
   system_language: 'en_US.UTF-8'
-  package_to_install: "{{        packages | selectattr('when') | selectattr('disable_gpg_check', 'undefined') | map(attribute='name') | list }}"
-  package_to_install_unsafe: "{{ packages | selectattr('when') | selectattr('disable_gpg_check', 'defined'  ) | map(attribute='name') | list }}"
-
+  package_to_install: "{{ current_packages | selectattr('disable_gpg_check', 'undefined') | map(attribute='name') | list }}"
+  package_to_install_unsafe: "{{ current_packages | selectattr('disable_gpg_check', 'defined') | map(attribute='name') | list }}"
