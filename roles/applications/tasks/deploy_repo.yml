@@ -21,6 +21,9 @@
     loop: "{{ to_delete.files }}"
   when: applications_devmode and applications_devmode_use_overlayfs
 
+
+# deploy_facts[repo.name].path is static
+# deploy_facts[repo.name].source is same as path, but might be changed by a deploy plugin.
 - name: deploy_facts
   set_fact:
     deploy_facts: >-
@@ -29,7 +32,7 @@
             repo.name: {
               'version': repo.branch|default('master'),
               'source': application.path+'/repos/'+repo.name,
-              'root': application.path+'/repos/'+repo.name 
+              'path': application.path+'/repos/'+repo.name 
             }
          }) -}}
 
