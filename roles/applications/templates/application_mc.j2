@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Start a Midnight Commander Session as as the application user
+# Ctrl+O gives you a terminal for this user.
+
+sudo -u {{ application.process_user }} mc "{{ application.path }}" "{{ application.path }}/repos"

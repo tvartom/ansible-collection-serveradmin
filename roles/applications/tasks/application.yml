@@ -192,7 +192,7 @@
 - name: "Define application specific scripts"
   set_fact:
     application_scripts:
-      - file: mc
+      - file: "mc"
         when: True
 
 - name: "Remove unsued script for this application"
