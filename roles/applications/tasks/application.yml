@@ -186,3 +186,32 @@
     loop_var: repo
     label: "{{ repo.name }}"
   when: applications_devmode | d(false)
+
+### Scripts for application
+
+- name: "Define application specific scripts"
+  set_fact:
+    application_scripts:
+      - file: mc
+        when: True
+
+- name: "Remove unsued script for this application"
+  become: yes
+  file:
+    path: "{{ serveradmin.path }}/{{ organisation.command_prefix }}app_{{ application.fullname }}_{{ item.file }}"
+    state: absent
+  loop: "{{ application_scripts }}"
+  when: not item.when
+
+- name: Create script for this application
+  become: yes
+  template:
+    src: "application_{{ item.file }}.j2"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}app_{{ application.fullname }}_{{ item.file }}"
+    owner: "{{ serveradmin.process_user }}"
+    group: "{{ serveradmin.process_group }}"
+    mode: "u=rwx,g=rx,o=r"
+  when: item.when
+  loop: "{{ application_scripts }}"
+
+
