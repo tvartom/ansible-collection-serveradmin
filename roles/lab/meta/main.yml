@@ -8,7 +8,7 @@ galaxy_info:
   # issue_tracker_url: http://example.com/issue/tracker
 
   # Choose a valid license ID from https://spdx.org - some suggested licenses:
-  license: CC-BY-4.0
+  license: MIT
 
   min_ansible_version: 2.9
 
