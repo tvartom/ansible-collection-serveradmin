@@ -1,4 +1,16 @@
 ---
+- debug:
+   var: packages
+- debug:
+   var: current_packages
+
+# (  packages | selectattr('when', 'undefined') | list)
+# (packages | selectattr('when', 'defined') | selectattr('when') | list)
+- debug: 
+    var: basic_default
+
+
+
 - name: Hämta default-värden
   set_fact:
     basic: "{{ basic_default | combine(basic | default({})) }}"

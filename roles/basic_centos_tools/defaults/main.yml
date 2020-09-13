@@ -21,7 +21,7 @@ packages:
 current_packages: >-
     {{
       (
-        (packages | selectattr('when', 'undefined') | list)
+        (  packages | selectattr('when', 'undefined') | list)
         + (packages | selectattr('when', 'defined') | selectattr('when') | list)
       ) | list
     }}
