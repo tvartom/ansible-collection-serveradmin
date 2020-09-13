@@ -2,6 +2,61 @@
 
 Documentation for the collection.
 
+## Setup
+
+1. Serveradmin require currently CentOS 8.2.2004.
+
+## As local virtual mashine
+
+Download CentOS as ISO-image: https://www.centos.org/download/
+
+If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enterprise Linux 8.2 (rhel8.2)`
+
+### CentOS setup
+
+1. Choose English (United States) as OS language. (For Googlable error messages) Press Next.
+
+2. Choose keyboard, may be different to language.
+
+3. Network & Host Name
+
+Ethernet (enp1s0) enabled!
+
+Host Name: Same as in Ansible inventory
+
+4. Time & Date
+
+Choose Time Zone and Network Time: On.
+
+Do this after enabled network for server.
+
+5. Software Selection
+
+Change to `Minimal Install`
+
+6. Installation Desitnation
+
+Leave default and confirm with `Done`.
+
+7. Begin installation
+
+Set Root Password and Create a main user. Make main user administrator (sudoer).
+
+Wait and Reboot!
+
+9. From now on can you ssh to the machine.
+
+To find ip-address login and run `ip addr` on the machine.
+Use `ssh -A <ip address>` or Putty (with agent forwarding).
+
+8. Login with main user and run `sudo dnf update`
+
+
+
+
+
+
+
 ## Bootstrap a server
 
 Run:
