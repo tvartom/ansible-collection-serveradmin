@@ -1,12 +1,61 @@
-# Ansible Collection - tvartom.serveradmin
+# Serveradmin by tvartom an Ansible Collection - tvartom.serveradmin
 
-Documentation for the collection.
+## What is Serveradmin?
+
+Serveradmin is a Ansible Collection for setting up a basic CentOS 8.2 web server.
+The main purpose is to easily setup a server with sane security, and all in one configuration with build and deploy.
+A server can also be run locally (As a virtuall maschine (tested) or Docker (not tested)) in devmode, offering the exact same setup as your production server.
+It has been developed as I needed a lot of servers with similar setup, and want to be able to improve and update all servers at once.
+
+Basic components:
+
+* Nginx
+* MariaDB
+* PHP
+* NodeJs
+* Redis
+* Encryptet backups with Rsnapshot
+* SSL-certificate with Letsencrypt (with updates) or Self signed
+
+* When logging in to the server, a admin user sees a splash-screen with information such as valid certificates, last backup and basic help of scripts to manage this server.
+* An application is running as a dedicated user, with little access to the rest of the server, and none to other applications.
+* Deploy script is generated, which pull source from a repo, push back the version as an annotated git tag, build the app and deploy it. No need for any extra build server like Jenkins or be dependent on Github Actions.
+
+* As it is just Ansible script, you can stop using it at anytime, and configure your server as you like.
+
+If devmode is used:
+
+* The security is lower, please do not expose the server to incoming connections from internet.
+* All git repos for an application is initiated and shared with the host with Samba or NFS
+* Debug features are enabled. (Xdebug (TODO))
+
+The Ansible Collection doesn't work stand alone, it needs a Git repository with configuration for a server or a group of servers.
+The configuration repo contains this configuration in group_vars and host_vars:
+
+Repo-global variables:
+* serveradmin - Where this configuration repo is hosted. (On github)
+* organisation - A name, a prefix for all commands, and a splashscreen with ASCII-art
+* applications - A list of configuration a all applications
+* users_all - A list of all users for the system, including public keys
+
+Variables normally set up per host:
+* application_instances - A list of selected instances from `applications` with settings for this host, like name of environment (dev, test, prod etc), database connection and domain-names.
+* users - A list of admin users fom `users_all` to add on this host
+* data_migrations - Configuration for genereating scripts that copy database and files from other servers.
+* backup - Configuration for backup of this server
 
 ## Setup
 
-1. Serveradmin require currently CentOS 8.2.2004.
+### Configuration repository
 
-## As local virtual mashine
+TODO: Show example.
+For now you probably have access to a already setup repo.
+
+### CentOS
+
+Serveradmin require currently CentOS 8.2.2004 (And isn't maintaned to support older versions)
+
+### As local virtual mashine
 
 Download CentOS as ISO-image: https://www.centos.org/download/
 
@@ -40,31 +89,51 @@ Leave default and confirm with `Done`.
 
 7. Begin installation
 
-Set Root Password and Create a main user. Make main user administrator (sudoer).
+Set Root Password and user if wanted. (The user will be set up by `<prefix>_ansible_serveradmin`, so not needed.)
 
 Wait and Reboot!
 
-9. From now on can you ssh to the machine.
+9. From now on can you SSH to the machine.
 
 To find ip-address login and run `ip addr` on the machine.
 Use `ssh -A <ip address>` or Putty (with agent forwarding).
 
-8. Login with main user and run `sudo dnf update`
+8. Login with main user or as root and run `sudo dnf update`
 
+9. Continue with `Bootstrap a server`
 
+### Bootstrap a server
 
+When asked for `### Serveradmin-repository on Github ###` you need to give details for the configuration repo.
 
-
-
-
-## Bootstrap a server
-
-Run:
+1. Run:
 ```
 curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh -o bootstrap.sh
 sudo bash bootstrap.sh
 ```
 
+2. Log out, log in again. (With root if no user is created yet)
+
+3. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
+
+4. Log out, log in as main user (This should now be possible with public-key authentication)
+
+5. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
+
+6. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
+
+7. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
+
+8. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
+
+### Bootstrap devmode
+
+See `Bootstrap a server`.
+
+Step 7 will initiate all git repos for your applications. This are placed in `/home/<devmode_user>/workspace` and accesible with Samba or NFS.
+
+Step 8 give you the option to deploy `devmode_infopage`. When you done that, you can reach a infopage by open that ip-adress in your webbrowser.
+The page give you som basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
 
 ## License
 
