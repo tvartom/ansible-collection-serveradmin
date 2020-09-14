@@ -4,9 +4,9 @@ An Ansible Collection
 
 ## What is Serveradmin?
 
-Serveradmin is a Ansible Collection for setting up a basic CentOS 8.2 web server.
-The main purpose is to easily setup a server with sane security, and all in one configuration with build and deploy.
-A server can also be run locally (As a virtuall maschine (tested) or Docker (not tested)) in `devmode`, offering the exact same setup as your production server.
+Serveradmin is an Ansible Collection for setting up a basic CentOS 8.2 web server.
+The main purpose is to easily set up a server with sane security, and all in one configuration to build, deploy and host.
+A server can also be run locally (As a virtual server (tested) or s Docker (not tested)) in `devmode`, offering the exact same setup as your production server.
 
 It has been developed over time as I needed a lot of servers with similar setup, and want to be able to improve and update all servers at once.
 
@@ -17,14 +17,14 @@ Basic components:
 * PHP
 * NodeJs
 * Redis
-* Encryptet backups with Rsnapshot
+* Encrypted backups with Rsnapshot
 * SSL-certificate with Letsencrypt (with updates) or Self signed
 
-* When logging in to the server, a admin user sees a splash-screen with information such as valid certificates, last backup and basic help of scripts to manage this server.
+* When logging in to the server, an admin user sees a splash-screen with information such as valid certificates, last backup and basic help of scripts to manage this server.
 * An application is running as a dedicated user, with little access to the rest of the server, and none to other applications.
-* Deploy script is generated, which pull source from a repo, push back the version as an annotated git tag, build the app and deploy it. No need for any extra build server like Jenkins or be dependent on Github Actions.
+* Deploy script is generated, which pulls source from a repo, pushes back the version as an annotated git tag, builds the app and deploys it. No need for any extra build server like Jenkins or be dependent on Github Actions.
 
-* As it is just Ansible script, you can stop using it at anytime, and configure your server as you like.
+* As it is just an Ansible script, you can stop using it at any time, and configure your server as you like.
 
 If devmode is used:
 
@@ -32,19 +32,19 @@ If devmode is used:
 * All git repos for an application is initiated and shared with the host with Samba or NFS
 * Debug features are enabled. (Xdebug (TODO))
 
-The Ansible Collection doesn't work stand alone, it needs a Git repository with configuration for a server or a group of servers.
+The Ansible Collection doesn't work stand-alone, it needs a Git repository with configuration for a server or a group of servers.
 The configuration repo contains this configuration in `group_vars/` and `host_vars/`:
 
 Repo-global variables:
 * `serveradmin` - Where this configuration repo is hosted. (On github)
-* `organisation` - A name, a prefix for all commands, and a splashscreen with ASCII-art
+* `organisation` - A name, a prefix for all commands, and a splash screen with ASCII-art
 * `applications` - A list of configuration a all applications
 * `users_all` - A list of all users for the system, including public keys
 
 Variables normally set up per host:
 * `application_instances` - A list of selected instances from `applications` with settings for this host, like name of environment (dev, test, prod etc), database connection and domain-names.
-* `users` - A list of admin users fom `users_all` to add on this host
-* `data_migrations` - Configuration for genereating scripts that copy database and files from other servers.
+* `users` - A list of admin users from `users_all` to add on this host
+* `data_migrations` - Configuration for generating scripts that copy databases and files from other servers.
 * `backup` - Configuration for backup of this server
 
 ## Setup
@@ -52,13 +52,13 @@ Variables normally set up per host:
 ### Configuration repository
 
 TODO: Show example.
-For now you probably have access to a already set up repo.
+For now you probably have access to an already set up repo.
 
 ### CentOS
 
-Serveradmin require currently CentOS 8.2.2004 (And isn't maintaned to support older versions)
+Serveradmin require currently CentOS 8.2.2004 (And isn't maintained to support older versions)
 
-### As local virtual mashine
+### As local virtual server
 
 Download CentOS as ISO-image: https://www.centos.org/download/
 
@@ -80,13 +80,13 @@ Host Name: Same as in Ansible inventory
 
 Choose Time Zone and Network Time: On.
 
-Do this after enabled network for server.
+Do this after enabling network for the server.
 
 5. Software Selection
 
 Change to `Minimal Install`
 
-6. Installation Desitnation
+6. Installation Destination
 
 Leave default and confirm with `Done`.
 
@@ -133,10 +133,10 @@ sudo bash bootstrap.sh
 
 See `Bootstrap a server`.
 
-Step 7 will initiate all git repos for your applications. This are placed in `/home/<devmode_user>/workspace` and accesible with Samba or NFS.
+Step 7 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with Samba or NFS.
 
-Step 8 give you the option to deploy `devmode_infopage`. When you done that, you can reach a infopage by open that ip-adress in your webbrowser.
-The page give you som basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
+Step 8 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
+The page gives you some basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
 
 ## License
 
