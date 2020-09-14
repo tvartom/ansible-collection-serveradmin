@@ -129,14 +129,30 @@ sudo bash bootstrap.sh
 
 8. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
 
-### Bootstrap devmode
+### Devmode
 
-See `Bootstrap a server`.
+See `Bootstrap a server` for setting up server.
 
 Step 7 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with Samba or NFS.
 
 Step 8 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
 The page gives you some basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
+
+### Access local database
+
+MariaDB doesn't listen to any port on any network interface. (Not even localhost).
+
+All connection to the database are made through the unix socket `/`.
+
+To connect to it from an outside DB-client, you need to set up a SSH-tunnel exposing the unix-socket.
+
+`ssh -A -L 127.0.0.1:3307::/var/lib/mysql/mysql.sock <address to server>`
+
+If you connect with Putty, this isn't possible. After you're connected, you can expose the socket to a network interface with a local SSH-connection. Do this only on a local virtual machine.
+
+`ssh -L <ip-address-of-local-network-interface>:3307:/var/lib/mysql/mysql.sock localhost`
+
+Instead of `<ip-address-of-local-network-interface>`, `*` can be used, but be sure to not expose it to internet, and it also possible to do to an external server.
 
 ## License
 
