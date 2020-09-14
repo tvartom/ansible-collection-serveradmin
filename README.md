@@ -1,4 +1,6 @@
-# Serveradmin by tvartom an Ansible Collection - tvartom.serveradmin
+# Serveradmin by tvartom
+
+An Ansible Collection
 
 ## What is Serveradmin?
 
@@ -33,23 +35,23 @@ The Ansible Collection doesn't work stand alone, it needs a Git repository with 
 The configuration repo contains this configuration in group_vars and host_vars:
 
 Repo-global variables:
-* serveradmin - Where this configuration repo is hosted. (On github)
-* organisation - A name, a prefix for all commands, and a splashscreen with ASCII-art
-* applications - A list of configuration a all applications
-* users_all - A list of all users for the system, including public keys
+* `serveradmin` - Where this configuration repo is hosted. (On github)
+* `organisation` - A name, a prefix for all commands, and a splashscreen with ASCII-art
+* `applications` - A list of configuration a all applications
+* `users_all` - A list of all users for the system, including public keys
 
 Variables normally set up per host:
-* application_instances - A list of selected instances from `applications` with settings for this host, like name of environment (dev, test, prod etc), database connection and domain-names.
-* users - A list of admin users fom `users_all` to add on this host
-* data_migrations - Configuration for genereating scripts that copy database and files from other servers.
-* backup - Configuration for backup of this server
+* `application_instances` - A list of selected instances from `applications` with settings for this host, like name of environment (dev, test, prod etc), database connection and domain-names.
+* `users` - A list of admin users fom `users_all` to add on this host
+* `data_migrations` - Configuration for genereating scripts that copy database and files from other servers.
+* `backup` - Configuration for backup of this server
 
 ## Setup
 
 ### Configuration repository
 
 TODO: Show example.
-For now you probably have access to a already setup repo.
+For now you probably have access to a already set up repo.
 
 ### CentOS
 
