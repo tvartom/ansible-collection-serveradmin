@@ -6,7 +6,7 @@ An Ansible Collection
 
 Serveradmin is an Ansible Collection for setting up a basic CentOS 8.2 web server.
 The main purpose is to easily set up a server with sane security, and all in one configuration to build, deploy and host.
-A server can also be run locally (As a virtual server (tested) or s Docker (not tested)) in `devmode`, offering the exact same setup as your production server.
+A server can also be run locally (As a virtual server (tested) or as Docker (not tested)) in `devmode`, offering the exact same setup as your production server.
 
 It has been developed over time as I needed a lot of servers with similar setup, and want to be able to improve and update all servers at once.
 
@@ -68,7 +68,7 @@ If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enter
 
 1. Choose English (United States) as OS language. (For Googlable error messages) Press Next.
 
-2. Choose keyboard, may be different to language.
+2. Choose keyboard, this may differ from language (Removed unused).
 
 3. Network & Host Name
 
