@@ -30,7 +30,7 @@
       {%-   if di.instance is not defined -%}
       {{-     di.__setitem__('instance', 'default'+(('_'+loop.index0|string) if not loop.first else '')) -}}
       {%-   endif -%}
-      {%-   if di.group is not defined -%}
+      {%-   if di.group is not defined or di.group is none -%}
       {{-     di.__setitem__('group', di.instance) -}}
       {%-   endif -%}
       {{-   di.__setitem__('fullname', temp_webinstance.fullname+'-'+di.instance) -}}
