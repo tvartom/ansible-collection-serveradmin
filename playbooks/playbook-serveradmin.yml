@@ -85,7 +85,7 @@
 
     - include_role:
         name: nfs
-      when: applications_devmode and applications_devmode_nfs | d(false)
+      when: applications_devmode | d(false) and applications_devmode_nfs | d(false)
       vars:
         nfs:
           exports:
