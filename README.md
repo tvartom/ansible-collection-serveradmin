@@ -119,7 +119,7 @@ sudo bash bootstrap.sh
 
 3. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
 
-4. Log out, log in as main user (This should now be possible with public-key authentication)
+4. Log out, log in as main user (It should now be possible with public-key authentication with the main user)
 
 5. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
 
