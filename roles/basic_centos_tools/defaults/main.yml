@@ -1,4 +1,6 @@
 ---
+applications_devmode: false
+
 # defaults file for ansible-role-basic_centos_tools
 packages:
   - name: byobu
