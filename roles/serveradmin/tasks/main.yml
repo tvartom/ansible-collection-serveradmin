@@ -103,7 +103,7 @@
       is_linux_user: true
       sudoer: true
 
-- name: "Create dir"
+- name: "Create dir for serveradmin"
   become: yes
   file:
     path: "{{ item.path }}"
@@ -116,7 +116,7 @@
   loop:
     - { path: "{{ serveradmin.path }}"}
     - { path: "{{ serveradmin.path }}/repos"}
-    - { path: "/home/{{ applications_devmode_user }}/workspace", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}", when: applications_devmode | d(false) }
+    - { path: "/home/{{ applications_devmode_user|d() }}/workspace", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
   tags:
     - bootstrap
 
