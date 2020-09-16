@@ -1,7 +1,6 @@
 #
 # Managed by Ansible!
 #
-#
 {% set https = webinstance.enable_https %}
 {% set only_https = (webinstance.only_https and webinstance.enable_https) %}
 {% set http2 = ' http2' if webinstance.enable_http2 else '' %}
@@ -35,11 +34,12 @@
       {% endif %}
     {% endfor %}
 
-    {% if https %}
+    {% if https and webinstance.cert_handler == 'letsencrypt' %}
 
       location '/.well-known/acme-challenge' {
         default_type "text/plain";
         alias        {{ path }}/letsencrypt/challenges;
+        error_page 404 /.well-known/acme-challenge/404.html
         try_files $uri =404;
       }
     {% endif %}

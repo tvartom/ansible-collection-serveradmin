@@ -144,6 +144,18 @@
     # För Java
     - { path: "/webapp",             when: false }
 
+### Letsencrypt ##############################################################
+
+- name: "Create 404 for Letsencrypt, which shows this servers inventory name"
+  become: yes
+  template:
+    src: "letsencrypt_404.html.j2"
+    dest: "{{ application.path }}/letsencrypt/challenges/404.html"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwx,g=rx,o=r"
+  when: application.any_letsencrypt
+
 ### NodeJS #####################################################################
 # Reading: https://www.sitepoint.com/quick-tip-multiple-versions-node-nvm/
 # Ansible-role: https://github.com/morgangraphics/ansible-role-nvm
