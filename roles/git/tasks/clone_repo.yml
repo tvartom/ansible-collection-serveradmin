@@ -46,14 +46,14 @@
 
 - debug:
     msg: >-
-      sed -e "s/ssh-rsa \S* \?//" {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}.pub 2>/dev/null
+      sed -e "s/ssh-rsa \S* \?//" "{{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}.pub" 2>/dev/null
       || echo "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname }} $(date +"%Y-%m-%d")"
   when: repo.use_unique_deploy_key
 
 - name: "Get comment from public key if exists or generate if missing"
   become: true
   become_user: "{{ clone_repo.user }}"
-  command: >-
+  shell: >-
     sed -e "s/ssh-rsa \S* \?//" {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}.pub 2>/dev/null
     || echo "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname }} $(date +"%Y-%m-%d")"
   args:
@@ -63,6 +63,10 @@
   when: repo.use_unique_deploy_key
   tags:
     - always
+
+- debug:
+    var: deploy_key_comment
+  when: repo.use_unique_deploy_key
 
 - name: "Create deploy-key for repo for current user"
   become: yes
