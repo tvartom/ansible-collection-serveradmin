@@ -77,6 +77,9 @@
     {%- if deploy.exclude_list_file is defined -%}
     {{' '}}--exclude-from "{{ deploy.exclude_list_file }}"
     {%- endif -%}
+    {%- for exclude in deploy.excludes | d([]) -%}
+    {{' '}}--exclude '{{ exclude }}'
+    {%- endfor -%}
     {{' '}}"{{ deploy.folder_to_copy }}/" "{{ deploy_facts[deploy.repo].source }}"
   args:
     chdir: "{{ deploy_facts[deploy.repo].path }}"
