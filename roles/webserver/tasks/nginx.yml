@@ -3,7 +3,7 @@
   become: yes
   yum:
     name:
-      - nginx
+      - nginx-1.16
       - httpd-tools  #För htpasswd
 #    update_cache: yes
     state: present
