@@ -147,7 +147,7 @@
 #
 # Skapa commit meddelande:
 # git log --pretty=format:"%s (%aN)" | grep -v "^Merge branch"
-- f:
+
 
     - name: Ange version i deploy_facts
       set_fact:
