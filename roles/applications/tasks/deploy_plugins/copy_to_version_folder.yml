@@ -39,10 +39,14 @@
 #setype: httpd_sys_rw_content_t om nginx ska skriva...
 
 - debug:
-    msg: "rsync -a --delete {{ '--exclude-from '+dq+deploy.exclude_list_file+dq+' ' if deploy.exclude_list_file is defined else '' }}'{{ deploy.folder_to_copy }}'/ \"{{ deploy_facts[deploy.repo].source }}\""
-  vars:
-    dq: >-
-
+    msg:
+      shell: >-
+        rsync -a --delete
+        {%- if deploy.exclude_list_file is defined -%}
+        {{' '}}--exclude-from "{{ deploy.exclude_list_file }}"
+        {%- endif -%}
+        {{' '}}"{{ deploy.folder_to_copy }}/" "{{ deploy_facts[deploy.repo].source }}"
+      chdir: "{{ deploy_facts[deploy.repo].path }}"
 
 - name: "Kopiera filer till /versions"
   become: yes
@@ -68,10 +72,12 @@
   
   #-v, --verbose
   #-z, --compress              compress file data during the transfer
-  shell: "rsync -a --delete {{ '--exclude-from '+dq+deploy.exclude_list_file+dq+' ' if deploy.exclude_list_file is defined else '' }}'{{ deploy.folder_to_copy }}'/ \"{{ deploy_facts[deploy.repo].source }}\""
+  shell: >-
+    rsync -a --delete
+    {%- if deploy.exclude_list_file is defined -%}
+    {{' '}}--exclude-from "{{ deploy.exclude_list_file }}"
+    {%- endif -%}
+    {{' '}}"{{ deploy.folder_to_copy }}/" "{{ deploy_facts[deploy.repo].source }}"
   args:
     chdir: "{{ deploy_facts[deploy.repo].path }}"
-  vars:
-    dq: >-
-      "
   when: not applications_devmode
