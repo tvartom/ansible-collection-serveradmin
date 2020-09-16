@@ -68,11 +68,11 @@
 # changed_when: not Already on 'master'
 - name: "Lista commit-meddelanden sen senaste pull"
   become: yes
-  become_user: "{{ webinstance.process_user }}"
+  become_user: "{{ application.process_user }}"
   shell: >-
-    git log --pretty=format:"%s (%aN)" ..origin/HEAD | sed --regexp-extended 's#ssh://.*@source\.developers\.google\.com:2022/p/diploma-group/r/##'
+    git log --pretty=format:"%s (%aN)" ..origin/HEAD
   args:
-    chdir: "{{ webinstance.path }}/repos/{{ repo.name }}"
+    chdir: "{{ application.path }}/repos/{{ repo.name }}"
   changed_when: git_list_of_commits.rc == 0
   failed_when: >
     not
