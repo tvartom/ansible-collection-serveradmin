@@ -38,16 +38,6 @@
 
 #setype: httpd_sys_rw_content_t om nginx ska skriva...
 
-- debug:
-    msg:
-      shell: >-
-        rsync -a --delete
-        {%- if deploy.exclude_list_file is defined -%}
-        {{' '}}--exclude-from "{{ deploy.exclude_list_file }}"
-        {%- endif -%}
-        {{' '}}"{{ deploy.folder_to_copy }}/" "{{ deploy_facts[deploy.repo].source }}"
-      chdir: "{{ deploy_facts[deploy.repo].path }}"
-
 - name: "Kopiera filer till /versions"
   become: yes
   become_user: "{{ application.process_user }}"

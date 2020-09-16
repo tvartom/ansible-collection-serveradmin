@@ -1,6 +1,15 @@
 ---
+- name: "Patch_files: Check if folder exists."
+  stat:
+    path: "{{ application.path }}/{{ deploy.source_dir }}"
+  register: dir_details
 
-- name: Copy files
+- name: "Patch_files: Failed."
+  fail:
+    msg: "The folder '{{ deploy.source_dir }}' is missing in {{ application.path }}. Can't patch files."
+  when: not dir_details.stat.exists
+
+- name: "Patch_files: Copy files"
   become: yes
   become_user: "{{ application.process_user }}"
   #rsync:
@@ -21,8 +30,8 @@
   
   #-v, --verbose
   #-z, --compress              compress file data during the transfer
-  
-  shell: "rsync -a \"{{ application.path }}/{{ deploy.source_dir }}\"/ \"{{ deploy_facts[deploy.repo | mandatory].source }}\""
+  shell: >-
+    rsync -a "{{ application.path }}/{{ deploy.source_dir }}/" "{{ deploy_facts[deploy.repo | mandatory].source }}"
   args:
     chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
   # TODO: Fix me:
