@@ -40,6 +40,8 @@
 
 - debug:
     msg: "rsync -a --delete {{ '--exclude-from '+dq+deploy.exclude_list_file+dq+' ' if deploy.exclude_list_file is defined else '' }}'{{ deploy.folder_to_copy }}'/ \"{{ deploy_facts[deploy.repo].source }}\""
+  vars:
+    dq: >-
 
 
 - name: "Kopiera filer till /versions"
