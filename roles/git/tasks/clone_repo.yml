@@ -137,7 +137,7 @@
         " 4. Fill in:",
         {
           'Title': deploy_key_comment.stdout,
-          'Key': key_info_unique.public_key
+          'Key': key_info_unique.public_key,
           'Allow write access':  'If any deploy_plugin push back information (tagged_version, cron_commit_and_push_repo etc)'
         },
         " 5. Press 'Add key'"
