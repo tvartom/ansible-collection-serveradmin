@@ -95,7 +95,7 @@
     var: repo
 
 - name: "Clone repo (with sub-modules recursively)"
-  # Använd inte become, så att agent forward fungerar, om det är rätt användare. Krävs för devmode
+  # TODO: Använd inte become, så att agent forward fungerar, om det är rätt användare. Krävs för devmode
   become: true
   become_user: "{{ clone_repo.user }}"
   git:
@@ -118,9 +118,30 @@
   tags:
     - always
 
+- name: "Generate fingerprint with MD5"
+  become: true
+  become_user: "{{ clone_repo.user }}"
+  when: git_clone_result.failed and repo.use_unique_deploy_key
+  command: >-
+    ssh-keygen -l -E md5 -f "{{ key_info_unique.filename }}" | grep -Po "(?<=MD5:).{47}"
+  register: deploy_key_fingerprint_md5
+
 - name: "Info about unique deploy key to be used when resolving cloning problem."
   debug:
-    var: key_info_unique
+    var: >-
+      [
+        "Add deploy key with fingerprint " ~ deploy_key_fingerprint_md5.stdout ~ " to repository.",
+        " 1. Log in as administrator on GitHub",
+        " 2. Goto https://" ~ repo.domain ~ repo.path ~ "/settings/keys",
+        " 3. Press 'Add deploy key'",
+        " 4. Fill in:",
+        {
+          'Title': deploy_key_comment.stdout,
+          'Key': key_info_unique.public_key
+          'Allow write access':  'If any deploy_plugin push back information (tagged_version, cron_commit_and_push_repo etc)'
+        },
+        " 5. Press 'Add key'"
+      ]
   when: git_clone_result.failed and repo.use_unique_deploy_key
   tags:
     - always
