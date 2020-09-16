@@ -32,7 +32,8 @@
             repo.name: {
               'version': repo.branch|default('master'),
               'source': application.path+'/repos/'+repo.name,
-              'path': application.path+'/repos/'+repo.name 
+              'path': application.path+'/repos/'+repo.name,
+              'repo': repo
             }
          }) -}}
 
