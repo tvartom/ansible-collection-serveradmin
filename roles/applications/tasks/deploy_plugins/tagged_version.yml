@@ -1,5 +1,5 @@
 ---
-- when: not applications_devmode
+- when: not applications_devmode | d(false)
   block:
     - name: Lista taggar
       become: yes
