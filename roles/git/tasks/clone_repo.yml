@@ -44,6 +44,12 @@
   tags:
     - always
 
+- debug:
+    msg: >-
+      sed -e "s/ssh-rsa \S* \?//" {{ user_home.stdout }}/.ssh/{{ repo.unique_deploy_key }}.pub 2>/dev/null
+      || echo "Deploykey for {{ clone_repo.user }}@{{ inventory_hostname }} $(date +"%Y-%m-%d")"
+  when: repo.use_unique_deploy_key
+
 - name: "Get comment from public key if exists or generate if missing"
   become: true
   become_user: "{{ clone_repo.user }}"
