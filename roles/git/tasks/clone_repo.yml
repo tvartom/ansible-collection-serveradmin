@@ -122,7 +122,7 @@
   become: true
   become_user: "{{ clone_repo.user }}"
   when: git_clone_result.failed and repo.use_unique_deploy_key
-  command: >-
+  shell: >-
     ssh-keygen -l -E md5 -f "{{ key_info_unique.filename }}" | grep -Po "(?<=MD5:).{47}"
   register: deploy_key_fingerprint_md5
 
