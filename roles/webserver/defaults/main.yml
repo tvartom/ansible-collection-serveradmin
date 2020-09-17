@@ -4,6 +4,8 @@ php_package: php
 php_fpm_service: php-fpm
 php_fpm_pool_path: /etc/php-fpm.d
 nginx_user: nginx
+webserver_nginx_version: 1.16
+
 
 webserver_use_ssl: true
 webserver_use_letsencrypt: "{{ webserver_use_ssl }}"

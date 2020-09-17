@@ -1,9 +1,23 @@
 ---
-- name: Install Nginx (YUM)
+#https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
+#https://github.com/ansible/ansible/issues/64852
+#https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/installing_managing_and_removing_user-space_components/removing-rhel-8-content_using-appstream
+
+- include_role:
+    name: dnf_module
+    tasks_from: install_package_from_module
+  vars:
+    dnf:
+      module_name: nginx
+      module_spec: "{{ webserver_nginx_version }}"
+      packages:
+        - nginx
+  when: ansible_os_family == "RedHat"
+
+- name: Install Extra packages for Nginx (YUM)
   become: yes
   yum:
     name:
-      - nginx:1.16
       - httpd-tools  #För htpasswd
 #    update_cache: yes
     state: present
