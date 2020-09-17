@@ -54,4 +54,3 @@
       {%- for di in temp_webinstance.domaininstances -%}
       {%- endfor -%}
       {{- application -}}
-	
