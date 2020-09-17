@@ -30,12 +30,14 @@
       {%-   if di.instance is not defined -%}
       {{-     di.__setitem__('instance', 'default'+(('_'+loop.index0|string) if not loop.first else '')) -}}
       {%-   endif -%}
-      {%-   if di.group is not defined or di.group is none -%}
-      {{-     di.__setitem__('group', di.instance) -}}
-      {%-   endif -%}
       {{-   di.__setitem__('fullname', temp_webinstance.fullname+'-'+di.instance) -}}
-      {%-   if temp_webinstance.domaininstance_groups[di.group] is not defined -%}
-      {{-     temp_webinstance.domaininstance_groups.__setitem__(di.group, {'fullname': temp_webinstance.fullname+'-group-'+di.group , 'domaininstances': [],'domains': []} ) -}}
+      {%-   if di.group is not defined or di.group is none -%}
+      {{-     di.__setitem__('group', 'instance-'~di.instance) -}}
+      {{-     temp_webinstance.domaininstance_groups.__setitem__(di.group, {'fullname': temp_webinstance.fullname+'-'+di.group , 'domaininstances': [],'domains': []} ) -}}
+      {%-   else -%}
+      {%-     if temp_webinstance.domaininstance_groups[di.group] is not defined -%}
+      {{-       temp_webinstance.domaininstance_groups.__setitem__(di.group, {'fullname': temp_webinstance.fullname+'-group-'+di.group , 'domaininstances': [],'domains': []} ) -}}
+      {%-     endif -%}
       {%-   endif -%}
       {{-   temp_webinstance.domaininstance_groups[di.group].domaininstances.append(di.fullname) -}}
       {{-   temp_webinstance.domaininstance_groups[di.group].domains.extend(di.domains) -}}
@@ -52,4 +54,4 @@
       {%- for di in temp_webinstance.domaininstances -%}
       {%- endfor -%}
       {{- application -}}
-
+	
