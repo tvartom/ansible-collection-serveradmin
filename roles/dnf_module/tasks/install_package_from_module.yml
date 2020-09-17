@@ -21,6 +21,7 @@
     warn: false # Ansible is warning for using dnf
   register: module_list_enabled
   changed_when: dnf.module_spec|string  not in module_list_enabled.stdout
+  failed_when: module_list_enabled.rc > 0 and 'No matching Modules to list' not in module_list_enabled.stderr
   tags:
     - always
 
