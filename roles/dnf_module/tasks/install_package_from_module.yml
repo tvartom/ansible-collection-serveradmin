@@ -1,4 +1,8 @@
 ---
+# https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
+# https://github.com/ansible/ansible/issues/64852
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/installing_managing_and_removing_user-space_components/removing-rhel-8-content_using-appstream
+
 #- include_role:
 #    name: dnf_module
 #    tasks_from: install_package_from_module
@@ -16,6 +20,7 @@
       dnf module list --enabled {{ dnf.module_name }} | grep "^{{ dnf.module_name }}"
   register: module_list_enabled
   changed_when: dnf.module_spec|string  not in module_list_enabled.stdout
+  warn: false # Ansible is warning for using dnf
   tags:
     - always
 
@@ -33,6 +38,7 @@
   shell:
     cmd: "dnf module reset -y {{ dnf.module_name }}"
   when: dnf.module_spec|string not in module_list_enabled.stdout
+  warn: false # Ansible is warning for using dnf
   tags:
     - always
 
@@ -41,6 +47,7 @@
   shell:
     cmd: "dnf module enable -y {{ dnf.module_name }}:{{ dnf.module_spec }}"
   when: dnf.module_spec|string not in module_list_enabled.stdout
+  warn: false # Ansible is warning for using dnf
   tags:
     - always
 
