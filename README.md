@@ -60,7 +60,7 @@ Serveradmin require currently CentOS 8.2.2004 (And isn't maintained to support o
 
 ### As local virtual server
 
-Download CentOS as ISO-image: https://www.centos.org/download/
+Download CentOS Minimal ISO-image: https://www.centos.org/download/
 
 If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enterprise Linux 8.2 (rhel8.2)`
 
