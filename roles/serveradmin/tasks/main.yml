@@ -110,6 +110,7 @@
       name: "{{ serveradmin.process_user }}"
       is_linux_user: true
       sudoer: true
+  when: mariadb_enable | d(true)
 
 - name: "Create dir for serveradmin"
   become: yes
@@ -128,7 +129,7 @@
   tags:
     - bootstrap
 
-- name: Install packages for samba-sharesf
+- name: Install packages for samba-shares
   become: yes
   yum:
     name:

@@ -42,12 +42,14 @@
 
     - include_role:
         name: mariadb
+      when: mariadb_enable | d(true)
 
     - include_role:
         name: firewall
 
     - include_role:
         name: java_and_maven
+      when: java_and_maven_enable | d(false)
 
     - include_role:
         name: serveradmin
