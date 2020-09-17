@@ -20,7 +20,6 @@
     cache_valid_time: 600
   when: ansible_os_family == "Debian"
 
-
 # Var application har sin egen
 - name: "Disable Redis service huvud-service (skapas en för var application istället)"
   become: yes
@@ -28,8 +27,6 @@
     name: redis
     enabled: no
     state: stopped
-  when: ansible_os_family == "RedHat"
-
 
 #- name: Redis conf
 #  become: yes

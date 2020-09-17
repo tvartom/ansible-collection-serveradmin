@@ -1,0 +1,7 @@
+---
+
+php_package: php
+php_fpm_service: php-fpm
+php_fpm_pool_path: /etc/php-fpm.d
+
+webserver_php_version: 7.3

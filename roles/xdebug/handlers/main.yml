@@ -3,7 +3,7 @@
 # https://github.com/ansible/ansible/issues/20493
 #- name: "Reload php-fpm (bug)"
 #  include_role:
-#    name: webserver
+#    name: php
 #    tasks_from: start_php
 #  vars:
 #    state: restarted

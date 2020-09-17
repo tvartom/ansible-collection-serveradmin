@@ -70,33 +70,3 @@
   service:
     name: "{{ php_fpm_service }}"
     enabled: yes
-
-
-
-# Role webinstances fixar induviduella pooler för var sida!!!
-
-#- name: Use socket instead of tcp
-#  become: yes
-#  lineinfile:
-#    dest: /etc/php-fpm.d/www.conf
-#    state: present
-#    regexp: "^\s*listen\s*="
-#    line: "listen = "
-
-#- name: "Config PHP FastCGI via socket"
-#  become: yes
-#  lineinfile:
-#    dest: /etc/php-fpm.d/www.conf
-#    state: present
-#    regexp: "^;?\s*{{ item.key }}"
-#    line: "{{ item.key }} = {{ item.value }}"
-#  with_items:
-#    - { key: "listen", value: "/var/run/php-fpm.sock" }
-#    - { key: "listen.owner", value: "nginx" } # The user nginx is running by
-#    - { key: "listen.group", value: "nginx" }
-#    - { key: "listen.mode", value: "0660" }
-#    - { key: "catch_workers_output", value: "yes" } # Log to /var/log/php-fpm
-
-
-
-

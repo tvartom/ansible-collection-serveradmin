@@ -60,6 +60,18 @@
         name: webserver
 
     - include_role:
+        name: sass
+      when: sass_enable | d(false)
+
+    - include_role:
+        name: php
+      when: php_enable | d(false)
+
+    - include_role:
+        name: redis
+      when: redis_enable | d(false)
+
+    - include_role:
         name: bertvv_samba
       when: applications_devmode | d(false) and applications_devmode_samba | d(true)
       vars:

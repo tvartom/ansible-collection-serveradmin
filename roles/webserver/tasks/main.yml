@@ -2,13 +2,7 @@
 
 - include: nginx.yml
 
-- include: php.yml
-
 - include: ssl_and_letsencrypt.yml
   when: webserver_use_ssl
 
 - include: sendmail.yml
-
-- include: sass.yml
-
-- include: redis.yml

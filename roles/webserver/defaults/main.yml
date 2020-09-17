@@ -1,16 +1,11 @@
 ---
 
-php_package: php
-php_fpm_service: php-fpm
-php_fpm_pool_path: /etc/php-fpm.d
 nginx_user: nginx
 
 
 # For available versions:
 # dnf module list nginx
 webserver_nginx_version: 1.16
-# dnf module list php
-webserver_php_version: 7.3
 
 
 webserver_use_ssl: true
