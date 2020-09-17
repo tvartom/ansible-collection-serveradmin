@@ -8,7 +8,7 @@
 {% set listen_to_ipv6 = webinstance.listen_to_ipv6 %}
 {% set path = application.path %}
 {% set domains = domaininstance.domains %}
-{% set domaininstance_group_fullname = webinstance.fullname+'-group-'+domaininstance.group %}
+{% set domaininstance_group_fullname = webinstance.domaininstance_groups[domaininstance.group].fullname %}
 {% if domains[1] is defined or only_https %}
   {% if only_https %}
 
