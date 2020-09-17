@@ -61,14 +61,22 @@
     label: "{{ application.environment|default('') }}-{{ application.name }}"
 
 ### Configfiler för alla applikationer/webinstancer #########################################
+#- name: "Install extra packages for all applications"
+#  become: yes
+#  package:
+#    name: >-
+#      {{
+#        applications_info | map(attribute='linux_packages') | flatten | unique | list
+#      }}
+#    state: present
+
 - name: "Install extra packages for all applications"
   become: yes
-  package:
-    name: >-
-      {{
-        applications_info | map(attribute='linux_packages') | flatten | unique | list
-      }}
+  dnf:
+    name: "{{ item.name if item is mapping else item }}"
+    enablerepo: "{{ item.repo if item is mapping else omit }}"
     state: present
+  loop: "{{ applications_info | map(attribute='linux_packages') | flatten | unique | list }}"
 
 # Installera locales från alla webinstances
 # https://github.com/ansible/ansible/issues/44708
