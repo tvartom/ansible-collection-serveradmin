@@ -101,12 +101,13 @@
       php_status_path: "/php-fpm-status" # To make it public, use suffix .php if php-conf allow it, false or empty to not use.
       create_root_dir: false
       #Properties that default value is: not defined
-      # [root_dir: "Ex public_html"]
       # [restricted:]
       #   - caption:
       #   - file:
       # [permalinkhandling: true]
       # [proxy_port: 8080]
+      #Populated properties, if not defined:
+      # [root_dir: "public_html"+webinstance_with_key.key]
       #Populated properties:
       # fullname: "{{ application.fullname+'-'+webinstance_with_key.key }}"
       # instance:"{{ webinstance_with_key.key }}"
