@@ -5,7 +5,7 @@
 #  vars:
 #    dnf:
 #      module_name: nginx
-#      module_spec: 1.16
+#      module_spec: "1.16"
 #      packages:
 #        - nginx
 
@@ -15,7 +15,7 @@
     cmd: >-
       dnf module list --enabled {{ dnf.module_name }} | grep "^{{ dnf.module_name }}"
   register: module_list_enabled
-  changed_when: dnf.module_spec not in module_list_enabled.stdout
+  changed_when: dnf.module_spec|string  not in module_list_enabled.stdout
   tags:
     - always
 
@@ -24,7 +24,7 @@
   dnf:
     name: "{{ dnf.packages }}"
     state: absent
-  when: dnf.module_spec not in module_list_enabled.stdout
+  when: dnf.module_spec|string not in module_list_enabled.stdout
   tags:
     - always
 
@@ -32,7 +32,7 @@
   become: yes
   shell:
     cmd: "dnf module reset -y {{ dnf.module_name }}"
-  when: dnf.module_spec not in module_list_enabled.stdout
+  when: dnf.module_spec|string not in module_list_enabled.stdout
   tags:
     - always
 
@@ -40,7 +40,7 @@
   become: yes
   shell:
     cmd: "dnf module enable -y {{ dnf.module_name }}:{{ dnf.module_spec }}"
-  when: dnf.module_spec not in module_list_enabled.stdout
+  when: dnf.module_spec|string not in module_list_enabled.stdout
   tags:
     - always
 
