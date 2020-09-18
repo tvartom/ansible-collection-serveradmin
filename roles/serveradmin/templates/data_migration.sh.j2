@@ -100,9 +100,9 @@ source include_common.sh
 
   {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
     {% if data_migration.ssh_host is defined %}ssh -C {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
-        {{ (database.from.default_character_set is defined) | ternary('--default-character-set='~database.from.default_character_set, '') }} \
-        {{ (database.from.host                  is defined) | ternary('--host='~database.from.host, '') }} \
-        {{ (database.from.user                  is defined) | ternary('--user='~database.from.user,'') }} \
+        {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
+        {{ '--host='~database.from.host if database.from.host is defined else '' }} \
+        {{ '--user='~database.from.user if database.from.user is defined else '' }} \
         {% if database.from.password is defined %}--password{{ '='~database.from.password if database.from.password is string else '' }}{% endif %} \
         {{ database.no_data          | d(false) | ternary('--no-data','') }} \
         {{ database.include_events   | d(true)  | ternary('--events','') }} \
@@ -138,7 +138,7 @@ source include_common.sh
     mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
 
     echo "Create database..."
-    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{{ (database.to.default_character_set is defined) | ternary(' DEFAULT CHARACTER SET '~database.to.default_character_set,'') }}"
+    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{{ ' DEFAULT CHARACTER SET '~database.to.default_character_set if database.to.default_character_set is defined else '' }}"
   {% endif %}
 
   {% for table in database.drop_tables | d([]) %}
@@ -153,6 +153,6 @@ source include_common.sh
   $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
       | mysql \
-        {{ (database.to.default_character_set is defined) | ternary('--default-character-set='~database.to.default_character_set, '') }} \
+        {{ '--default-character-set='~database.to.default_character_set if database.to.default_character_set is defined else '' }} \
         {{ database.to.name }}
 {% endfor %}
