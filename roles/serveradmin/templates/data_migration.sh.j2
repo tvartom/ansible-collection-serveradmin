@@ -79,7 +79,7 @@ source include_common.sh
 
   echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
   {% if database.from.default_character_set is defined %}
-    echo " * Default character set: {{ database.from.default_character_set }}"
+    echo "  Default character set: {{ database.from.default_character_set }}"
   {% endif %}
   echo "  {{ database.no_data          | d(false) | ternary('Include', 'Exclude') }} data"
   echo "  {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
@@ -148,7 +148,7 @@ source include_common.sh
 
   echo "Populate local database..."
   {% if database.to.default_character_set is defined %}
-    echo " Default character set: {{ database.to.default_character_set }}"
+    echo "  Default character set: {{ database.to.default_character_set }}"
   {% endif %}
   $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
