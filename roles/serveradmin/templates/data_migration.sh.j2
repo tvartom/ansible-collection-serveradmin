@@ -76,10 +76,12 @@ source include_common.sh
     PIPE_COMMAND="cat"
     PIPE_COMMAND_DUMP_FILE="cat"
   fi
+  {% set default_character_set_from = database.from.default_character_se | d(database.default_character_set | d(false)) %}
+  {% set default_character_set_to = database.to.default_character_se | d(database.default_character_set | d(false)) %}
 
   echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
-  {% if database.from.default_character_set is defined %}
-    echo "  Default character set: {{ database.from.default_character_set }}"
+  {% if default_character_set_from %}
+    echo "  Default character set: {{ default_character_set_from }}"
   {% endif %}
   echo "  {{ database.no_data          | d(false) | ternary('Include', 'Exclude') }} data"
   echo "  {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
@@ -100,7 +102,7 @@ source include_common.sh
 
   {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
     {% if data_migration.ssh_host is defined %}ssh -C {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
-        {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
+        {{ default_character_set_from | ternary('--default-character-set='~default_character_set_from,'') }} \
         {{ '--host='~database.from.host if database.from.host is defined else '' }} \
         {{ '--user='~database.from.user if database.from.user is defined else '' }} \
         {% if database.from.password is defined %}--password{{ '='~database.from.password if database.from.password is string else '' }}{% endif %} \
@@ -138,7 +140,13 @@ source include_common.sh
     mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
 
     echo "Create database..."
-    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{{ ' DEFAULT CHARACTER SET '~database.to.default_character_set if database.to.default_character_set is defined else '' }}"
+    {% if database.default_character_set is defined %}
+    echo "  DEFAULT CHARACTER SET {{ database.default_character_set }}"
+    {%   if database.default_collation is defined %}
+    echo "  COLLATION {{ database.default_collation }}"
+    {%   endif %}
+    {% endif %}
+    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{% if database.default_character_set is defined %} DEFAULT CHARACTER SET {{ database.default_character_set }}{% if database.default_collation is defined %} COLLATION {{ database.default_collation }}{% endif %}{% endif %};"
   {% endif %}
 
   {% for table in database.drop_tables | d([]) %}
@@ -147,12 +155,12 @@ source include_common.sh
   {% endfor %}
 
   echo "Populate local database..."
-  {% if database.to.default_character_set is defined %}
-    echo "  Default character set: {{ database.to.default_character_set }}"
+  {% if default_character_set_to %}
+    echo "  Default character set: {{ default_character_set_to }}"
   {% endif %}
   $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
       | mysql \
-        {{ '--default-character-set='~database.to.default_character_set if database.to.default_character_set is defined else '' }} \
+        {{ default_character_set_to | ternary('--default-character-set='~default_character_set_to,'') }} \
         {{ database.to.name }}
 {% endfor %}
