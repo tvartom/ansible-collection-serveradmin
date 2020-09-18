@@ -78,8 +78,8 @@ source include_common.sh
   fi
 
   echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
-  {% if database.default_character_set is defined %}
-    echo " Default character set: {{ database.default_character_set }}"
+  {% if database.from.default_character_set is defined %}
+    echo " Default character set: {{ database.from.default_character_set }}"
   {% endif %}
   echo " {{ database.no_data          | d(false) | ternary('Include', 'Exclude') }} data"
   echo " {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
@@ -100,14 +100,13 @@ source include_common.sh
 
   {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
     {% if data_migration.ssh_host is defined %}ssh -C {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
-        {{ '--default-character-set='~database.default_character_set if database.default_character_set is defined else '' }} \
+        {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
         {{ '--host='~database.from.host if database.from.host is defined else '' }} \
         {{ '--user='~database.from.user if database.from.user is defined else '' }} \
         {% if database.from.password is defined %}--password{{ '='~database.from.password if database.from.password is string else '' }}{% endif %} \
         {{ '--events'   if database.include_events   | d(true) else '' }} \
         {{ '--routines' if database.include_routines | d(true) else '' }} \
         {{ '--triggers' if database.include_triggers | d(true) else '' }} \
-        {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
         `#--add-drop-database` \
         --no-create-db \
         {{ '--no-data' if database.no_data | d(false) else '' }} \
@@ -146,11 +145,14 @@ source include_common.sh
   {% endif %}
 
   {% for table in database.drop_tables | d([]) %}
-    echo "Drop table {{ table }} if exists.."
+    echo "Drop table {{ table }} if exists..."
     mysql -NB -e "DROP TABLE IF EXISTS \`{{ database.to.name }}\`.\`{{ table }}\`"
   {% endfor %}
 
   echo "Populate local database..."
+  {% if database.to.default_character_set is defined %}
+    echo " Default character set: {{ database.to.default_character_set }}"
+  {% endif %}
   $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
       | mysql \
