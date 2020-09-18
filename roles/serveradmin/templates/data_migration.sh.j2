@@ -79,44 +79,41 @@ source include_common.sh
 
   echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
   {% if database.from.default_character_set is defined %}
-    echo " Default character set: {{ database.from.default_character_set }}"
+    echo " * Default character set: {{ database.from.default_character_set }}"
   {% endif %}
-  echo " {{ database.no_data          | d(false) | ternary('Include', 'Exclude') }} data"
-  echo " {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
-  echo " {{ database.include_routines | d(true)  | ternary('Include', 'Exclude') }} routines"
-  echo " {{ database.include_triggers | d(true)  | ternary('Include', 'Exclude') }} triggers"
+  echo "  {{ database.no_data          | d(false) | ternary('Include', 'Exclude') }} data"
+  echo "  {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
+  echo "  {{ database.include_routines | d(true)  | ternary('Include', 'Exclude') }} routines"
+  echo "  {{ database.include_triggers | d(true)  | ternary('Include', 'Exclude') }} triggers"
   {% if database.exclude_tables is defined %}
-    echo " Exlude tables:"
+    echo "  Exlude tables:"
     {% for table in database.exclude_tables | d([]) %}
-      echo " - {{ table }}"
+      echo "  - {{ table }}"
     {% endfor %}
   {% endif %}
   {% if database.include_tables is defined %}
-    echo " Include tables:"
+    echo "  Include tables:"
     {% for table in database.include_tables | d([]) %}
-      echo " - {{ table }}"
+      echo "   - {{ table }}"
     {% endfor %}
   {% endif %}
 
   {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
     {% if data_migration.ssh_host is defined %}ssh -C {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
-        {{ '--default-character-set='~database.from.default_character_set if database.from.default_character_set is defined else '' }} \
-        {{ '--host='~database.from.host if database.from.host is defined else '' }} \
-        {{ '--user='~database.from.user if database.from.user is defined else '' }} \
+        {{ (database.from.default_character_set is defined) | ternary('--default-character-set='~database.from.default_character_set, '') }} \
+        {{ (database.from.host                  is defined) | ternary('--host='~database.from.host, '') }} \
+        {{ (database.from.user                  is defined) | ternary('--user='~database.from.user,'') }} \
         {% if database.from.password is defined %}--password{{ '='~database.from.password if database.from.password is string else '' }}{% endif %} \
-        {{ '--events'   if database.include_events   | d(true) else '' }} \
-        {{ '--routines' if database.include_routines | d(true) else '' }} \
-        {{ '--triggers' if database.include_triggers | d(true) else '' }} \
-        `#--add-drop-database` \
+        {{ database.no_data          | d(false) | ternary('--no-data','') }} \
+        {{ database.include_events   | d(true)  | ternary('--events','') }} \
+        {{ database.include_routines | d(true)  | ternary('--routines','') }} \
+        {{ database.include_triggers | d(true)  | ternary('--triggers','') }} \
         --no-create-db \
-        {{ '--no-data' if database.no_data | d(false) else '' }} \
         --skip-lock-tables \
         {% for table in database.exclude_tables | d([]) %}--ignore-table={{ database.from.name }}.{{ table }} {% endfor %} \
         '{{ database.from.name }}' \
         {% for table in database.include_tables | d([]) %}{{ table }} {% endfor %} \
         {% if data_migration.ssh_host is defined %} {{ '"' }} {% endif %} | $PIPE_COMMAND_DUMP_FILE > {{ dumpfile }}
-
-  #	${DB_PORT:+"--protocol=TCP"} ${DB_PORT:+"--port=$DB_PORT"} \
 
   echo
   {% if database.from.name != database.to.name %}
@@ -141,7 +138,7 @@ source include_common.sh
     mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
 
     echo "Create database..."
-    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\` DEFAULT CHARACTER SET utf8mb4"
+    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{{ (database.to.default_character_set is defined) | ternary(' DEFAULT CHARACTER SET '~database.to.default_character_set,'') }}"
   {% endif %}
 
   {% for table in database.drop_tables | d([]) %}
@@ -156,6 +153,6 @@ source include_common.sh
   $PIPE_COMMAND {{ dumpfile }} \
     {# | gunzip #} \
       | mysql \
-        {{ '--default-character-set='~database.to.default_character_set if database.to.default_character_set is defined else '' }} \
+        {{ (database.to.default_character_set is defined) | ternary('--default-character-set='~database.to.default_character_set, '') }} \
         {{ database.to.name }}
 {% endfor %}
