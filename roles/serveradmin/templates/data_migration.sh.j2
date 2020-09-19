@@ -79,8 +79,8 @@ source include_common.sh
     PIPE_COMMAND="cat"
     PIPE_COMMAND_DUMP_FILE="cat"
   fi
-  {% set default_character_set_from = database.from.default_character_se | d(database.default_character_set | d(false)) %}
-  {% set default_character_set_to = database.to.default_character_se | d(database.default_character_set | d(false)) %}
+  {% set default_character_set_from = database.from.default_character_set | d(database.default_character_set | d(false)) %}
+  {% set default_character_set_to = database.to.default_character_set | d(database.default_character_set | d(false)) %}
 
   echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
   {% if default_character_set_from %}
