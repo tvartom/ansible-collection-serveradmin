@@ -146,7 +146,7 @@ source include_common.sh
     {% if database.default_character_set is defined %}
     echo "  DEFAULT CHARACTER SET {{ database.default_character_set }}"
     {%   if database.default_collation is defined %}
-    echo "  COLLATION {{ database.default_collation }}"
+    echo "  COLLATE {{ database.default_collation }}"
     {%   endif %}
     {% endif %}
     mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{% if database.default_character_set is defined %} DEFAULT CHARACTER SET {{ database.default_character_set }}{% if database.default_collation is defined %} COLLATE {{ database.default_collation }}{% endif %}{% endif %};"
