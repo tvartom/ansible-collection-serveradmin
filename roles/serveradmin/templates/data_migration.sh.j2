@@ -3,6 +3,9 @@
 # Managed by Ansible!
 #
 set -e
+#https://stackoverflow.com/a/1221870/1003172
+set -o pipefail
+
 source include_common.sh
 
 {% set data_migration = item.meta %}
