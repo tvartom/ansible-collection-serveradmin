@@ -1,4 +1,6 @@
 ---
+mariadb_version: 10.4
+
 mariadb_conf_server_character_set: utf8mb4
 mariadb_conf_server_collation: utf8mb4_swedish_ci
 
