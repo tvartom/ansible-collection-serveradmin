@@ -86,7 +86,7 @@ source include_common.sh
   {% if default_character_set_from %}
     echo "  Default character set: {{ default_character_set_from }}"
   {% endif %}
-  echo "  {{ database.no_data          | d(false) | ternary('Include', 'Exclude') }} data"
+  echo "  {{ database.no_data          | d(false) | ternary('Exclude', 'Include') }} data"
   echo "  {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
   echo "  {{ database.include_routines | d(true)  | ternary('Include', 'Exclude') }} routines"
   echo "  {{ database.include_triggers | d(true)  | ternary('Include', 'Exclude') }} triggers"
@@ -166,4 +166,17 @@ source include_common.sh
       | mysql \
         {{ default_character_set_to | ternary('--default-character-set='~default_character_set_to,'') }} \
         {{ database.to.name }}
+
+  {% if database.run_sql_after is defined %}
+  ($PIPE_COMMAND << DataMigrationEndOfSQL
+{{ database.run_sql_after }}
+DataMigrationEndOfSQL
+  ) | mysql \
+        {{ default_character_set_to | ternary('--default-character-set='~default_character_set_to,'') }} \
+        {{ database.to.name }}
+  {% endif %}
+
+
+
 {% endfor %}
+	
