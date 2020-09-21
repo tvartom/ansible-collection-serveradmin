@@ -2,6 +2,27 @@
 <html>
   <head>
     <title>{{ organisation.name }} - Devmode</title>
+    <style>
+* Component Needs */
+
+.pc-tab > input,
+.pc-tab section > div {
+  display: none;
+}
+
+#tab1:checked ~ section .tab1,
+#tab2:checked ~ section .tab2,
+#tab3:checked ~ section .tab3 {
+  display: block;
+}
+
+#tab1:checked ~ nav .tab1,
+#tab2:checked ~ nav .tab2,
+#tab3:checked ~ nav .tab3 {
+  color: red;
+}
+
+    </style>
   </head>
   <body>
     <h1>Server is in devmode</h1>
@@ -21,18 +42,34 @@
     </ul>
 </details>
 
+<div class="pc-tab">
+  <nav>
+    <ul>
+{% for address in ansible_facts.all_ipv4_addresses %}
+      <li class="tab{{ loop.index }}">
+        <label for="tab{{ loop.index }}">{{ address }}</label>
+        <input  id="tab{{ loop.index }}" type="radio" name="pct" {{ 'checked' if address = ansible_facts.default_ipv4.address else '' }}>
+      </li>
+{% endfor %}
+    </ul>
+  </nav>
+
+<section>
+{% for address in ansible_facts.all_ipv4_addresses %}
+<div class="tab{{ loop.index }}">
+
 <details>
   <summary>hosts file</summary>
     <pre>
 # {{ organisation.name }}{{ "\n" -}}
-{{- ansible_facts.default_ipv4.address }}	{{ inventory_hostname }}{{ "\n\n" -}}
+{{- address }}	{{ inventory_hostname }}{{ "\n\n" -}}
       {%- for application_instance in applications_info if not application_instance.name == 'devmode_infopage' -%}
         {#- {{ application_instance.name }} ({{ application_instance.environment }}) -#}
         {%- for (key, webinstance) in application_instance.webinstances.items() -%}
           {%- for domaininstance in webinstance.domaininstances -%}
             # {{ domaininstance.fullname }}{{ "\n" -}}
             {%- for domain in domaininstance.domains -%}
-              {{- ansible_facts.default_ipv4.address }}	{{ domain }}{{ "\n" -}}
+              {{- address }}	{{ domain }}{{ "\n" -}}
             {%- endfor -%}
           {%- endfor -%}
         {%- endfor -%}
@@ -46,17 +83,25 @@
     <pre>
 {% if applications_devmode_samba | d(true) %}
 # Devmode workspace with Samba (Cifs)
-//{{ ansible_facts.default_ipv4.address }}/workspace /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} cifs guest,uid={{ applications_devmode_user }},gid={{ applications_devmode_user }},iocharset=utf8,noauto,x-systemd.automount 0 0
+//{{ address }}/workspace /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} cifs guest,uid={{ applications_devmode_user }},gid={{ applications_devmode_user }},iocharset=utf8,noauto,x-systemd.automount 0 0
 {% endif %}
 {% if applications_devmode_nfs | d(false) %}
 
 # Devmode workspace with NFS
 # For Ubuntu
 # sudo apt-get install nfs-common
-{{ ansible_facts.default_ipv4.address }}:/ /home/{{ applications_devmode_user }}/workspace_{{ organisation.name }} nfs4 rw,noauto,x-systemd.automount,soft 0 0
+{{ address }}:/ /home/{{ applications_devmode_user }}/workspace_{{ organisation.name }} nfs4 rw,noauto,x-systemd.automount,soft 0 0
 {% endif %}
     </pre>
 </details>
+
+</div>
+
+{% endfor %}
+  </section>
+</div>
+
+
 
   </body>
 </html>
