@@ -46,6 +46,10 @@
 </details>
 
 <div class="pc-tab">
+{% for address in ansible_facts.all_ipv4_addresses %}
+  <input  id="tab{{ loop.index }}" type="radio" name="pct" {{ 'checked' if address == ansible_facts.default_ipv4.address else '' }}>
+{% endfor %}
+
   <nav>
     <ul>
 {% for address in ansible_facts.all_ipv4_addresses %}
