@@ -87,8 +87,22 @@
   <summary>Mount</summary>
     <h3>fstab</h3>
     <pre>
+
 {% if applications_devmode_samba | d(true) %}
-# Devmode workspace with Samba (Cifs)
+
+# Windows
+# User: {{ applications_devmode_user }}
+# Password: "" (Empty)
+# (Guest login is also allowed by server)
+# Windows (With host-file updated):
+\\{{ inventory_hostname }}\workspace
+# Windows (IP)
+\\{{ address }}\workspace
+
+
+
+
+# Linux Devmode workspace with Samba (Cifs)
 //{{ address }}/workspace /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }} cifs guest,uid={{ applications_devmode_user }},gid={{ applications_devmode_user }},iocharset=utf8,noauto,x-systemd.automount 0 0
 {% endif %}
 {% if applications_devmode_nfs | d(false) %}
