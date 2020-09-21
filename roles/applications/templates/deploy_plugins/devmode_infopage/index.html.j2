@@ -11,15 +11,17 @@
   display: none;
 }
 
-#tab1:checked ~ section .tab1,
-#tab2:checked ~ section .tab2,
-#tab3:checked ~ section .tab3 {
+{% for address in ansible_facts.all_ipv4_addresses %}
+#tab{{ loop.index }}:checked ~ section .tab{{ loop.index }}{{ loop.last | ternary('', ',') }}
+{% endfor %}
+{
   display: block;
 }
 
-#tab1:checked ~ nav .tab1,
-#tab2:checked ~ nav .tab2,
-#tab3:checked ~ nav .tab3 {
+{% for address in ansible_facts.all_ipv4_addresses %}
+#tab{{ loop.index }}:checked ~ nav .tab{{ loop.index }}{{ loop.last | ternary('', ',') }}
+{% endfor %}
+{
   color: red;
 }
 
