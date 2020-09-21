@@ -55,7 +55,6 @@
 {% for address in ansible_facts.all_ipv4_addresses %}
       <li class="tab{{ loop.index }}">
         <label for="tab{{ loop.index }}">{{ address }}</label>
-        <input  id="tab{{ loop.index }}" type="radio" name="pct" {{ 'checked' if address == ansible_facts.default_ipv4.address else '' }}>
       </li>
 {% endfor %}
     </ul>
