@@ -43,6 +43,7 @@ source include_common.sh
     sudo -u {{ data_migration.file_owner }} -i \
       {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK"{% endif %} \
       rsync \
+        {% if fileset.src_sudo | d(false) %}--rsync-path="sudo rsync"{% endif %} \
         --recursive \
         --links \
         --prune-empty-dirs \
