@@ -101,41 +101,41 @@ Wait and Reboot!
 To find ip-address login and run `ip addr` on the machine.
 Use `ssh -A <ip address>` or Putty (with agent forwarding).
 
-8. Login with main user or as root and run `sudo dnf update`
-
-9. Continue with `Bootstrap a server`
+8. Continue with `Bootstrap a server`
 
 ### Bootstrap a server
 
 When asked for `### Serveradmin-repository on Github ###` you need to give details for the configuration repo.
 
-1. Run:
+1. Log in as root or a any sudo-user
+
+2. Run:
 ```
 curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh -o bootstrap.sh
 sudo bash bootstrap.sh
 ```
 
-2. Log out, log in again. (With root if no user is created yet)
+3. Log out, log in again. (With root if no sudo-user for serveradmin is created yet)
 
-3. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
+4. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
 
-4. Log out, log in as main user (It should now be possible with public-key authentication with the main user)
+5. Log out, log in as a sudo-user (It should now be possible with public-key authentication with the sudo-users. The sudo-users must be specified in the serveradmin config.)
 
-5. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
+6. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
 
-6. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
+7. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
 
-7. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
+8. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
-8. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
+9. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
 
 ### Devmode
 
 See `Bootstrap a server` for setting up server.
 
-Step 7 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with Samba or NFS.
+Step 8 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with Samba or NFS.
 
-Step 8 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
+Step 9 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
 The page gives you some basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
 
 ### Access local database

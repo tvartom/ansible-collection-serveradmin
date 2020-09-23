@@ -162,5 +162,5 @@ sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && ansible-playbook --extra-v
 echo -e "Done\n"
 
 echo "### Bootstrap is done ###"
-echo "1. Logout and relogin."
+echo "1. Logout and relogin as root or a sudo-user specified in serveradmin."
 echo "2. Run <prefix>_ansible_serveradmin to setup server."
