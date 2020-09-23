@@ -46,6 +46,12 @@ SA_PATH="$SA_PATH_DEFAULT"
 
 echo ""
 
+echo "Update system..."
+# Start by updating system
+# For AWS, gdisk is missing: https://www.spinics.net/lists/centos-devel/msg18766.html
+dnf -y install gdisk
+dnf -y update
+
 SYSTEM_USER_HOME="/home/system"
 echo -n "Make sure '$SYSTEM_USER_HOME' exists... "
 mkdir -p "$SYSTEM_USER_HOME"
