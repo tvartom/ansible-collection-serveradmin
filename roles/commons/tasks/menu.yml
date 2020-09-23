@@ -18,6 +18,9 @@
 # Valet returneras i variablen: menu_result
 # menu.options[?].value används, om ej satt används name.
 
+- include_role:
+    name: colors
+
 - name: set_fact menu_extra
   set_fact:
     menu_extra: |-

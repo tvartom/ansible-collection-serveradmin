@@ -12,9 +12,6 @@
     tasks_from: get_serveradmin
 # Returns: serveradmin
 
-- include_role:
-    name: colors
-
 - name: Meny
   include_role:
     name: commons
