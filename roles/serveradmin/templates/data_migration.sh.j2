@@ -48,7 +48,7 @@ source include_common.sh
         --links \
         --prune-empty-dirs \
         {% for exclude in fileset.excludes | d([]) %}--exclude '{{ exclude }}' {% endfor %} \
-        "{{ data_migration.ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src) ~'/') }}" "{{ fileset.dest }}/"
+        "{{ data_migration.ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src | d()) ~'/') }}" "{{ fileset.dest }}/"
   {% endfor %}
 
   {% if agent_forwarding %}
