@@ -10,4 +10,4 @@ webserver_nginx_version: 1.16
 
 webserver_use_ssl: true
 webserver_use_letsencrypt: "{{ webserver_use_ssl }}"
-webserver_generate_dhparam: "{{ not ( applications_devmode | d(false) ) and webserver_use_ssl }}"
+webserver_generate_dhparam: "{{ (not ( applications_devmode | d(false) ) and webserver_use_ssl) | ternary('confirm', false) }}"

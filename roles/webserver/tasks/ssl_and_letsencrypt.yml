@@ -33,6 +33,49 @@
     creates: /opt/letsencrypt/account.key
   when: webserver_use_letsencrypt
 
+### Generate dhparam ###
+# https://cipherli.st/
+- name: "Check if dhparam.pem exists."
+  stat:
+    path: /etc/nginx/ssl/dhparam.pem
+  register: dhparam
+#  dhparam.stat.exists
+
+- name: "Confirm dhparm"
+  include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "Diffie–Hellman Parameters are not present. It takes a long time to create dhparam.pem."
+      question: "Generate the file now?"
+      options:
+        - name: "Yes, do it now, I have the time."
+          value: true
+          option: y
+          default: true
+        - name: "No, do it later."
+          value: false
+          option: n
+  when: webserver_generate_dhparam == 'confirm' and not dhparam.stat.exists
+
+- name:
+  set_fact:
+    webserver_generate_dhparam: "{{ dhparam.stat.exists or menu_result }}"
+  when: webserver_generate_dhparam == 'confirm'
+
+- name: "Generating Diffie–Hellman Parameters."
+  debug:
+    msg: "Creating dhparam.pem. It takes a long time."
+  when: webserver_generate_dhparam and not dhparam.stat.exists
+
+- name: Generate a stronger DHE parameter (This is going to take a long time)
+  become: yes
+  shell: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 4096
+  args:
+    creates: /etc/nginx/ssl/dhparam.pem
+  when: webserver_generate_dhparam
+
 ### Common SSL ###
 - name: "Create /etc/nginx/ssl"
   become: yes
@@ -51,17 +94,3 @@
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"
-
-### Generate dhparam ###
-# https://cipherli.st/
-- name: "Warning"
-  debug:
-    msg: "If dhparam.pem does not exists, it will be created now. It takes a long time."
-  when: webserver_generate_dhparam
-
-- name: Generate a stronger DHE parameter (This is going to take a long time)
-  become: yes
-  shell: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 4096
-  args:
-    creates: /etc/nginx/ssl/dhparam.pem
-  when: webserver_generate_dhparam
