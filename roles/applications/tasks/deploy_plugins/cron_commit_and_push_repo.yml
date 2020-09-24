@@ -17,7 +17,7 @@
   become: yes
   template:
     src: "deploy_plugins/cron_commit_and_push_repo/cron_commit_and_push_repo.sh.j2"
-    dest: "{{ application.path }}/scripts/cron/script/commit_and_push-{{ deploy.repo | mandatory }}.sh"
+    dest: "{{ application.path }}/scripts/cron/commit_and_push-{{ deploy.repo | mandatory }}.sh"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     mode: "u=rwx,g=rx,o=r"
