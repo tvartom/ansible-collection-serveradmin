@@ -96,7 +96,7 @@ source include_common.sh
   echo "  {{ database.include_routines | d(true)  | ternary('Include', 'Exclude') }} routines"
   echo "  {{ database.include_triggers | d(true)  | ternary('Include', 'Exclude') }} triggers"
   {% if database.exclude_tables is defined %}
-    echo "  Exlude tables:"
+    echo "  Exclude tables:"
     {% for table in database.exclude_tables | d([]) %}
       echo "  - {{ table }}"
     {% endfor %}
