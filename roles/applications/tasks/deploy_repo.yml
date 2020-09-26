@@ -97,7 +97,7 @@
       {{- deploy_facts | combine({
         repo.name: {
             'list_of_commits': git_list_of_commits.stdout
-            ,'list_of_commits_debug: git_list_of_commits
+            ,'list_of_commits_debug': git_list_of_commits
           }
         }
         , recursive=True) -}}
