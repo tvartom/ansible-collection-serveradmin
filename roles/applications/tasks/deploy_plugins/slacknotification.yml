@@ -58,7 +58,7 @@
   set_fact:
     slack_list_of_commits: >-
       {%- set o = [] -%}
-      {%- for repo_name, deploy_fact in deploy_facts.items() if deploy_fact.list_of_commits | d("") != "" -%}
+      {%- for repo_name, deploy_fact in deploy_facts.items() if deploy_fact.list_of_commits | d("") | length > 0 -%}
       {{-   o.append({
               'title': 'Commits för '~repo_name,
               'value': deploy_fact.list_of_commits,

@@ -64,6 +64,10 @@
   loop_control:
     loop_var: deploy
 
+- name: "Show final deploy_facts (Populated during deployment)"
+  debug:
+    var: deploy_facts
+
 
 #- name: Repos
 #  include_tasks: deploy_repo.yml
