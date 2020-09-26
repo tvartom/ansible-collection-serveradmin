@@ -41,10 +41,17 @@
     path: "{{ application.path }}/{{ applications_devmode_use_overlayfs | ternary('devmode', 'repos') }}/{{ repo.name }}"
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
-    opts: "{{ applications_devmode_use_overlayfs | ternary('ro', 'rw') }},force-user={{ application.process_user }},force-group={{ application.process_group }},create-for-user={{ applications_devmode_user }},create-for-group={{ applications_devmode_user }}"
+    opts: |-
+      {{ applications_devmode_use_overlayfs | ternary('ro', 'rw') }} {#- -#}
+      ,force-user={{ application.process_user }}                     {#- -#}
+      ,force-group={{ application.process_group }}                   {#- -#}
+      ,create-for-user={{ applications_devmode_user }}               {#- -#}
+      ,create-for-group={{ applications_devmode_user }}              {#- -#}
+      ,chown-ignore                                                  {#- -#}
+      ,chgrp-ignore                                                  {#- -#}
     state: mounted
 
-# Overlay doen't support changes in lowerdirs, editing files works, but changeing folders doesn't.
+# Overlay doen't support changes in lowerdirs, editing files works, but changing folders doesn't.
 # TODO: To use it, changes should trigger a remount in some way, or with cron-job.
 - name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
   become: yes
