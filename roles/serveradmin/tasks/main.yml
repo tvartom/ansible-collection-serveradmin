@@ -182,3 +182,17 @@
     repo: "{{ serveradmin.repo }}"
   tags:
     - bootstrap
+
+- name: "Mount serveradmin-repo for devmode"
+  include_role:
+    name: applications
+    tasks_from: devmode_repo
+  vars:
+    applications: "{{ serveradmin }}"
+      #path: "{{ serveradmin.path }}"
+      #process_user: "{{ serveradmin.process_user }}"
+      #process_group: "{{ serveradmin.process_group }}"
+    repo: "{{ serveradmin.repo | combine({'name': 'serveradmin-devmoce'}) }}"
+      #name: serveradmin-devmode
+      #path: "{{ serveradmin.repo.path }}"
+  when: applications_devmode
