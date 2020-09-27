@@ -188,7 +188,7 @@
     name: applications
     tasks_from: devmode_repo
   vars:
-    applications: "{{ serveradmin }}"
+    application: "{{ serveradmin }}"
       #path: "{{ serveradmin.path }}"
       #process_user: "{{ serveradmin.process_user }}"
       #process_group: "{{ serveradmin.process_group }}"
