@@ -14,6 +14,8 @@ echo -e "${BIYellow}Clone all repos for development on this server:${NC}"
 		echo "{{ repo.path }} to /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}"
 		stat "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}/.git" &> /dev/null || \
 		git clone{% if repo.branch is defined %} --branch "{{ repo.branch }}"{% endif %} --recurse-submodules {{ repo.url }} "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+        cd  "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
 		git submodule update --remote
 	{% endfor %}
 {% endfor %}
+cd  "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}"
