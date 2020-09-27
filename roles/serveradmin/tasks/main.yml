@@ -192,7 +192,7 @@
       #path: "{{ serveradmin.path }}"
       #process_user: "{{ serveradmin.process_user }}"
       #process_group: "{{ serveradmin.process_group }}"
-    repo: "{{ serveradmin.repo | combine({'name': 'serveradmin-devmoce'}) }}"
+    repo: "{{ serveradmin.repo | combine({'name': 'serveradmin-devmode'}) }}"
       #name: serveradmin-devmode
       #path: "{{ serveradmin.repo.path }}"
   when: applications_devmode
