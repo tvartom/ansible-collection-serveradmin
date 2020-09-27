@@ -39,9 +39,9 @@
   set_fact:
     temp_application_default:
       #Properties must be set in application_instances:
-      # name:
-      # environment:
-      fullname: "{{ temp_application_fullname }}"
+        # name:
+        # environment:
+      #Properties with default values:
       process_user: "app-{{ temp_application_fullname }}"
       process_group: "app-{{ temp_application_fullname }}"
       enable_redis: false
@@ -52,21 +52,23 @@
       organisation: "{{ temp_application_organisation }}"
       path: "/opt/{{ temp_application_organisation }}/{{ temp_application_fullname }}"
       linux_packages: [] # Installera extra packages
-      #Exempel linux_packages:
-      # - pdftoppm
-      # - "{{ php_package }}-bcmath"
-      # - "{{ 'redhat-package' if ansible_os_family == "RedHat" else 'debian-package' }}"
+        #Example for linux_packages:
+        # - pdftoppm
+        # - "{{ php_package }}-bcmath"
+        # - "{{ 'redhat-package' if ansible_os_family == "RedHat" else 'debian-package' }}"
       locales: []
-      #Exempel locales:
-      # - sv_SE # Svenska (Sverige)
-      # - nb_NO # Bokmål (Justerad danska för att passa norska) 90% väljer detta i skolan
-      # - nn_NO # Nynorsk (Nytt skriftspråk bygger på norska dialekter) 10% väljer detta i skolan
+        #Example for locales:
+        # - sv_SE # Svenska (Sverige)
+        # - nb_NO # Bokmål (Justerad danska för att passa norska) 90% väljer detta i skolan
+        # - nn_NO # Nynorsk (Nytt skriftspråk bygger på norska dialekter) 10% väljer detta i skolan
+      #Properties that default value is: not defined
+        # [databases:]
+        # [nodejs_version:]
       #Populated properties:
+      fullname: "{{ temp_application_fullname }}"
       any_enable_php: false
       any_enable_https: false
       any_letsencrypt: false
-      #Properties that default value is: not defined
-      # [databases:]
 
 - name: "Generate default values for webinstance"
   set_fact:
