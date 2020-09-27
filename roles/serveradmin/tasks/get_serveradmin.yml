@@ -66,6 +66,9 @@
         meta:
           ansible_playbook: "playbook-applications_deploy.yml"
         when: "{{ 'bootstrap' not in ansible_run_tags }}"
+      - file: activate_devmode.sh
+        desc: "Switch between normal and devmode for serveradmin repo."
+        when: "{{ applications_devmode }}"
   tags:
     - bootstrap
 
