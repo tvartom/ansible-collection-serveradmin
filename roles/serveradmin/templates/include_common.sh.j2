@@ -80,6 +80,10 @@ On_IWhite='\e[0;107m'   # White
 # echo -e "I ${RED}love${NC} Stack Overflow"
 
 
+INCLUDE_DEVMODE_PATH="{{ serveradmin.path }}/include_devmode.sh"
+test -f "$INCLUDE_DEVMODE_PATH" && source "$INCLUDE_DEVMODE_PATH"
+
+
 {% raw %}
 function menu {
 	
