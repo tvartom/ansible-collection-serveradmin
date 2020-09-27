@@ -9,7 +9,7 @@ source include_common.sh
 echo -e "${BIYellow}Clone all repos for development on this server:${NC}"
 
 
-{% for application in applications_info + serveradmin %}
+{% for application in applications_info + [{'repo': serveradmin.repo }] %}
 	{% for repo in application.repos %}
 		echo "{{ repo.path }} to /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}"
 		stat "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}/.git" &> /dev/null || \
