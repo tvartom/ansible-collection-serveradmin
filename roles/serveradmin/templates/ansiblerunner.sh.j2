@@ -19,6 +19,7 @@ source include_common.sh
 {% if applications_devmode %}
   {% set devmode_suffix = '${devmode_suffix}' %}
   if [[ ! "{{devmode_suffix}}" == "-devmode" ]]; then
+    {% set close_devmode_if = 'fi' %}
 {% else %}
   {% set devmode_suffix = '' %}
   {% set close_devmode_if = '' %}
