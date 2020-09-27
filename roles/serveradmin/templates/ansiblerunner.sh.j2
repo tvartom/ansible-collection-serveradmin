@@ -3,20 +3,29 @@
 # Managed by Ansible!
 #
 {% set agent_forwarding = item.meta.agent_forwarding | default(false) %}
-# Se till att devops-repot alltid är uppdaterat:
-{{ organisation.command_prefix }}pull_serveradmin_repo
 
 {% if not agent_forwarding %}
 # Exit on error:
 set -e
 {% endif %}
 {% if applications_devmode %}
-devmode_suffix=""
-{% set devmode_suffix = '${devmode_suffix}' %}
+	{% set devmode_suffix = '${devmode_suffix}' %}
 {% else %}
-{% set devmode_suffix = '' %}
+	{% set devmode_suffix = '' %}
 {% endif %}
 source include_common.sh
+
+
+{% if applications_devmode %}
+  {% set devmode_suffix = '${devmode_suffix}' %}
+  if [[ ! "{{devmode_suffix}}" == "-devmode" ]]; then
+{% else %}
+  {% set devmode_suffix = '' %}
+  {% set close_devmode_if = '' %}
+{% endif %}
+# Se till att devops-repot alltid är uppdaterat:
+{{ organisation.command_prefix }}pull_serveradmin_repo
+{{ close_devmode_if  %}
 
 
 # If playbook doesn't exist in root of serveradmin-repo,
