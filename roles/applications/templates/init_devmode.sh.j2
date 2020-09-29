@@ -8,14 +8,22 @@ set -e
 source include_common.sh
 echo -e "${BIYellow}Clone all repos for development on this server:${NC}"
 
-{% for application in applications_info %}
+
+{% for application in applications_info + [{'repos': [serveradmin.repo ]}] %}
 	{% for repo in application.repos %}
 		echo "{{ repo.path }} to /home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}"
 		stat "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}/.git" &> /dev/null || \
 		git clone{% if repo.branch is defined %} --branch "{{ repo.branch }}"{% endif %} --recurse-submodules {{ repo.url }} "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+        cd  "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+		git submodule update --remote
 	{% endfor %}
 {% endfor %}
+
 
 # This may fix a detached HEAD in a submodule:
 #https://stackoverflow.com/a/5772882/1003172 See comment
 # git branch -f master HEAD && git checkout master
+
+
+cd  "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}"
+

@@ -3,24 +3,40 @@
 # Managed by Ansible!
 #
 {% set agent_forwarding = item.meta.agent_forwarding | default(false) %}
-# Se till att devops-repot alltid är uppdaterat:
-{{ organisation.command_prefix }}pull_serveradmin_repo
 
 {% if not agent_forwarding %}
 # Exit on error:
 set -e
 {% endif %}
+{% if applications_devmode %}
+	{% set devmode_suffix = '${devmode_suffix}' %}
+{% else %}
+	{% set devmode_suffix = '' %}
+{% endif %}
 source include_common.sh
+
+
+{% if applications_devmode %}
+  {% set devmode_suffix = '${devmode_suffix}' %}
+  if [[ ! "{{devmode_suffix}}" == "-devmode" ]]; then
+    {% set close_devmode_if = 'fi' %}
+{% else %}
+  {% set devmode_suffix = '' %}
+  {% set close_devmode_if = '' %}
+{% endif %}
+# Se till att devops-repot alltid är uppdaterat:
+{{ organisation.command_prefix }}pull_serveradmin_repo
+{{ close_devmode_if  }}
 
 
 # If playbook doesn't exist in root of serveradmin-repo,
 # Create a playbook that include the playbook from ansible-collection-serveradmin
-if [ -f "{{ serveradmin.path }}/repos/serveradmin/{{ item.meta.ansible_playbook }}" ]; then
+if [ -f "{{ serveradmin.path }}/repos/serveradmin{{ devmode_suffix }}/{{ item.meta.ansible_playbook }}" ]; then
   PLAYBOOK_TO_RUN="{{ item.meta.ansible_playbook }}"
 else
   PLAYBOOK_TO_RUN="temp_{{ item.meta.ansible_playbook }}"
   echo -e "---\n- import_playbook: collections/ansible_collections/tvartom/serveradmin/playbooks/{{ item.meta.ansible_playbook }}" \
-      | sudo -u {{ serveradmin.process_user }} tee "{{ serveradmin.path }}/repos/serveradmin/$PLAYBOOK_TO_RUN" > /dev/null
+      | sudo -u {{ serveradmin.process_user }} tee "{{ serveradmin.path }}/repos/serveradmin{{ devmode_suffix }}/$PLAYBOOK_TO_RUN" > /dev/null
 fi
 
 

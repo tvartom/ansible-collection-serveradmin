@@ -31,5 +31,8 @@ if id -nG | egrep -cq "(^| ){{ serveradmin.process_group }}( |$)"; then
 	{%   endif %}
 	{% endfor %}
 	echo ""
-
+{% if applications_devmode %}
+	{{ organisation.command_prefix }}activate_devmode --state
+{% endif %}
+	echo ""
 fi
