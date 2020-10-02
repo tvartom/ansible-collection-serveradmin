@@ -146,7 +146,7 @@ Run: `nmcli` again to make sure everything looks ok, and find your new ip-addres
  
 #### 9. From now on can you SSH to the machine.
 
-Use `ssh -A <ip address>` or Putty (with agent forwarding).
+Use `ssh -A root@<ip address>` or Putty.
 
 #### 10. Continue with `Bootstrap a server`
 
@@ -162,19 +162,28 @@ curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/ma
 sudo bash bootstrap.sh
 ```
 
-#### 3. Log out, log in again. (With root if no sudo-user for serveradmin is created yet)
+#### 3. Reboot, log in again. (With root if no sudo-user for serveradmin is created yet)
 
 #### 4. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
 
-#### 5. Log out, log in as a sudo-user (It should now be possible with public-key authentication with the sudo-users. The sudo-users must be specified in the serveradmin config.)
+#### 5. Log out, log in as a sudo-user
 
-#### 6. Only for devmode with VirtualBox Shared folders, run: `<prefix>_ansible_vboxsf`
+It should now be possible with public-key authentication with the sudo-users. The sudo-users must be specified in the serveradmin config.
+Use `ssh -A <ip address>` or Putty. Activate agent forwarding.
 
-#### 7. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
+#### 6. Only for devmode with VirtualBox Shared folders
+
+Run: `<prefix>_ansible_vboxsf`
+
+#### 7. Run: Any datamigration, if your applications is dependent on it.
+
+Remember to have agent forward activated for your ssh-connection
 
 #### 8. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
 
-#### 9. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
+#### 9. Only for devmode
+
+Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
 #### 10. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
 
