@@ -125,18 +125,9 @@
   loop:
     - { path: "{{ serveradmin.path }}"}
     - { path: "{{ serveradmin.path }}/repos"}
-    - { path: "/home/{{ applications_devmode_user|d() }}/workspace", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
+#    - { path: "/home/{{ applications_devmode_user|d() }}/workspace", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
   tags:
     - bootstrap
-
-- name: Install packages for samba-shares
-  become: yes
-  yum:
-    name:
-      - cifs-utils
-    update_cache: no
-    state: latest
-  when: applications_devmode | d(false)
 
 - name: "Create scripts for serveradmin"
   become: yes
@@ -182,17 +173,3 @@
     repo: "{{ serveradmin.repo }}"
   tags:
     - bootstrap
-
-- name: "Mount serveradmin-repo for devmode"
-  include_role:
-    name: applications
-    tasks_from: devmode_repo
-  vars:
-    application: "{{ serveradmin }}"
-      #path: "{{ serveradmin.path }}"
-      #process_user: "{{ serveradmin.process_user }}"
-      #process_group: "{{ serveradmin.process_group }}"
-    repo: "{{ serveradmin.repo | combine({'name': 'serveradmin-devmode'}) }}"
-      #name: serveradmin-devmode
-      #path: "{{ serveradmin.repo.path }}"
-  when: applications_devmode

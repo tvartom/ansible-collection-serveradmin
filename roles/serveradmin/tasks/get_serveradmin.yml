@@ -69,6 +69,12 @@
       - file: activate_devmode
         desc: "Switch between normal and devmode for serveradmin repo."
         when: "{{ applications_devmode }}"
+      - file: ansiblerunner.sh
+        dest: "ansible_vboxsf"
+        #desc: "Installera VirtualBox Guest Additions and mount shared folder"
+        meta:
+          ansible_playbook: "playbook-vboxsf.yml"
+        when: "{{ applications_devmode and applications_devmode_vboxsf }}"
   tags:
     - bootstrap
 

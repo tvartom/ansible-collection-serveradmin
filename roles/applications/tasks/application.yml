@@ -146,7 +146,8 @@
     - { path: "/webapp",             when: false }
 
 ### Letsencrypt ##############################################################
-
+# I can be hard to determine if it is a lag DNS-updates or other problems...
+# Give some info in the response. Are we on the right server?
 - name: "Create 404 for Letsencrypt, which shows this servers inventory name"
   become: yes
   template:

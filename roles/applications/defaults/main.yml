@@ -9,9 +9,11 @@ nginx_group: nginx
 
 applications_devmode: false
 
-applications_devmode_samba: true
+applications_devmode_samba: false
 applications_devmode_nfs: false
+applications_devmode_vboxsf: true
 applications_devmode_use_overlayfs: false
+
 
 webserver_use_ssl: true
 webserver_use_letsencrypt: "{{ (not applications_devmode) and webserver_use_ssl }}"

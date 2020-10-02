@@ -1,0 +1,68 @@
+---
+# Based on this guide:
+# https://www.tecmint.com/install-virtualbox-guest-additions-on-centos-8/
+- name: Enable EPEL-repo
+  become: yes
+  yum:
+    name: epel-release
+    state: latest
+  when: ansible_os_family == "RedHat"
+
+- name: Install some basic tools (DNF)
+  become: yes
+  dnf:
+    name:
+     - gcc
+     - make
+     - perl
+     - kernel-devel
+     - kernel-headers
+     - bzip2
+     - dkms
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: "Create /mnt/cdrom"
+  become: yes
+  file:
+    path: "/mnt/cdrom"
+    state: directory
+    owner: "root"
+    group: "root"
+
+- pause:
+    prompt: "Insert the VirtualBox Guest Additions disc into virtual machine!"
+
+- name: "Mount cdrom temporary"
+  become: yes
+  shell:
+    cmd: "mount /dev/cdrom /mnt/cdrom"
+
+- name: "Run VirtualBox Guest Additions setup"
+  become: yes
+  shell:
+    cmd: "./VBoxLinuxAdditions.run --nox11"
+    chdir: /mnt/cdrom
+
+- pause:
+    prompt: "Make sure a shared folder namned 'workspace' exists in virtual machine!"
+
+- name: "Create dir for workspace mount"
+  become: yes
+  file:
+    path: "/home/{{ applications_devmode_user }}/workspace"
+    state: directory
+    owner: "{{ applications_devmode_user }}"
+    group: "{{ applications_devmode_user }}"
+
+- name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
+  become: yes
+  mount:
+    src: "workspace"
+    path: "/home/{{ applications_devmode_user }}/workspace"
+    fstype: vboxsf # VirtualBox Shared Folder
+    opts: |-
+      rw                                   {#- Read/write -#}
+      ,uid={{ applications_devmode_user }} {#- owner for all files -#}
+      ,gid={{ applications_devmode_user }} {#- group for all files -#}
+    state: mounted

@@ -9,10 +9,18 @@
 
 # Nginx conf: /etc/nginx/conf.d/{{ organisation.name }}/{{ webinstance.fullname }}.conf
 
+## Serveradmin ############################################################################
+
 - include_role:
     name: serveradmin
     tasks_from: get_serveradmin
 # Returns: serveradmin
+
+# devmode for serveradmin is handle as an application to not write anything in workspace before mounted properly.
+- include_role:
+    name: serveradmin
+    tasks_from: serveradmin_devmode
+  when: applications_devmode | d(false)
 
 ### Create global folders #######################################################################
 
@@ -134,3 +142,5 @@
     group: "{{ applications_devmode_user }}"
     mode: "u=rwx,g=rw,o=r"
   when: applications_devmode | d(false)
+
+
