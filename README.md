@@ -6,7 +6,7 @@ An Ansible Collection
 
 Serveradmin is an Ansible Collection for setting up a basic CentOS 8.2 web server.
 The main purpose is to easily set up a server with sane security, and all in one configuration to build, deploy and host.
-A server can also be run locally (As a virtual server (tested) or as Docker (not tested)) in `devmode`, offering the exact same setup as your production server.
+A server can also be run locally (As a virtual server) in _`devmode`_, offering the exact same setup as your production server.
 
 It has been developed over time as I needed a lot of servers with similar setup, and want to be able to improve and update all servers at once.
 
@@ -26,7 +26,7 @@ Basic components:
 
 * As it is just an Ansible script, you can stop using it at any time, and configure your server as you like.
 
-If devmode is used:
+If _devmode_ is used:
 
 * The security is lower, please do not expose the server to incoming connections from internet.
 * All git repos for an application is initiated and shared with the host with Samba or NFS
@@ -54,9 +54,42 @@ Variables normally set up per host:
 TODO: Show example.
 For now you probably have access to an already set up repo.
 
+### As a virtual machine (VM) on VirtualBox
+
+To understand the network for VirtualBox, here is a nice guide: https://www.nakivo.com/blog/virtualbox-network-setting-guide/
+
+**Never** use _Bridged Adapter_ with Serveradmin in _devmode_.
+
+First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`**. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`, `NatNetwork1` ...)
+
+
+Create a new VM. (`Machine` -> `Create`). Make sure to make the maximum capacity of the disc big enough. It is growing dynamicly, so it will not will fill up your harddrive until you filled it.
+
+Before running the VM, go into settings:
+
+**Network:**
+
+You need 2 network adapters:
+
+* Adapter 1: `Host-only Adapter` with `vboxnet0`. This is used to connect from your host (your computer) to the VM.
+* Adapter 2: `NAT` For internet-connection **from** the VM.
+
+**Shared Folders:**
+
+For _devmode_:
+Share a folder with the `Folder Name`: `workspace`.
+
+Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for CentOS. See `CentOS`for next step.
+
+To escape your trapped mouse-pointer in VirtualBox use **Right Ctrl**.
+
 ### CentOS
 
 Serveradmin require currently CentOS 8.2.2004 (And isn't maintained to support older versions)
+
+### On AWS
+
+Search for `ami-0474ce84d449ee66f` for `8.2.2004` in `eu-north-1`, or look at https://wiki.centos.org/Cloud/AWS for other regions.
 
 ### As local virtual server
 
@@ -72,7 +105,8 @@ If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enter
 
 3. Network & Host Name
 
-Ethernet (enp1s0) enabled!
+Enable **all** network adapters.
+Ethernet (enp?s?) enabled!
 
 Host Name: Same as in Ansible inventory
 
@@ -96,12 +130,24 @@ Set Root Password and user if wanted. (The user will be set up by `<prefix>_ansi
 
 Wait and Reboot!
 
+8. Log in as `root` to make sure your network is set up and find your ip-address.
+
+Run `nmcli`.
+
+CentOS setup seems to sometimes fail activate all network interfaces/connections for interfaces.
+Run: `nmcli --fields name,autoconnect connection show` to see connection-names and if `ONBOOT=yes` in set in `/etc/sysconfig/network-scripts/ifcfg-<connection-name>`.
+
+To activte missing connections and set `ONBOOT=yes`, run: `nmcli connection modify <connection-name> autoconnect yes` for every connection.
+
+Run: `nmcli` again to make sure everything looks ok, and find your new ip-address.
+
+(`ip addr` is an alternative to find your ip-address.)
+ 
 9. From now on can you SSH to the machine.
 
-To find ip-address login and run `ip addr` on the machine.
 Use `ssh -A <ip address>` or Putty (with agent forwarding).
 
-8. Continue with `Bootstrap a server`
+10. Continue with `Bootstrap a server`
 
 ### Bootstrap a server
 
