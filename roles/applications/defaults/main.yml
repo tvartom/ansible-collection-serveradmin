@@ -11,7 +11,7 @@ applications_devmode: false
 
 applications_devmode_samba: false
 applications_devmode_nfs: false
-applications_devmode_vboxsf: true
+applications_devmode_vboxsf: true #Default method
 applications_devmode_use_overlayfs: false
 
 

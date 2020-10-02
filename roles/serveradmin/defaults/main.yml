@@ -11,4 +11,4 @@ serveradmin_default:
       use_unique_deploy_key: true
 
 applications_devmode: false
-applications_devmode_vboxsf: false
+applications_devmode_vboxsf: true #Default method
