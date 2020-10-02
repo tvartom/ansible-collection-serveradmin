@@ -2,6 +2,13 @@
 single_quote: "'"
 double_quote: '"'
 
+php_enable: false
+sass_enable: false
+redis_enable: false
+java_and_maven_enable: false
+mariadb_enable: true
+
+
 php_package: php
 php_fpm_service: php-fpm
 php_fpm_pool_path: /etc/php-fpm.d
@@ -16,6 +23,7 @@ applications_devmode_samba: false
 applications_devmode_nfs: false
 applications_devmode_vboxsf: true #Default method
 applications_devmode_use_overlayfs: false
+applications_devmode_xdebug: true
 
 # For available versions:
 # dnf module list nginx

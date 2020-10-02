@@ -46,14 +46,14 @@
 
     - include_role:
         name: mariadb
-      when: mariadb_enable | d(true)
+      when: mariadb_enable
 
     - include_role:
         name: firewall
 
     - include_role:
         name: java_and_maven
-      when: java_and_maven_enable | d(false)
+      when: java_and_maven_enable
 
     - include_role:
         name: serveradmin
@@ -65,15 +65,19 @@
 
     - include_role:
         name: sass
-      when: sass_enable | d(false)
+      when: sass_enable
 
     - include_role:
         name: php
-      when: php_enable | d(false)
+      when: php_enable
+
+    - include_role:
+        name: php_xdebug
+      when: php_enable and applications_devmode and applications_devmode_xdebug
 
     - include_role:
         name: redis
-      when: redis_enable | d(false)
+      when: redis_enable
 
     - include_role:
         name: bertvv_samba
