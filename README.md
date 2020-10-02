@@ -29,7 +29,7 @@ Basic components:
 If _devmode_ is used:
 
 * The security is lower, please do not expose the server to incoming connections from internet.
-* All git repos for an application is initiated and shared with the host with Samba or NFS
+* All git repos for an application is initiated and shared with the host with VirtualBox Shared folder, Samba or NFS
 * Debug features are enabled. (Xdebug (TODO))
 
 The Ansible Collection doesn't work stand-alone, it needs a Git repository with configuration for a server or a group of servers.
@@ -56,12 +56,11 @@ For now you probably have access to an already set up repo.
 
 ### As a virtual machine (VM) on VirtualBox
 
-To understand the network for VirtualBox, here is a nice guide: https://www.nakivo.com/blog/virtualbox-network-setting-guide/
+To understand the network for VirtualBox, here is a nice guide: [nakivo.com/blog/virtualbox-network-setting-guide](https://www.nakivo.com/blog/virtualbox-network-setting-guide/)
 
 Notice: **Never** use _Bridged Adapter_ with Serveradmin in _devmode_. This will open up your database and code to the world outside your computer.
 
 First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`**. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`, `NatNetwork1` ...)
-
 
 Create a new VM. (`Machine` -> `Create`). Make sure to make the maximum capacity of the disc big enough. It is growing dynamicly, so it will not will fill up your harddrive until you filled it.
 
@@ -90,11 +89,13 @@ Serveradmin require currently CentOS 8.2.2004 (And isn't maintained to support o
 
 ### On AWS
 
-Search for `ami-0474ce84d449ee66f` for `8.2.2004` in `eu-north-1`, or look at https://wiki.centos.org/Cloud/AWS for other regions.
+Search for `ami-0474ce84d449ee66f` for `8.2.2004` in `eu-north-1`, or look at [wiki.centos.org/Cloud/AWS](https://wiki.centos.org/Cloud/AWS) for other regions.
+
+Don't foreget to setup auto-recover [Amazon docs: UsingAlarmActions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/UsingAlarmActions.html)
 
 ### As local virtual server
 
-Download CentOS Minimal ISO-image: https://www.centos.org/download/
+Download CentOS Minimal ISO-image: [centos.org/download](https://www.centos.org/download/)
 
 If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enterprise Linux 8.2 (rhel8.2)`
 
