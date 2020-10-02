@@ -69,7 +69,6 @@ Before running the VM, go into settings:
 **Network:**
 
 > You need 2 network adapters:
-
 > * Adapter 1: `Host-only Adapter` with `vboxnet0`. This is used to connect from your host (your computer) to the VM.
 > * Adapter 2: `NAT` For internet-connection **from** the VM.
 
