@@ -58,7 +58,7 @@ For now you probably have access to an already set up repo.
 
 To understand the network for VirtualBox, here is a nice guide: https://www.nakivo.com/blog/virtualbox-network-setting-guide/
 
-**Never** use _Bridged Adapter_ with Serveradmin in _devmode_.
+Notice: **Never** use _Bridged Adapter_ with Serveradmin in _devmode_. This will open up your database and code to the world outside your computer.
 
 First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`**. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`, `NatNetwork1` ...)
 
@@ -69,15 +69,16 @@ Before running the VM, go into settings:
 
 **Network:**
 
-You need 2 network adapters:
+> You need 2 network adapters:
 
-* Adapter 1: `Host-only Adapter` with `vboxnet0`. This is used to connect from your host (your computer) to the VM.
-* Adapter 2: `NAT` For internet-connection **from** the VM.
+> * Adapter 1: `Host-only Adapter` with `vboxnet0`. This is used to connect from your host (your computer) to the VM.
+> * Adapter 2: `NAT` For internet-connection **from** the VM.
 
 **Shared Folders:**
 
-For _devmode_:
-Share a folder with the `Folder Name`: `workspace`.
+> For _devmode_:
+> Share a folder with the `Folder Name`: `workspace`.
+
 
 Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for CentOS. See `CentOS`for next step.
 
@@ -167,21 +168,23 @@ sudo bash bootstrap.sh
 
 5. Log out, log in as a sudo-user (It should now be possible with public-key authentication with the sudo-users. The sudo-users must be specified in the serveradmin config.)
 
-6. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
+6. Only for devmode with VirtualBox Shared folders, run: `<prefix>_ansible_vboxsf`
 
-7. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
+7. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
 
-8. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
+8. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
 
-9. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
+9. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
+
+10. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
 
 ### Devmode
 
 See `Bootstrap a server` for setting up server.
 
-Step 8 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with Samba or NFS.
+Step 9 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with VBox shared folders, Samba or NFS.
 
-Step 9 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
+Step 10 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
 The page gives you some basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
 
 ### Access local database
