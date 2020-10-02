@@ -44,7 +44,7 @@ Repo-global variables:
 Variables normally set up per host:
 * `application_instances` - A list of selected instances from `applications` with settings for this host, like name of environment (dev, test, prod etc), database connection and domain-names.
 * `users` - A list of admin users from `users_all` to add on this host
-* `data_migrations` - Configuration for generating scripts that copy databases and files from other servers.
+* `data_migrations` - Configuration for generating scripts to copy databases and files from other servers.
 * `backup` - Configuration for backup of this server
 
 ## Setup
