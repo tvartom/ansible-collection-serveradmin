@@ -100,38 +100,38 @@ If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enter
 
 ### CentOS setup
 
-1. Choose English (United States) as OS language. (For Googlable error messages) Press Next.
+#### 1. Choose English (United States) as OS language. (For Googlable error messages) Press Next.
 
-2. Choose keyboard, this may differ from language (Removed unused).
+#### 2. Choose keyboard, this may differ from language (Removed unused).
 
-3. Network & Host Name
+#### 3. Network & Host Name
 
 Enable **all** network adapters.
 Ethernet (enp?s?) enabled!
 
 Host Name: Same as in Ansible inventory
 
-4. Time & Date
+#### 4. Time & Date
 
 Choose Time Zone and Network Time: On.
 
 Do this after enabling network for the server.
 
-5. Software Selection
+#### 5. Software Selection
 
 Change to `Minimal Install`
 
-6. Installation Destination
+#### 6. Installation Destination
 
 Leave default and confirm with `Done`.
 
-7. Begin installation
+#### 7. Begin installation
 
 Set Root Password and user if wanted. (The user will be set up by `<prefix>_ansible_serveradmin`, so not needed.)
 
 Wait and Reboot!
 
-8. Log in as `root` to make sure your network is set up and find your ip-address.
+#### 8. Log in as `root` to make sure your network is set up and find your ip-address.
 
 Run `nmcli`.
 
@@ -144,39 +144,39 @@ Run: `nmcli` again to make sure everything looks ok, and find your new ip-addres
 
 (`ip addr` is an alternative to find your ip-address.)
  
-9. From now on can you SSH to the machine.
+#### 9. From now on can you SSH to the machine.
 
 Use `ssh -A <ip address>` or Putty (with agent forwarding).
 
-10. Continue with `Bootstrap a server`
+#### 10. Continue with `Bootstrap a server`
 
 ### Bootstrap a server
 
 When asked for `### Serveradmin-repository on Github ###` you need to give details for the configuration repo.
 
-1. Log in as root or a any sudo-user
+#### 1. Log in as root or a any sudo-user
 
-2. Run:
+#### 2. Run:
 ```
 curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh -o bootstrap.sh
 sudo bash bootstrap.sh
 ```
 
-3. Log out, log in again. (With root if no sudo-user for serveradmin is created yet)
+#### 3. Log out, log in again. (With root if no sudo-user for serveradmin is created yet)
 
-4. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
+#### 4. Run: `<prefix>_ansible_serveradmin` to set up all main components of the server
 
-5. Log out, log in as a sudo-user (It should now be possible with public-key authentication with the sudo-users. The sudo-users must be specified in the serveradmin config.)
+#### 5. Log out, log in as a sudo-user (It should now be possible with public-key authentication with the sudo-users. The sudo-users must be specified in the serveradmin config.)
 
-6. Only for devmode with VirtualBox Shared folders, run: `<prefix>_ansible_vboxsf`
+#### 6. Only for devmode with VirtualBox Shared folders, run: `<prefix>_ansible_vboxsf`
 
-7. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
+#### 7. Run: Any datamigration, if your applications is dependent on it. (Remember to have agent forward activated for your ssh-connection)
 
-8. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
+#### 8. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
 
-9. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
+#### 9. Only for devmode, Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
-10. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
+#### 10. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
 
 ### Devmode
 
