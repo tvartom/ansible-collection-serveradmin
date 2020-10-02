@@ -73,7 +73,7 @@
 
     - include_role:
         name: bertvv_samba
-      when: applications_devmode | d(false) and applications_devmode_samba | d(true)
+      when: applications_devmode | d(false) and applications_devmode_samba | d(false)
       vars:
         ansible_become: yes
         samba_shares:
