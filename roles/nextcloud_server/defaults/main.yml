@@ -4,8 +4,6 @@
 # Info:
 # https://owncloud.org/changelog/
 
-php_package: php
-
 nextcloud_tempdir: /tmp/nextcloud
 
 nextcloud_db_create: true

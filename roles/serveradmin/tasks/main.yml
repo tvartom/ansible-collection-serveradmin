@@ -125,7 +125,6 @@
   loop:
     - { path: "{{ serveradmin.path }}"}
     - { path: "{{ serveradmin.path }}/repos"}
-#    - { path: "/home/{{ applications_devmode_user|d() }}/workspace", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
   tags:
     - bootstrap
 

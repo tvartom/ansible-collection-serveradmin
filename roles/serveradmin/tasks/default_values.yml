@@ -1,0 +1,10 @@
+---
+# Include this to get default values for from /defaults/main.yml
+# Usage:
+#- include_role:
+#    name: serveradmin
+#    tasks_from: default_values
+#    public: yes
+
+- name: "Used for including default vars values"
+  meta: noop

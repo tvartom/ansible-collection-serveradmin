@@ -7,15 +7,15 @@
   <service name="{{ item.name }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
   {% endfor %}
 
-  {% if applications_devmode | d(False) %}
-  {%   if applications_devmode_samba | d(true) %}
+  {% if applications_devmode %}
+  {%   if applications_devmode_samba %}
   <!-- Samba is used by devmode -->
   <port protocol="tcp" port="137"/><!-- Samba: NETBIOS Name Service (netbios-ns) -->
   <port protocol="tcp" port="138"/><!-- Samba: NETBIOS Datagram Service (netbios-dgm) -->
   <port protocol="tcp" port="139"/><!-- Samba: NETBIOS session service (netbios-ssn) -->
   <port protocol="tcp" port="445"/><!-- Samba: if you are using Active Directory (microsoft-ds) -->
   {%   endif %}
-  {%   if applications_devmode_nfs | d(false) %}
+  {%   if applications_devmode_nfs %}
   <!-- NFS is used by devmode -->
   <port protocol="tcp" port="2049"/><!-- NFSv4 -->
   {%   endif %}

@@ -1,6 +1,4 @@
 ---
-applications_devmode: false
-
 # defaults file for ansible-role-basic_centos_tools
 packages:
   - name: byobu
@@ -11,10 +9,12 @@ packages:
   - name: pv #progressbar for pipe
   #- name: net-tools #ifconfig finns i denna
   #- name: rsync
-  - name: fuse-overlayfs # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
+  - name: fuse-overlayfs
+    when: "{{ applications_devmode_use_overlayfs }}"
+  # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
   - name: https://github.com/tvartom/rpms/raw/master/centos8/bindfs/bindfs-1.14.3-2.el8.x86_64.rpm
     disable_gpg_check: true
-    when: "{{ applications_devmode }}"
+    when: "{{ applications_devmode and not applications_devmode_use_overlayfs }}"
   - name: glibc-langpack-en
     when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int == 8 }}"
   - name: glibc-langpack-sv

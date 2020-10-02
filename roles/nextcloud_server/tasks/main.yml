@@ -3,6 +3,12 @@
 # chcon -R -t httpd_sys_rw_content_t cloud
 # chown -R cloud:cloud cloud
 
+# Include this to get default values for from php/defaults/main.yml
+- include_role:
+    name: php
+    tasks_from: default_values
+    public: yes
+
 - name: Install php-dependencis (YUM)
   become: yes
   yum:

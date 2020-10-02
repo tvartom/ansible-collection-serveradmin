@@ -1,5 +1,10 @@
 ---
 - include_role:
+    name: applications
+    tasks_from: default_values
+    public: yes
+
+- include_role:
     name: dnf_module
     tasks_from: install_package_from_module
   vars:

@@ -2,6 +2,10 @@
 #https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
 #https://github.com/ansible/ansible/issues/64852
 #https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/installing_managing_and_removing_user-space_components/removing-rhel-8-content_using-appstream
+- include_role:
+   name: applications
+   tasks_from: default_values
+   public: yes
 
 - include_role:
     name: dnf_module

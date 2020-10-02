@@ -1,9 +1,12 @@
 ---
 single_quote: "'"
 double_quote: '"'
+
 php_package: php
 php_fpm_service: php-fpm
 php_fpm_pool_path: /etc/php-fpm.d
+webserver_php_version: 7.3
+
 nginx_user: nginx
 nginx_group: nginx
 
@@ -14,9 +17,14 @@ applications_devmode_nfs: false
 applications_devmode_vboxsf: true #Default method
 applications_devmode_use_overlayfs: false
 
+# For available versions:
+# dnf module list nginx
+webserver_nginx_version: 1.16
 
 webserver_use_ssl: true
 webserver_use_letsencrypt: "{{ (not applications_devmode) and webserver_use_ssl }}"
+webserver_generate_dhparam: "{{ (webserver_use_ssl and not applications_devmode) | ternary('confirm', false) }}"
+
 applications_enable_https_by_default: true
 
 

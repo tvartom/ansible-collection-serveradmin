@@ -19,6 +19,10 @@
             #- users
           host_vars_from_host: true
           diskspace_message: false
+    - include_role:
+        name: applications
+        tasks_from: default_values
+        public: yes
 
     - include_role:
         name: basic_centos_tools
@@ -73,7 +77,7 @@
 
     - include_role:
         name: bertvv_samba
-      when: applications_devmode | d(false) and applications_devmode_samba | d(false)
+      when: applications_devmode and applications_devmode_samba
       vars:
         ansible_become: yes
         samba_shares:
@@ -99,7 +103,7 @@
 
     - include_role:
         name: nfs
-      when: applications_devmode | d(false) and applications_devmode_nfs | d(false)
+      when: applications_devmode and applications_devmode_nfs
       vars:
         nfs:
           exports:

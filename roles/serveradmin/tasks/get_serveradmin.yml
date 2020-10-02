@@ -5,6 +5,12 @@
 #
 # Returns: serveradmin
 
+# Usage:
+- include_role:
+    name: applications
+    tasks_from: default_values
+    public: yes
+
 - include_role:
     name: git
     tasks_from: get_repo_url

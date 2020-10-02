@@ -1,4 +1,8 @@
 ---
+- include_role:
+    name: applications
+    tasks_from: default_values
+    public: yes
 
 - include: nginx.yml
 

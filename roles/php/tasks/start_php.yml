@@ -6,6 +6,8 @@
 #    state: started
 #    enabled: true
 
+
+
 - name: Gather list of php pool conf
   find:
     paths: "{{ php_fpm_pool_path }}"

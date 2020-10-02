@@ -1,0 +1,14 @@
+---
+- hosts: "{{ target }}"
+  connection: "{{ connection_type | default('ssh', true) }}"
+  gather_facts: yes
+  collections:
+    - tvartom.serveradmin
+  tasks:
+    - include_role:
+        name: applications
+        tasks_from: default_values
+        public: yes
+
+    - debug:
+        var: applications_devmode

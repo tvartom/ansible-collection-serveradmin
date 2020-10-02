@@ -2,15 +2,11 @@
 - name: "Create dir for serveradmin"
   become: yes
   file:
-    path: "{{ item.path }}"
+    path: "/home/{{ applications_devmode_user }}/workspace"
     state: directory
-    owner: "{{ item.owner | default( serveradmin.process_user, true ) }}"
-    group: "{{ item.group | default( serveradmin.process_group, true ) }}"
-    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
-    mode: "{{ item.mode | d('u=rwx,g=rx,o=rx') }}"
-  when: item.when | default(True)
-  loop:
-    - { path: "/home/{{ applications_devmode_user|d() }}/workspace", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
+    owner: "{{ applications_devmode_user }}"
+    group: "{{ applications_devmode_user }}"
+  when: applications_devmode
 
 - name: "Mount serveradmin-repo for devmode"
   include_role:

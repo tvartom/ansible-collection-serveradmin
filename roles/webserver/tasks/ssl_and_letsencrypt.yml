@@ -1,4 +1,9 @@
 ---
+- include_role:
+    name: applications
+    tasks_from: default_values
+    public: yes
+
 ### Letsencrypt ###
 - name: "Create /opt/letsencrypt"
   become: yes

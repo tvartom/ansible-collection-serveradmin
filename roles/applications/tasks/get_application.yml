@@ -7,6 +7,11 @@
 #
 # Returnerar: application
 
+- include_role:
+    name: php
+    tasks_from: default_values
+    public: yes
+
 - name: "Temp variable: environment"
   set_fact:
     temp_application_environment: >-
