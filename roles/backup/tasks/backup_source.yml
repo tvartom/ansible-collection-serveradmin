@@ -38,12 +38,13 @@
     createhome: yes
     system: "{{ ansible_os_family != 'Debian' }}"
 
-- name: "Let user join group to read source-data"
-  become: yes
-  user:
-    name: "{{ backup_info.source_user.name }}"
-    groups: "{{ backup_info.instances.values() | map(attribute='jobs') | flatten | selectattr('group_to_access', 'defined') | map(attribute='group_to_access') | unique | list }}"
-    append: true
+# 2020-10-03 LL använd bindfs istället.
+#- name: "Let user join group to read source-data"
+#  become: yes
+#  user:
+#    name: "{{ backup_info.source_user.name }}"
+#    groups: "{{ backup_info.instances.values() | map(attribute='jobs') | flatten | selectattr('group_to_access', 'defined') | map(attribute='group_to_access') | unique | list }}"
+#    append: true
 
 # https://www.shell-tips.com/2014/09/08/sudo-sorry-you-must-have-a-tty-to-run-sudo/
 #- name: Make rsync work with sudo
@@ -68,35 +69,27 @@
   authorized_key:
     user: "{{ backup_info.source_user.name }}"
     manage_dir: yes
-    key: "{{ item }}"
+    key: "{{ item.value.public_key }}"
     key_options: |-
-      command="{{ backup_info.source_user.home }}/validate-backup-cmd.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding
-  loop: "{{ backup_dest_public_keys }}"
+      command="{{ backup_info.source_user.home }}/validate-backup-cmd_{{ item.key }}.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding
+  loop: "{{ backup_dest_with_public_keys | dict2items }}"
 
-- name: Security filter-command
-  become: yes
-  template:
-    dest: "{{ backup_info.source_user.home }}/validate-backup-cmd.sh"
-    src: validate-backup-cmd.sh.j2
-    owner: "root" #Ägs av root för att inte ska kunna ändras av med rsync.
-    group: "{{ backup_info.source_user.group }}"
-    mode: "u=rwx,g=rx,o="
+- name: "List scripts to create"
+  set_fact:
+    backup_source_scripts:
+      - validate-backup-cmd
+      - preparebackup
+      - encrypt-file
 
 - name: "Script in source home"
   become: yes
   template:
-    dest: "{{ backup_info.source_user.home }}/{{ item.dest }}"
-    src: "{{ item.src }}"
-    owner: "root" #Ägs av root för att inte ska kunna ändras av med rsync.
+    dest: "{{ backup_info.source_user.home }}/{{ item.1 }}_{{ item.0 }}.sh"
+    src: "{{ item.1 }}.sh.j2"
+    owner: "root" # Ägs av root för att inte ska kunna ändras av med rsync.
     group: "{{ backup_info.source_user.group }}"
     mode: "u=rwx,g=rx,o="
-  loop:
-    - dest: validate-backup-cmd.sh
-      src: validate-backup-cmd.sh.j2
-    - dest: preparebackup.sh
-      src: preparebackup.sh.j2
-    - dest: encrypt-file.sh
-      src: encrypt-file.sh.j2
+  loop: "{{ backup_dest_with_public_keys.keys() | product(backup_source_scripts) | list }}"
 
 - name: "Lista databaser med rättigheter"
   set_fact:

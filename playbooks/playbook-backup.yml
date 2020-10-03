@@ -51,6 +51,17 @@
         | map('extract', hostvars, 'backup_dest_public_key')
         | select('defined') | list
       -}}
+    backup_dest_with_public_keys: |-
+      {%- set output = {} -%}
+      {%- for hostname in
+                backup.instances.values()
+                | map(attribute='dest_instances') | flatten | map(attribute='host')
+                | intersect(hostvars.keys()) -%}
+      {%-   if hostvars[hostname].backup_dest_public_key is defined -%}
+      {{-     output.__setitem__(hostname, {'public_key': hostvars[hostname].backup_dest_public_key}) -}}
+      {%-   endif -%}
+      {%- endfor -%}
+      {{- output -}}
   tasks:
     - include_role:
         name: backup

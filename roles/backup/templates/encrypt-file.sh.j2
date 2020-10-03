@@ -1,4 +1,8 @@
 #!/bin/bash
+{% set hostname = item.0 %}
+{% set script_output_dir = backup_info.backup_script_output_dir ~  hostname %}
+{% set script_working_dir = backup_info.backup_script_working_dir ~ hostname %}
+
 # Exit on error:
 set -e
 
@@ -37,7 +41,7 @@ FILE_COMMENT="$3" # "Databasen xyz från abc (2020-XX-XX)"
 
 #}
 
-TAR_DIR="{{ backup_info.backup_script_working_dir }}/encrypted/$DEST_NAME"
+TAR_DIR="{{ script_working_dir }}/encrypted/$DEST_NAME"
 
 rm -rf "$TAR_DIR" || true
 mkdir -p "$TAR_DIR"
@@ -95,4 +99,4 @@ unset SYMETRIC_KEY
 
 # Paketera katalogen
 cd ..
-tar -C "$TAR_DIR" -c --remove-files -f "{{ backup_info.backup_script_output_dir }}/$DEST_NAME.tar" "."
+tar -C "$TAR_DIR" -c --remove-files -f "{{ script_output_dir }}/$DEST_NAME.tar" "."
