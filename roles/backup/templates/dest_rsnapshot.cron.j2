@@ -28,7 +28,7 @@
 {#-       -#}{{ time }} every {{ everyinstance.interval == 1 | ternary('day', everyinstance.interval ~ ' days') }}:
 {{        minute }} {{ hour }} */{{ everyinstance.interval }} * *
 {%-     elif everyinstance.unit == 'hour' -%}
-{#-       -#}{{ minute }} past every {{ everyinstance.interval == 1 | ternary('hour', everyinstance.interval ~ ' hours') }}:
+{#-       -#}{{ minute }} past every {{ (everyinstance.interval == 1) | ternary('hour', everyinstance.interval ~ ' hours') }}:
 {{        minute }} {{ range(hour % everyinstance.interval, 23, everyinstance.interval)|join(',') }} * * *
 {%-     else -%}
 {{-       None | mandatory(everyinstance.unit ~ ' is an unknown unit!') -}}
