@@ -27,7 +27,7 @@ rsync\ --server\ --sender*)
 # https://stackoverflow.com/questions/13210880/replace-one-substring-for-another-string-in-shell-script
 SSH_COMMAND="$SSH_ORIGINAL_COMMAND"
 # There must be a starting / in rsnapshot conf, so remove the first from __backuproot__-replacement:
-BACKUP_ROOT="{{ script_output_dir[1:] }}/././"
+BACKUP_ROOT="{{ script_output_dir[1:] }}"
 # Filer med __nobackup__ i sig ska aldrig gå att ta backup på.
 SSH_COMMAND="${SSH_COMMAND/rsync --server/rsync --exclude '*__nobackup__*' --server}"
 SSH_COMMAND="${SSH_COMMAND//__backuproot__/$BACKUP_ROOT}"
