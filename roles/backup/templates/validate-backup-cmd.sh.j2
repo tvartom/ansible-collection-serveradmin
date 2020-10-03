@@ -26,7 +26,8 @@ rsync\ --server\ --sender*)
 {# $SSH_ORIGINAL_COMMAND #}
 # https://stackoverflow.com/questions/13210880/replace-one-substring-for-another-string-in-shell-script
 SSH_COMMAND="$SSH_ORIGINAL_COMMAND"
-BACKUP_ROOT="{{ script_output_dir }}/././"
+# There must be a starting / in rsnapshot conf, so remove the first from __backuproot__-replacement:
+BACKUP_ROOT="{{ script_output_dir[1:] }}/././"
 # Filer med __nobackup__ i sig ska aldrig gå att ta backup på.
 SSH_COMMAND="${SSH_COMMAND/rsync --server/rsync --exclude '*__nobackup__*' --server}"
 SSH_COMMAND="${SSH_COMMAND//__backuproot__/$BACKUP_ROOT}"
@@ -43,8 +44,8 @@ SUCCESS=($SSH_ORIGINAL_COMMAND)
 {% for backupinstance in backup_info.instances.values() | list %}
 {%   for destinstance in backupinstance.dest_instances %}
 {%     if hostname == destinstance.host %}
-         if [ "${SUCCESS[1]}" = "{{ backupinstance.name }}" ] && [ "${SUCCESS[2]}" = "{{ destinstance.host }}" ]; then
-           txtfile="/opt/backup_source/success-{{ backupinstance.name }}-{{ destinstance.host }}.txt"
+         if [ "${SUCCESS[1]}" = "{{ backupinstance.name }}" ] && [ "${SUCCESS[2]}" = "{{ hostname }}" ]; then
+           txtfile="/opt/backup_source/success-{{ backupinstance.name }}-{{ hostname }}.txt"
            echo -n "${SUCCESS[3]}" > "$txtfile"
            chmod a+r "$txtfile"
            exit 0
@@ -58,8 +59,21 @@ exit 1
 ;;
 
 #Kör scriptet preparebackup.sh
-preparebackup)
-{{ backup_info.source_user.home }}/preparebackup_{{ hostname }}.sh
+preparebackup\ *)
+PREPARE=($SSH_ORIGINAL_COMMAND)
+{% for backupinstance in backup_info.instances.values() | list %}
+{%   for destinstance in backupinstance.dest_instances %}
+{%     if hostname == destinstance.host %}
+         if [ "${PREPARE[1]}" = "{{ backupinstance.name }}" ] && [ "${PREPARE[2]}" = "{{ hostname }}" ]; then
+           {{ backup_info.source_user.home }}/preparebackup_{{ hostname }}.sh "{{ backupinstance.name }}"
+           exit 0
+         fi
+{%     endif %}
+{%   endfor %}
+{% endfor %}
+echo "Rejected prepare backup"
+echo "$(date "+[%F %T]") Rejected prepare backup: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+exit 1
 ;;
 {# TODO: Separera mellan olika backupdest-hosts #}
 {% if backupscripts.stdout_lines is defined %}

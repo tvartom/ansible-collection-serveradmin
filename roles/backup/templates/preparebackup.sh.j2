@@ -11,8 +11,10 @@
 MYSQL=/usr/bin/mysql
 MYSQLDUMP=/usr/bin/mysqldump
 
+case "$1" in
 {% for instance in backup_info.instances.values() | list %}
 {%   if hostname in instance.dest_instances | map(attribute='host') | flatten | list %}
+{{ instance.name }})
 #################### {{ instance.name }} ####################
 mkdir -p "{{ script_output_dir }}/{{ instance.name }}/prepared"
 ### Skapa lastrun ###
@@ -72,9 +74,12 @@ done
 {%       endif %}
 {%     endfor %}
 rm -R "{{ script_working_dir }}/{{ instance.name }}/lastrun"
+;;
+
 {%   endif %}
 {% endfor %}
 
+esac
 
 #
 # Backup-user need following permissions:
