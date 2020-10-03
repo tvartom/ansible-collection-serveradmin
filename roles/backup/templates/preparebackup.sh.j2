@@ -62,7 +62,7 @@ for db in ${databases[@]}; do
       # Kryptera filen och kopiera till output-dir
       {{ backup_info.source_user.home }}/encrypt-file_{{ hostname }}.sh \
         "{{ script_working_dir }}/{{ instance.name }}/__nobackup__$db.gz" \
-        "$output_name" \
+        "{{ instance.name }}/prepared/$output_name" \
         "Databas $db från {{ backup_info.target }} $(date)."
     {% else %}
       # Ingen kryptering, kopiera filen direkt till output-dir:

@@ -54,7 +54,7 @@ ${FILE_COMMENT}
 Filen ${SOURCE_FILE_FULLNAME}.gpg är krypterat med ett genererat lösenord.
 Symmetrisk kryptering med AES256 används med kommandot gpg.
 
-Det genererade lösenordet finns krypterade i filerna *-key.bin.gpg
+Det genererade lösenordet finns krypterat i filerna *-key.bin.gpg
 och går enbart att avkryptera med respektive personlig nyckel.
 
 De som kan avkryptera säkerhetskopian är:
@@ -76,7 +76,7 @@ SYMETRIC_KEY="$(openssl rand -base64 32)"
 {{   counter.__setitem__('i', counter.i+1) }}
 echo "$SYMETRIC_KEY" | gpg --trust-model always --armor --encrypt --recipient "{{ user.pgp_user }}" -o "key-{{ user.pgp_user }}.bin.gpg"
 
-# Gör ett script förr användare {{ user.pgp_user }} 
+# Gör ett script för användare {{ user.pgp_user }} 
 cat <<EOT >> unpack-{{ user.pgp_user }}.sh
 #!/bin/bash
 # Avkrypterar den symetriska nyckeln för att sedan avkryptera data-filen med denna.
