@@ -19,4 +19,4 @@ TIMESTAMP="$(grep "{{ backupinstance.dest.every[0].name }}: completed successful
 SIZE="$(du --summarize --human-readable "{{ backupinstance.dest.root }}/{{ backupinstance.name }}/{{ backupinstance.dest.every[0].name }}.0" | cut -f1)"
 
 
-/usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} success "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}" "\"$TIMESTAMP $SIZE\""
+/usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} success "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}" "'$TIMESTAMP $SIZE'"
