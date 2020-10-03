@@ -13,4 +13,10 @@
 # "success" är inget riktigt kommando utan tolkas i "validate-backup-cmd.sh"
 # som sparar undan datumet i /opt/backup_source
 # Där kan det senare läsas av scriptet <prefix>_list_backups
-/usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} success "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}" "$(grep "{{ backupinstance.dest.every[0].name }}: completed successfully" {{ backupinstance.dest.logfile }} | tail -1 | grep -oP "(?<=\[).{10,30}(?=\])")"
+
+TIMESTAMP="$(grep "{{ backupinstance.dest.every[0].name }}: completed successfully" {{ backupinstance.dest.logfile }} | tail -1 | grep -oP "(?<=\[).{10,30}(?=\])")"
+# "
+SIZE="$(du --summarize --human-readable "{{ backupinstance.dest.root }}/{{ backupinstance.name }}/{{ backupinstance.dest.every[0].name }}.0" | cut -f1)"
+
+
+/usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} success "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}" "$TIMESTAMP $SIZE"
