@@ -264,7 +264,7 @@ backup_exec	true ########## Backup of {{ backup_info.target }}({{ backupinstance
 {%     if loop.changed('prepare') %}{# Lite ett hack, skriver bara ut första gång, sen är den inte ändrad #}
 {#       #}backup_exec	/usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} preparebackup "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}"
 {# https://serverfault.com/questions/472885/how-to-truncate-backup-paths-in-rsnapshot ././ #}
-{#       #}backup	{{ backup_info.source_user.name }}@{{ backup_info.ssh_host }}:/__backuproot__/{{ backupinstance.name }}/././prepared/	prepared/
+{#       #}backup	{{ backup_info.source_user.name }}@{{ backup_info.ssh_host }}:/__backuproot__/{{ backupinstance.name }}/prepared/././	prepared/
 {%     endif %}
 {%   else %}
        {{ not_implemented | mandatory('Serveradmin backup method not implemented yet') }}
