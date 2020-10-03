@@ -25,21 +25,18 @@
   when: ansible_os_family == "RedHat"
   notify: "Reload php-fpm"
 
+- name: "Combine settings with default-values for xdebug"
+  set_fact:
+    php_xdebug_settings: "{{ php_xdebug_default | combine( php_xdebug | d({}) ) }}"
+
+# To comment out a setting, set the value to: null
+# Null value: null
+# Null test: is none
 - name: "xdebug php-ini"
   become: yes
   lineinfile:
     path: "{{ php_xdebug_ini }}"
-    regexp: '^;?{{ item.option }} ='
-    line: "{{ item.option }} = {{ item.value }}"
-  loop:
-    - option: xdebug.remote_enable
-      value: 1
-    - option: xdebug.remote_autostart
-      value: 1
-    # https://xdebug.org/docs/display
-    - option: xdebug.overload_var_dump
-      value: 0
-    # https://xdebug.org/docs/all_settings#remote_connect_back
-    - option: xdebug.remote_connect_back
-      value: 1
+    regexp: '^;?{{ item.key }} ='
+    line: "{{ ';' if item.value is none else '' }}{{ item.key }} = {{ item.value }}"
+  loop: "{{ php_xdebug_settings | dict2items}}"
   notify: "Reload php-fpm"

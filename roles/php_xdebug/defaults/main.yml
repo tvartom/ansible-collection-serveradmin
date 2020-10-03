@@ -5,3 +5,9 @@
 
 #CentOS 8, with PHP 7.3:
 php_xdebug_ini: /etc/php.d/15-xdebug.ini
+
+php_xdebug_default:
+  remote_enable: 1
+  remote_autostart: 1
+  overload_var_dump: 0 # https://xdebug.org/docs/display
+  remote_connect_back: 1 # https://xdebug.org/docs/all_settings#remote_connect_back

@@ -30,7 +30,7 @@ If _devmode_ is used:
 
 * The security is lower, please do not expose the server to incoming connections from internet.
 * All git repos for an application is initiated and shared with the host with VirtualBox Shared folder, Samba or NFS
-* Debug features are enabled. (Xdebug (TODO))
+* Debug PHP with Xdebug
 
 The Ansible Collection doesn't work stand-alone, it needs a Git repository with configuration for a server or a group of servers.
 The configuration repo contains this configuration in `group_vars/` and `host_vars/`:
@@ -189,12 +189,35 @@ Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
 ### Devmode
 
+
+>applications_devmode: true (default is `false`)
+
 See `Bootstrap a server` for setting up server.
 
 Step 9 will initiate all git repos for your applications. These are placed in `/home/<devmode_user>/workspace` and accessible with VBox shared folders, Samba or NFS.
 
 Step 10 gives you the option to deploy `devmode_infopage`. When you've done that, you can reach an infopage by opening that ip-address in your webbrowser.
 The page gives you some basic information including config to paste in your local hosts-file, to be able to access your applications on the server.
+
+#### PHP Xdebug
+
+Prerequirements to be installed and activated:
+>**`php_enable`**: `true` (Default is `false`)
+>**`applications_devmode`**: true (Default is `false`)
+>**`applications_devmode_xdebug`**: true (Default is `true`)
+
+Any settings from [xdebug.org/docs/all_settings](https://xdebug.org/docs/all_settings) can be set.
+The following are default:
+
+```
+php_xdebug:
+  remote_enable: 1
+  remote_autostart: 1
+  overload_var_dump: 0 # https://xdebug.org/docs/display
+  remote_connect_back: 1 # https://xdebug.org/docs/all_settings#remote_connect_back
+```
+
+In your IDE, setup **Accept remote session (JIT)** for Xdebug on port 9000. (This is not from `localhost`, `prompt` is working for Eclipse)
 
 ### Access local database
 
