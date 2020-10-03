@@ -60,7 +60,7 @@ for db in ${databases[@]}; do
     output_name="$db$(date "+-%Y%m%d-%H%M")"
     {% if job.encrypt | default(false) %}
       # Kryptera filen och kopiera till output-dir
-      {{ backup_info.source_user.home }}/encrypt-file.sh \
+      {{ backup_info.source_user.home }}/encrypt-file_{{ hostname }}.sh \
         "{{ script_working_dir }}/{{ instance.name }}/__nobackup__$db.gz" \
         "$output_name" \
         "Databas $db från {{ backup_info.target }} $(date)."
