@@ -1,6 +1,6 @@
 ---
-- name: "Backup dest"
-  hosts: "prod"
+- name: "Backup dest (Setup and get public keys)"
+  hosts: all
   gather_facts: false
   collections:
     - tvartom.serveradmin

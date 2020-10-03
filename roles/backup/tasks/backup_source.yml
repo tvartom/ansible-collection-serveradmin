@@ -174,7 +174,7 @@
   become: yes
   template:
     src: list_backups.sh.j2
-    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}_list_backups"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}list_backups"
     owner: "{{ serveradmin.process_user }}"
     group: "{{ serveradmin.process_user }}"
     mode: "u=rwx,g=rx,o=rx"

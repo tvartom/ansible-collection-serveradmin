@@ -12,6 +12,5 @@
 # Detta ssh:as med kommandot "success" till den backupade servern.
 # "success" är inget riktigt kommando utan tolkas i "validate-backup-cmd.sh"
 # som sparar undan datumet i /opt/backup_source
-# Där kan det senre läsas av scriptet (org)_list_backups
+# Där kan det senare läsas av scriptet <prefix>_list_backups
 /usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} success "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}" "$(grep "{{ backupinstance.dest.every[0].name }}: completed successfully" {{ backupinstance.dest.logfile }} | tail -1 | grep -oP "(?<=\[).{10,30}(?=\])")"
-
