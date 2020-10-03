@@ -31,7 +31,7 @@
 {#-       -#}{{ minute }} past every {{ everyinstance.interval == 1 | ternary('hour', everyinstance.interval ~ ' hours') }}:
 {{        minute }} {{ range(hour % everyinstance.interval, 23, everyinstance.interval)|join(',') }} * * *
 {%-     else -%}
-{{-       null | mandatory(everyinstance.unit ~ ' is an unknown unit!') -}}
+{{-       None | mandatory(everyinstance.unit ~ ' is an unknown unit!') -}}
 {%-     endif -%}
 {{- "\t" -}}{{ backup_info.dest_user.name }}	{{ backupinstance.rsnapshotscript }} {{ everyinstance.name }}
 
