@@ -12,25 +12,26 @@
 {%   for everyinstance in backupinstance.dest.every | reverse %}
 {%     set minute = (backupinstance.dest.start_minute + loop.index0 * backupinstance.dest.minutes_between) % 60 %}
 {%     set hour = backupinstance.dest.start_hour + ((backupinstance.dest.start_minute + loop.index0 * backupinstance.dest.minutes_between) // 60) %}
+{%     set time = '{%02d}:{%02d}'.format(hour, minute) %}
 
-# Every{#- ... year/month/week/day/hour... -#}{{- ' ' -}}
+# {#- ... year/month/week/day/hour... -#}{{- ' ' -}}
 {%-     if everyinstance.unit == 'year' -%}
-{#-       -#}year: (31 dec)
+{#-       -#}{{ time }} on 31 dec every year:
 {{        minute }} {{ hour }} 31 12 *
 {%-     elif everyinstance.unit == 'month' -%}
-{#-       -#}{{ everyinstance.interval }} month(s): (1st)
+{#-       -#}{{ time }} the 1st every {{ everyinstance.interval == 1 | ternary('month', everyinstance.interval ~ ' months') }}:
 {{        minute }} {{ hour }} 1 */{{ everyinstance.interval }} *
 {%-     elif everyinstance.unit == 'week' -%}
-{#-       -#}week: (Monday)
+{#-       -#}{{ time }} on Monday every week:
 {{        minute }} {{ hour }} * * 1
 {%-     elif everyinstance.unit == 'day' -%}
-{#-       -#}{{ everyinstance.interval }} day(s):
+{#-       -#}{{ time }} every {{ everyinstance.interval == 1 | ternary('day', everyinstance.interval ~ ' days') }}:
 {{        minute }} {{ hour }} */{{ everyinstance.interval }} * *
 {%-     elif everyinstance.unit == 'hour' -%}
-{#-       -#}{{ everyinstance.interval }} hour(s):
+{#-       -#}{{ minute }} past every {{ everyinstance.interval == 1 | ternary('hour', everyinstance.interval ~ ' hours') }}:
 {{        minute }} {{ range(hour % everyinstance.interval, 23, everyinstance.interval)|join(',') }} * * *
 {%-     else -%}
-{{-       "Okänd unit!"/0 -}}
+{{-       null | mandatory(everyinstance.unit ~ ' is an unknown unit!') -}}
 {%-     endif -%}
 {{- "\t" -}}{{ backup_info.dest_user.name }}	{{ backupinstance.rsnapshotscript }} {{ everyinstance.name }}
 
