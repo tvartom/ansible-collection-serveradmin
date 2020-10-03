@@ -12,7 +12,7 @@
 {%   for everyinstance in backupinstance.dest.every | reverse %}
 {%     set minute = (backupinstance.dest.start_minute + loop.index0 * backupinstance.dest.minutes_between) % 60 %}
 {%     set hour = backupinstance.dest.start_hour + ((backupinstance.dest.start_minute + loop.index0 * backupinstance.dest.minutes_between) // 60) %}
-{%     set time = '{%02d}:{%02d}'.format(hour, minute) %}
+{%     set time = '{:02d}:{:02d}'.format(hour, minute) %}
 
 # {#- ... year/month/week/day/hour... -#}{{- ' ' -}}
 {%-     if everyinstance.unit == 'year' -%}
