@@ -29,7 +29,7 @@
 {{        minute }} {{ hour }} */{{ everyinstance.interval }} * *
 {%-     elif everyinstance.unit == 'hour' -%}
 {#-       -#}{{ minute }} past every {{ (everyinstance.interval == 1) | ternary('hour', everyinstance.interval ~ ' hours') }}:
-{{        minute }} {{ range(hour % everyinstance.interval, 23, everyinstance.interval)|join(',') }} * * *
+{{        minute }} {{ range(hour % everyinstance.interval, 24, everyinstance.interval)|join(',') }} * * *
 {%-     else -%}
 {{-       wrong_unit | mandatory(everyinstance.unit ~ ' is an unknown unit!') -}}
 {%-     endif -%}
