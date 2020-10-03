@@ -11,7 +11,8 @@ echo -e "${BIYellow}Senaste säkerhetskopieringar av denna server:${NC}"
 
 {% for backupinstance in backup_info.instances.values() | list %}
 {%   for destinstance in backupinstance.dest_instances %}
-       INSTANCE="$(cat "/opt/backup_source/success-{{ backupinstance.name }}-{{ destinstance.host }}.txt" | sed "s/T/ /" && [ "${PIPESTATUS[0]}" = "0" ] || echo -e "${Red}(SAKNAS)${NC}")"
+{#       INSTANCE="$(cat "/opt/backup_source/success-{{ backupinstance.name }}-{{ destinstance.host }}.txt" | sed "s/T/ /" && [ "${PIPESTATUS[0]}" = "0" ] || echo -e "${Red}(SAKNAS)${NC}")" #}
+       INSTANCE="$(cat "/opt/backup_source/success-{{ backupinstance.name }}-{{ destinstance.host }}.txt" || echo -e "${Red}(SAKNAS)${NC}")"
 {# " #}
        echo -e "$INSTANCE ${Green}{{ backupinstance.name }}${NC} till ${Green}{{ destinstance.host }}${NC}"
 {%   endfor %}

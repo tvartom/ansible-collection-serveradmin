@@ -46,7 +46,7 @@ SUCCESS=($SSH_ORIGINAL_COMMAND)
 {%     if hostname == destinstance.host %}
          if [ "${SUCCESS[1]}" = "{{ backupinstance.name }}" ] && [ "${SUCCESS[2]}" = "{{ hostname }}" ]; then
            txtfile="/opt/backup_source/success-{{ backupinstance.name }}-{{ hostname }}.txt"
-           echo -n "${SUCCESS[3]}" > "$txtfile"
+           echo -n "${SUCCESS[@]:3}" > "$txtfile"
            chmod a+r "$txtfile"
            exit 0
          fi
