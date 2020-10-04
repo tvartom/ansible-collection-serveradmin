@@ -162,6 +162,6 @@ sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && ansible-playbook --extra-v
 echo -e "Done\n"
 
 echo "### Bootstrap is done ###"
-echo "1. REBOOT! Run 'sudo reboot'. (Kernel is probably updated)
+echo "1. REBOOT! Run 'sudo reboot'. (Kernel is probably updated)"
 echo "2. Relogin as root or a sudo-user specified in serveradmin."
 echo "3. Run '<prefix>_ansible_serveradmin' to setup server."
