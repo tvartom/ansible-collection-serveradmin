@@ -144,7 +144,7 @@ Run: `nmcli` again to make sure everything looks ok, and find your new ip-addres
 
 (`ip addr` is an alternative to find your ip-address.)
  
-#### 9. From now on can you SSH to the machine.
+#### 9. You can from now on SSH to the machine.
 
 Use `ssh -A root@<ip address>` or Putty.
 
