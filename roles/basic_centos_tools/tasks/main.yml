@@ -1,15 +1,14 @@
 ---
-- debug:
-   var: packages
+- include_role:
+    name: applications
+    tasks_from: default_values
+    public: yes
+
 - debug:
    var: current_packages
 
 # (  packages | selectattr('when', 'undefined') | list)
 # (packages | selectattr('when', 'defined') | selectattr('when') | list)
-- debug: 
-    var: basic_default
-
-
 
 - name: Hämta default-värden
   set_fact:

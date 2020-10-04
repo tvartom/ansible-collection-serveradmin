@@ -115,7 +115,7 @@ Host Name: Same as in Ansible inventory
 
 Choose Time Zone and Network Time: On.
 
-Do this after enabling network for the server.
+Do this after enabling network for the server. (Turn on and off Network Time will remove warning about networking if you completed step 3.)
 
 #### 5. Software Selection
 
@@ -129,21 +129,22 @@ Leave default and confirm with `Done`.
 
 Set Root Password and user if wanted. (The user will be set up by `<prefix>_ansible_serveradmin`, so not needed.)
 
-Wait and Reboot!
+Wait until completed. Remove CentOS installation disk and reboot.
 
 #### 8. Log in as `root` to make sure your network is set up and find your ip-address.
 
 Run `nmcli`.
 
-CentOS setup seems to sometimes fail activate all network interfaces/connections for interfaces.
-Run: `nmcli --fields name,autoconnect connection show` to see connection-names and if `ONBOOT=yes` in set in `/etc/sysconfig/network-scripts/ifcfg-<connection-name>`.
+Run: `nmcli connection modify <connection-name> autoconnect yes` for every disconnected connection.
 
-To activte missing connections and set `ONBOOT=yes`, run: `nmcli connection modify <connection-name> autoconnect yes` for every connection.
+This sets `ONBOOT=yes` for the connection in `/etc/sysconfig/network-scripts/ifcfg-<connection-name>`. 
+CentOS setup seems to sometimes fail activate all network interfaces/connections for interfaces.
+You can see this specific settings by: `nmcli --fields name,autoconnect connection show` 
 
 Run: `nmcli` again to make sure everything looks ok, and find your new ip-address.
 
 (`ip addr` is an alternative to find your ip-address.)
- 
+
 #### 9. You can from now on SSH to the machine.
 
 Use `ssh -A root@<ip address>` or Putty.
