@@ -4,12 +4,12 @@
 - name: Install yum-cron
   become: yes
   yum:
-    name: "{{ item }}"
+    name:
+      - yum-cron
     update_cache: yes
     state: latest
   when: ansible_os_family == "RedHat"
-  with_items:
-    - yum-cron
+
 
 # Notes:
 # CentOS 6 uses: /etc/sysconfig/yum-cron
