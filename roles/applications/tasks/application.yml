@@ -173,8 +173,8 @@
       user: "{{ application.process_user }}"
       default: true # Make this version default
       nodejs_version: "{{ application.nodejs_version }}"
-      #nvm_install: "git"
-      nvm_profile: ".bashrc"
+      nvm_install: "curl"
+      nvm_profile: "/home/system/{{ application.process_user }}/.bashrc"
   when: application.nodejs_version is defined
 
 ### Redis #######################################################################
