@@ -3,6 +3,8 @@
     name: applications
     tasks_from: default_values
     public: yes
+  tags:
+    - bootstrap
 
 - debug:
    var: current_packages
