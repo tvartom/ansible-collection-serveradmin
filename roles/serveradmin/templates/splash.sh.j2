@@ -32,7 +32,7 @@ if id -nG | egrep -cq "(^| ){{ serveradmin.process_group }}( |$)"; then
 	{% endfor %}
 	echo ""
 {% if applications_devmode %}
-	{{ organisation.command_prefix }}activate_devmode --state
+	{{ organisation.command_prefix }}diploma_activate_devmode --state
 {% endif %}
 	echo ""
 fi
