@@ -72,8 +72,8 @@
         meta:
           ansible_playbook: "playbook-applications_deploy.yml"
         when: "{{ 'bootstrap' not in ansible_run_tags }}"
-      - file: activate_devmode
-        desc: "Switch between normal and devmode for serveradmin repo."
+      - file: development_of_ansible_playbook
+        desc: "Switch between remote playbook and local repo for ansblie playbooks."
         when: "{{ applications_devmode }}"
       - file: ansiblerunner.sh
         dest: "ansible_vboxsf"
