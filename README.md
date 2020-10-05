@@ -69,14 +69,14 @@ Before running the VM, go into settings:
 **Network:**
 
 > You need 2 network adapters:
-> * Adapter 1: `Host-only Adapter` with `vboxnet0`. This is used to connect from your host (your computer) to the VM.
-> * Adapter 2: `NAT` For internet-connection **from** the VM.
+> * **Adapter 1:** `Host-only Adapter` with `vboxnet0`. This is used to connect from your host (your computer) to the VM.
+> * **Adapter 2:** `NAT` For internet-connection **from** the VM.
 
 **Shared Folders:**
 
-> For _devmode_, add a Share folder:
+> For _devmode_, add a Shared folder:
 > * **Folder Path:** Typically `C:\mydevstuff` or `/home/<user>/workspace`
-> * ** Folder Name:** `workspace`
+> * **Folder Name:** `workspace`
 > * **Read-only:** `No`
 > * **Auto-mount:** `No`
 > * **Mount point:** Leave blank.
