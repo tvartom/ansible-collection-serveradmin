@@ -89,11 +89,11 @@
     serveradmin_files: |-
       {%- for data_migration in data_migrations | default([]) -%}
       {{-   serveradmin_files.append({
-        'file': 'data_migration.sh',
-        'dest': 'data_migration_'+data_migration.name,
-        'desc': 'Kopiera data'~((' från '~data_migration.ssh_host) if data_migration.ssh_host is defined else ''),
-        'meta': data_migration,
-        'show_on_splash': data_migration.show_on_splash | default(true) }) -}}
+              'file': 'data_migration.sh',
+              'dest': 'data_migration_'+data_migration.name,
+              'desc': 'Kopiera data'~((' från '~data_migration.ssh_host) if data_migration.ssh_host is defined else ''),
+              'meta': data_migration,
+              'show_on_splash': data_migration.show_on_splash | default(true) }) -}}
       {%- endfor -%}
       {{- serveradmin_files -}}
 
