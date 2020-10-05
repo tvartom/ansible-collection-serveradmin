@@ -30,8 +30,25 @@
     owner: "root"
     group: "root"
 
-- pause:
-    prompt: "Insert the VirtualBox Guest Additions disc into virtual machine!"
+- include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "Download and insert the VirtualBox Guest Additions ISO-image into your virtual machine as a CD/DVD"
+      question: "Your choice"
+      options:
+        - name: Continue
+          option: c
+          value: c
+          default: true
+        - name: Abort
+          option: a
+          value: a
+
+- fail:
+    msg: "Aborted by user"
+  when: menu_result == 'a'
 
 - name: "Mount cdrom temporary"
   become: yes
@@ -44,8 +61,25 @@
     cmd: "./VBoxLinuxAdditions.run --nox11"
     chdir: /mnt/cdrom
 
-- pause:
-    prompt: "Make sure a shared folder namned 'workspace' exists in virtual machine!"
+- include_role:
+    name: commons
+    tasks_from: menu
+  vars:
+    menu:
+      caption: "Make sure a shared folder namned 'workspace' exists in virtual machine"
+      question: "Your choice"
+      options:
+        - name: Continue
+          option: c
+          value: c
+          default: true
+        - name: Abort
+          option: a
+          value: a
+
+- fail:
+    msg: "Aborted by user"
+  when: menu_result == 'a'
 
 - name: "Create dir for workspace mount"
   become: yes

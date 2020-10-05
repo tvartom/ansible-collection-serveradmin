@@ -62,6 +62,8 @@ Notice: **Never** use _Bridged Adapter_ with Serveradmin in _devmode_. This will
 
 First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`** (Linux) or **`VirtualBox Host-Only Ethernet Adapter`** (Windows). Typically it will be a `192.168.56.1/24` network. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`)
 
+To use __devmode__ with Shared Folders, download **`VirtualBox Guest Additions disc`** for your current version of VirtualBox, and mount when asked for. For Linux VM-hosts this exists as a seprate package to install with your packagemanager.
+
 Create a new VM. (`Machine` -> `Create`). Make sure to make the maximum capacity of the disc big enough. It is growing dynamicly, so it will not will fill up your harddrive until you filled it.
 
 Before running the VM, go into settings:
@@ -194,6 +196,20 @@ Remember to have agent forward activated for your ssh-connection
 Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
 #### 10. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
+
+
+#### KNown issues:
+
+If you get:
+
+```
+RUNNING HANDLER [tvartom.serveradmin.applications : Reload php-fpm] *******************************************
+fatal: [<inventory-name>]: FAILED! => {"changed": false, "msg": "Unable to start service php-fpm: Job for php-
+fpm.service failed because the control process exited with error code.\nSee \"systemctl status php-fpm.service\
+" and \"journalctl -xe\" for details.\n"}
+```
+
+Re-run your command.
 
 ### Devmode
 
