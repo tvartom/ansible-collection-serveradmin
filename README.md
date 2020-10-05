@@ -195,7 +195,7 @@ Remember to have agent forward activated for your ssh-connection
 
 Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
-#### 10. Run: `<prefix>_deploy` for every application. This will pull down your source code, and deploy it.
+#### 10. Run: `<prefix>_ansible_deploy` for every application. This will pull down your source code, and deploy it.
 
 
 #### KNown issues:

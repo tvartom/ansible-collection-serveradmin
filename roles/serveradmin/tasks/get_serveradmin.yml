@@ -67,13 +67,13 @@
           agent_forwarding: true
         when: "{{ backup is defined and 'bootstrap' not in ansible_run_tags }}"
       - file: ansiblerunner.sh
-        dest: "deploy"
+        dest: "ansible_deploy"
         desc: "Driftsättning av applikation."
         meta:
           ansible_playbook: "playbook-applications_deploy.yml"
         when: "{{ 'bootstrap' not in ansible_run_tags }}"
       - file: development_of_ansible_playbook
-        desc: "Switch between remote playbook and local repo for ansblie playbooks."
+        desc: "Switch between remote playbook and local repo for ansible playbooks."
         when: "{{ applications_devmode }}"
       - file: ansiblerunner.sh
         dest: "ansible_vboxsf"
