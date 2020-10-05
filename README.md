@@ -143,8 +143,9 @@ Run `nmcli`.
 
 Run: `nmcli connection modify <connection-name> autoconnect yes` for every disconnected connection.
 
-This sets `ONBOOT=yes` for the connection in `/etc/sysconfig/network-scripts/ifcfg-<connection-name>`. 
-CentOS setup seems to sometimes fail activate all network interfaces/connections for interfaces.
+This will set `ONBOOT=yes` for the connection in `/etc/sysconfig/network-scripts/ifcfg-<connection-name>`. 
+
+The reason to do this is that CentOS setup seems to fail to activate all network interfaces/connections for interfaces.
 You can see this specific settings by: `nmcli --fields name,autoconnect connection show` 
 
 Run: `nmcli` again to make sure everything looks ok, and find your new ip-address.
@@ -196,7 +197,7 @@ Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
 ### Devmode
 
-
+Prerequirements in Ansilbe to be installed and activated:
 >applications_devmode: true (default is `false`)
 
 See `Bootstrap a server` for setting up server.
@@ -208,7 +209,7 @@ The page gives you some basic information including config to paste in your loca
 
 #### PHP Xdebug
 
-Prerequirements to be installed and activated:
+Prerequirements in Ansilbe to be installed and activated:
 >**`php_enable`**: `true` (Default is `false`)
 >**`applications_devmode`**: true (Default is `false`)
 >**`applications_devmode_xdebug`**: true (Default is `true`)
