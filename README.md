@@ -198,7 +198,7 @@ Run `<prefix>_init_devmode` (This must be run by the devmode user)
 ### Devmode
 
 Prerequirements in Ansilbe to be installed and activated:
->applications_devmode: true (default is `false`)
+>* applications_devmode: true (default is `false`)
 
 See `Bootstrap a server` for setting up server.
 
@@ -210,12 +210,12 @@ The page gives you some basic information including config to paste in your loca
 #### PHP Xdebug
 
 Prerequirements in Ansilbe to be installed and activated:
->**`php_enable`**: `true` (Default is `false`)
->**`applications_devmode`**: true (Default is `false`)
->**`applications_devmode_xdebug`**: true (Default is `true`)
+>* **`php_enable`**: `true` (Default is `false`)
+>* **`applications_devmode`**: true (Default is `false`)
+>* **`applications_devmode_xdebug`**: true (Default is `true`)
 
 Any settings from [xdebug.org/docs/all_settings](https://xdebug.org/docs/all_settings) can be set.
-The following are default:
+The following is default:
 
 ```
 php_xdebug:
@@ -231,7 +231,7 @@ In your IDE, setup **Accept remote session (JIT)** for Xdebug on port 9000. (Thi
 
 MariaDB doesn't listen to any port on any network interface. (Not even localhost).
 
-All connection to the database are made through the unix socket `/`.
+All connection to the database are made through the unix socket `/var/lib/mysql/mysql.sock`.
 
 To connect to it from an outside DB-client, you need to set up a SSH-tunnel exposing the unix-socket.
 
@@ -241,7 +241,8 @@ If you connect with Putty, this isn't possible. After you're connected, you can 
 
 `ssh -L <ip-address-of-local-network-interface>:3307:/var/lib/mysql/mysql.sock localhost`
 
-Instead of `<ip-address-of-local-network-interface>`, `*` can be used, but be sure to not expose it to internet, and it also possible to do to an external server.
+Instead of `<ip-address-of-local-network-interface>`, `*` can be used, but be sure to not expose it to internet.
+This method is also possible to use on your local devmode-server, to connect to externel servers with unix-socket-only databases. Then replace `localhost` with server name.
 
 ## License
 
