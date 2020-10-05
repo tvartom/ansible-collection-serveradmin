@@ -60,7 +60,7 @@ To understand the network for VirtualBox, here is a nice guide: [nakivo.com/blog
 
 Notice: **Never** use _Bridged Adapter_ with Serveradmin in _devmode_. This will open up your database and code to the world outside your computer.
 
-First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`**. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`)
+First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`** (Linux) or **`VirtualBox Host-Only Ethernet Adapter`** (Windows). Typically it will be a `192.168.56.1/24` network. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`)
 
 Create a new VM. (`Machine` -> `Create`). Make sure to make the maximum capacity of the disc big enough. It is growing dynamicly, so it will not will fill up your harddrive until you filled it.
 
@@ -74,8 +74,14 @@ Before running the VM, go into settings:
 
 **Shared Folders:**
 
-> For _devmode_:
-> Share a folder with the `Folder Name`: `workspace`.
+> For _devmode_, add a Share folder:
+> * **Folder Path:** Typically `C:\mydevstuff` or `/home/<user>/workspace`
+> * ** Folder Name:** `workspace`
+> * **Read-only:** `No`
+> * **Auto-mount:** `No`
+> * **Mount point:** Leave blank.
+>
+> Git repositories will be cloned into `C:\mydevstuff\<organisationname>\<Repo-name>` or `/home/<user>/workspace/<organisationname>/<Repo-name>`
 
 
 Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for CentOS. See `CentOS`for next step.
