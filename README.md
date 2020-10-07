@@ -62,7 +62,7 @@ Notice: **Never** use _Bridged Adapter_ with Serveradmin in _devmode_. This will
 
 First create a network in VirtualBox to be used with the `Host-only Adapter`. `Tools` -> `Network` -> `Create`. It will be named **`vboxnet0`** (Linux) or **`VirtualBox Host-Only Ethernet Adapter`** (Windows). Typically it will be a `192.168.56.1/24` network. Enable `DHCP Server`. (This is **not** the same as `Preferences` -> `Network` -> `NAT Networks`, which are called `NatNetwork`)
 
-To use __devmode__ with Shared Folders, download **`VirtualBox Guest Additions disc`** for your current version of VirtualBox, and mount when asked for. For Linux VM-hosts this exists as a seprate package to install with your packagemanager.
+To use __devmode__ with Shared Folders, download **`VirtualBox Guest Additions disc`** for your current version of VirtualBox, and mount when asked for in point 6 under Bootstrap server. For Linux VM-hosts this exists as a seprate package to install with your packagemanager.
 
 Create a new VM. (`Machine` -> `Create`). Make sure to make the maximum capacity of the disc big enough. It is growing dynamicly, so it will not will fill up your harddrive until you filled it.
 
@@ -154,9 +154,11 @@ Run: `nmcli` again to make sure everything looks ok, and find your new ip-addres
 
 (`ip addr` is an alternative to find your ip-address.)
 
-#### 9. You can from now on SSH to the machine.
+Log out from the server in the console window. You can even restart the virtual machine with Headless start, meaning you have no visual window for the running machine.
 
-Use `ssh -A root@<ip address>` or Putty.
+#### 9. You can from now on SSH to the machine from your host OS
+
+Use `ssh root@<ip address>` or Putty. This mean that copy paste, scroll back, and window resize will work.
 
 #### 10. Continue with `Bootstrap a server`
 
