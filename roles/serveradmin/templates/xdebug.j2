@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# ${1+x} means if $1 is defined, return x. Checking if $1 is empty or not
+if [ -z ${1+x} ]; then
+  # Från: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
+  read -p "Press A to activate Xdebug, D to disable [A/d]" -n 1 -r
+  echo
+else
+  REPLY="$1"
+fi
+
+
+if [[ $REPLY =~ ^[Aa]$ ]]; then
+  #Activate:
+  sudo sed -i -E -e "s/^;(zend_extension=xdebug.so)/\1/" /etc/php.d/15-xdebug.ini
+  sudo service php-fpm restart
+fi
+
+if [[ $REPLY =~ ^[Dd]$ ]]; then
+  # Disable:
+  sudo sed -i -E -e "s/^(zend_extension=xdebug.so)/;\1/" /etc/php.d/15-xdebug.ini 
+  sudo service php-fpm restart
+fi
+
+
+
+zend_extension=''
+source <(sed -E -e "s/;/#/g" -e "s/\.(.*=)/_\1/g" -e "s/ ?= ?/=/g" /etc/php.d/15-xdebug.ini | grep = )
+
+if [ "$zend_extension" == "xdebug.so" ]; then
+   echo "Xdebug active!"
+else
+   echo "Xdebug disabled!"
+fi

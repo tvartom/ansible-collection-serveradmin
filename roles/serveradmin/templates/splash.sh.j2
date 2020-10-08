@@ -33,6 +33,9 @@ if id -nG | egrep -cq "(^| ){{ serveradmin.process_group }}( |$)"; then
 	echo ""
 {% if applications_devmode %}
 	{{ organisation.command_prefix }}development_of_ansible_playbook --state
+	{% if php_enable and applications_devmode_xdebug %}
+		{{ organisation.command_prefix }}xdebug --state
+	{% endif %}
 {% endif %}
 	echo ""
 fi
