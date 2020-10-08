@@ -2,6 +2,47 @@
 # Managed by Ansible!
 #
 {% set path = application.path %}
+{% macro php_location() -%}
+      {% if webinstance.enable_php %}
+        #https://blog.martinfjordvald.com/2013/04/nginx-config-history-fastcgi_params-versus-fastcgi-conf/
+        location ~ [^/]\.php(/|$) {
+
+           fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+           fastcgi_pass unix:/var/run/php-fpm-{{ webinstance.fullname }}.sock;
+
+           {# Pga chroot i  php-fpm
+           #fastcgi_param PATH_TRANSLATED /{{ webinstance.root_dir }}$fastcgi_script_name;
+           #Utan chroot #}
+           fastcgi_param PATH_TRANSLATED $document_root$fastcgi_script_name;
+
+           fastcgi_index index.php;
+
+           {% for param in webinstance.fastcgi_params.application.keys() %}
+             fastcgi_param {{ param }} ${{ param }};
+           {% endfor %}
+           {% for param in webinstance.fastcgi_params.webinstance.keys() %}
+             fastcgi_param {{ param }} ${{ param }};
+           {% endfor %}
+           {% for param in webinstance.fastcgi_params.domaininstance.keys() %}
+             fastcgi_param {{ param }} ${{ param }};
+           {% endfor %}
+
+           include fastcgi_params;
+        }
+      {% endif %}
+{%- endmacro %}
+{% macro more_location(location) -%}
+         location {{ location.location }} {
+           {% if location.root_dir | d(false) %}
+             root {{ path }}/{{ location.root_dir }};
+           {% elif location.alias_dir | d(false) %}
+             alias {{ path }}/{{ location.alias_dir }};
+           {% endif %}
+           {% if location.php | d(true) %}
+             {{ php_location() }}
+           {% endif %}
+         }
+{%- endmacro %}
 
   {% for name, value  in webinstance.fastcgi_params.webinstance.items() %}
     set ${{ name }} '{{ webinstance[value] | default('') }}';
@@ -75,36 +116,18 @@ add_header  X-Robots-Tag $x_robots_tag;
         try_files $uri $uri/ /index.php?$args;
       {% endif %}
 
-      {% if webinstance.enable_php %}
-        #https://blog.martinfjordvald.com/2013/04/nginx-config-history-fastcgi_params-versus-fastcgi-conf/
-        location ~ [^/]\.php(/|$) {
-
-           fastcgi_split_path_info ^(.+?\.php)(/.*)$;
-           fastcgi_pass unix:/var/run/php-fpm-{{ webinstance.fullname }}.sock;
-
-           {# Pga chroot i  php-fpm
-           #fastcgi_param PATH_TRANSLATED /{{ webinstance.root_dir }}$fastcgi_script_name;
-           #Utan chroot #}
-           fastcgi_param PATH_TRANSLATED $document_root$fastcgi_script_name;
-
-           fastcgi_index index.php;
-
-           {% for param in webinstance.fastcgi_params.application.keys() %}
-             fastcgi_param {{ param }} ${{ param }};
-           {% endfor %}
-           {% for param in webinstance.fastcgi_params.webinstance.keys() %}
-             fastcgi_param {{ param }} ${{ param }};
-           {% endfor %}
-           {% for param in webinstance.fastcgi_params.domaininstance.keys() %}
-             fastcgi_param {{ param }} ${{ param }};
-           {% endfor %}
-
-           include fastcgi_params;
-        }
-      {% endif %}
+      {{ php_location() }}
 
       {% if webinstance.proxy_port is defined %}
         proxy_pass http://localhost:{{ webinstance.proxy_port }};
       {% endif %}
+
+      {% for location in webinstance.more_locations | d([]) if more_location.nested | d(true) %}
+        {{ more_location(location) }}
+      {% endfor %}
     }
+      {% for location in webinstance.more_locations | d([]) if not (more_location.nested | d(true)) %}
+        {{ more_location(location) }}
+      {% endfor %}
+
   {% endif %}
