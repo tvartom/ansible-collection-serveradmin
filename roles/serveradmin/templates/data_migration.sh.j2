@@ -1,4 +1,76 @@
 #!/bin/bash
+{% set data_migration = item.meta %}
+{% set show_progress = data_migration.show_progress | d(true) %}
+{#
+
+data_migration:
+  - name: 
+    confirm:
+    ssh_host: 
+    agent_forwarding: true/false
+    show_on_splash: true
+    databases:
+    show_progress: true
+    jobs:
+      - name: Name of job
+        type: databases
+
+        include_databases: '%' (default)
+        # or
+        include_databases:
+          - name1
+          - name2
+
+        exclude_databases:
+        include_tables: 
+          - log
+          - sessions
+        rename_databases:
+          name1old: name1new
+          name2old: name2new
+        src:
+          --name:--
+          host:
+          user:
+          password: undefined(default)|true(ask for it)|string
+          default_character_set
+        dest: file/database
+          ?host:
+          default_character_set:
+          drop_database: false
+          drop_tables:
+          - [table-name 1]
+          - [table-name 2]
+          - [...]
+        default_character_set: utf8mb4
+        default_collation:
+        exclude_tables:
+          - [table-name 1]
+          - [table-name 2]
+          - [...]
+        suffix_on_emailadresses: 'string'
+        no_data: true
+        include_events: false
+        include_triggers: false
+        include_routines: false
+        skip_dump_date \
+        single_transaction
+        no_create_db \
+        skip_lock_tables
+        force
+        
+    --skip-dump-date \
+    --single-transaction \
+        --no-create-db \
+        --skip-lock-tables \
+-- force
+
+
+
+
+
+
+#}
 #
 # Managed by Ansible!
 #
@@ -7,8 +79,6 @@ set -e
 set -o pipefail
 
 source include_common.sh
-
-{% set data_migration = item.meta %}
 
 {% if data_migration.confirm |  d('',True) != ''  %}
   # Från: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
@@ -20,8 +90,20 @@ source include_common.sh
 {% endif %}
 
 
-{% if data_migration.filesets is defined %}
+### Pipe command ###
+PIPE_COMMAND="cat"
+PIPE_COMMAND_DUMP_FILE="cat"
+{% if show_progress %}
+if command -v pv >/dev/null 2>&1; then
+  PIPE_COMMAND="pv"
+else
+  echo "Note: Install 'pv' to show progressbar.".
+fi
+{% endif %}
+
 {% set agent_forwarding = data_migration.agent_forwarding | d(false) %}
+
+{% if data_migration.filesets is defined %}
 ################## Kopiera filer #########################
   {% if agent_forwarding %}
     # https://unix.stackexchange.com/questions/131596/ssh-agent-forwarding-works-but-what-about-sudo-u-username-no-shell-permission
@@ -69,120 +151,161 @@ source include_common.sh
 {% endif %}
 
 
-{% for database in data_migration.databases | default([]) %}
-  {% set dumpfile = 'dump_'~loop.index~'_'~database.from.name~'.sql' %}
-  # Does pv exists? (for progressbar)
-  if command -v pv >/dev/null 2>&1; then
-    PIPE_COMMAND="pv"
-    if [ -f "{{ dumpfile }}" ]; then
-      PIPE_COMMAND_DUMP_FILE="pv --wait -s $(stat --printf="%s" {{ dumpfile }})"
-    else
-      PIPE_COMMAND_DUMP_FILE="pv --wait"
-    fi
-  else
-    echo "Note: Install 'pv' to show progressbar.".
-    PIPE_COMMAND="cat"
-    PIPE_COMMAND_DUMP_FILE="cat"
-  fi
-  {% set default_character_set_from = database.from.default_character_set | d(database.default_character_set | d(false)) %}
-  {% set default_character_set_to = database.to.default_character_set | d(database.default_character_set | d(false)) %}
+{% for job in data_migration.jobs | default([]) %}
+###### {{ job.name | d(loop.index) }}({{ job.type }}) ######
+{%   if job.type == "databases" %}
+{%     set default_character_set_src = job.src.default_character_set | d(job.default_character_set | d(false)) %}
+{%     set default_character_set_dest = job.dest.default_character_set | d(job.default_character_set | d(false)) %}
 
-  echo "### Copy database from {{ database.from.host | d(data_migration.ssh_host | d('localhost')) }}/{{ database.from.name }} to localhost/{{ database.to.name }} ####"
-  {% if default_character_set_from %}
-    echo "  Default character set: {{ default_character_set_from }}"
-  {% endif %}
-  echo "  {{ database.no_data          | d(false) | ternary('Exclude', 'Include') }} data"
-  echo "  {{ database.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
-  echo "  {{ database.include_routines | d(true)  | ternary('Include', 'Exclude') }} routines"
-  echo "  {{ database.include_triggers | d(true)  | ternary('Include', 'Exclude') }} triggers"
-  {% if database.exclude_tables is defined %}
-    echo "  Exclude tables:"
-    {% for table in database.exclude_tables | d([]) %}
-      echo "  - {{ table }}"
-    {% endfor %}
-  {% endif %}
-  {% if database.include_tables is defined %}
-    echo "  Include tables:"
-    {% for table in database.include_tables | d([]) %}
-      echo "   - {{ table }}"
-    {% endfor %}
-  {% endif %}
+{%     if job.include_databases is not defined or job.include_databases is string %}
+{#       https://stackoverflow.com/questions/11426529/reading-output-of-a-command-into-an-array-in-bash #}
+         mapfile -t databases < <(
+             {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} bash << EOF{% endif %}
 
-  {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
-    {% if data_migration.ssh_host is defined %}ssh -C {{ data_migration.ssh_host }} {{ '"' }}{% endif %} mysqldump \
-        {{ default_character_set_from | ternary('--default-character-set='~default_character_set_from,'') }} \
-        {{ '--host='~database.from.host if database.from.host is defined else '' }} \
-        {{ '--user='~database.from.user if database.from.user is defined else '' }} \
-        {% if database.from.password is defined %}--password{{ '='~database.from.password if database.from.password is string else '' }}{% endif %} \
-        {{ database.no_data          | d(false) | ternary('--no-data','') }} \
-        {{ database.include_events   | d(true)  | ternary('--events','') }} \
-        {{ database.include_routines | d(true)  | ternary('--routines','') }} \
-        {{ database.include_triggers | d(true)  | ternary('--triggers','') }} \
-        --no-create-db \
-        --skip-lock-tables \
-        {% for table in database.exclude_tables | d([]) %}--ignore-table={{ database.from.name }}.{{ table }} {% endfor %} \
-        '{{ database.from.name }}' \
-        {% for table in database.include_tables | d([]) %}{{ table }} {% endfor %} \
-        {% if data_migration.ssh_host is defined %} {{ '"' }} {% endif %} | $PIPE_COMMAND_DUMP_FILE > {{ dumpfile }}
+                 mysql \
+                     {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
+                     {{ '--host='~job.src.host if job.src.host is defined else '' }} \
+                     {{ '--user='~job.src.user if job.src.user is defined else '' }} \
+                     {% if job.src.password is defined %}--password{{ '='~job.src.password if job.src.password is string else '' }}{% endif %} \
+                     -BNe "SHOW DATABASES WHERE \`Database\` LIKE '{{ job.include_databases | d('%') }}'
+                         {%- if job.exclude_databases is string %} AND \`Database\` NOT LIKE '{{ job.exclude_databases }}'{% endif -%}
+                         {#- #} AND \`Database\` NOT IN (
+                             {{- (job.exclude_databases | default([]) | map('regex_replace', '^(.*)$', '\'\\1\',') | join('')) if job.exclude_databases is iterable else '' -}}
+                             'mysql','information_schema','performance_schema');"
 
-  echo
-  {% if database.from.name != database.to.name %}
-    echo "Clean old db_name from dump-file..."
-    # mysqldump lämnar några spår av databasnamnet, exempelvis i triggers, så byt ut dessa:
-    sed -ri "s/\`{{ database.from.name }}\`/\`{{ database.to.name }}\`/g" {{ dumpfile }}
-  {% endif %}
+{%           if data_migration.ssh_host is defined %}EOF{% endif %}
 
-  {% if database.suffix_on_emailadresses | d('', true) != '' %}
-    echo "Add '{{ database.suffix_on_emailadresses }}' on all email-address to make them useless..."
-    # -i == inplace (in och ut i samma fil)
-    sed -i -r "s/'([^@'\ ]+@[^@'\ ]+)'/'\1{{ database.suffix_on_emailadresses }}'/g" {{ dumpfile }}
-  {% endif %}
+         )
+{%     else %}
+databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') | join(',') }})
+{%     endif %}
 
-  {% for replace in database.replaces | default([]) %}
-    echo "{{ replace.description }}"
-    sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" {{ dumpfile }}
-  {% endfor %}
+       echo "### Dump database from {{ job.src.host | d(data_migration.ssh_host | d('localhost')) }} ####"
+{%     if default_character_set_src %}
+         echo "  Default character set: {{ default_character_set_src }}"
+{%     endif %}
+       echo "  {{ job.no_data          | d(false) | ternary('Exclude', 'Include') }} data"
+       echo "  {{ job.include_events   | d(true)  | ternary('Include', 'Exclude') }} events"
+       echo "  {{ job.include_routines | d(true)  | ternary('Include', 'Exclude') }} routines"
+       echo "  {{ job.include_triggers | d(true)  | ternary('Include', 'Exclude') }} triggers"
+{%     if job.exclude_tables is defined %}
+         echo "  Exclude tables:"
+{%       for table in job.exclude_tables | d([]) %}
+           echo "  - {{ table }}"
+{%       endfor %}
+{%     endif %}
+{%     if job.include_tables is defined %}
+         echo "  Include tables:"
+{%       for table in job.include_tables | d([]) %}
+           echo "   - {{ table }}"
+{%       endfor %}
+{%     endif %}
 
-  {% if database.drop_database | d(true) %}
-    echo "Drop database {{ database.to.name }} if exists..."
-    mysql -NB -e "DROP DATABASE IF EXISTS \`{{ database.to.name }}\`"
+       for db in ${databases[@]}; do
+         echo "Backing up: $db..."
 
-    echo "Create database..."
-    {% if database.default_character_set is defined %}
-    echo "  DEFAULT CHARACTER SET {{ database.default_character_set }}"
-    {%   if database.default_collation is defined %}
-    echo "  COLLATE {{ database.default_collation }}"
-    {%   endif %}
-    {% endif %}
-    mysql -NB -e "CREATE DATABASE \`{{ database.to.name }}\`{% if database.default_character_set is defined %} DEFAULT CHARACTER SET {{ database.default_character_set }}{% if database.default_collation is defined %} COLLATE {{ database.default_collation }}{% endif %}{% endif %};"
-  {% endif %}
+         DUMPFILE="dump_{{ job.name | d(loop.index) }}_$db"
 
-  {% for table in database.drop_tables | d([]) %}
-    echo "Drop table {{ table }} if exists..."
-    mysql -NB -e "DROP TABLE IF EXISTS \`{{ database.to.name }}\`.\`{{ table }}\`"
-  {% endfor %}
+{%       if show_progress %}
+           # Does old file exists? (for progressbar)
+           if [ "$PIPE_COMMAND" == "pv" ]; then
+             if [ -f "$DUMPFILE" ]; then
+               PIPE_COMMAND_DUMP_FILE="pv --wait -s $(stat --printf="%s" $DUMPFILE)"
+             else
+               PIPE_COMMAND_DUMP_FILE="pv --wait"
+             fi
+           fi
+{%       endif %}
 
-  echo "Populate local database..."
-  {% if default_character_set_to %}
-    echo "  Default character set: {{ default_character_set_to }}"
-  {% endif %}
-  $PIPE_COMMAND {{ dumpfile }} \
-    {# | gunzip #} \
-      | mysql \
-        {{ default_character_set_to | ternary('--default-character-set='~default_character_set_to,'') }} \
-        {{ database.to.name }}
+         echo "Dump $db to $DUMPFILE..."
+         {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
+         (
+           {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} bash << EOF{% endif %}
 
-  {% if database.run_sql_after is defined %}
-  echo "Run SQL..."
-  ($PIPE_COMMAND << DataMigrationEndOfSQL
-{{ database.run_sql_after }}
+           mysqldump \
+             {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
+             {{ '--host='~job.src.host if job.src.host is defined else '' }} \
+             {{ '--user='~job.src.user if job.src.user is defined else '' }} \
+             {% if job.src.password is defined %}--password{{ '='~job.src.password if job.src.password is string else '' }}{% endif %} \
+             {{ job.no_data            | d(false) | ternary('--no-data','') }} \
+             {{ job.include_events     | d(true)  | ternary('--events','') }} \
+             {{ job.include_routines   | d(true)  | ternary('--routines','') }} \
+             {{ job.include_triggers   | d(true)  | ternary('--triggers','') }} \
+             {{ job.force              | d(false) | ternary('--force','') }} \
+             {{ job.skip_lock_tables   | d(false) | ternary('--skip-lock-tables','') }} \
+             {{ job.skip_dump_date     | d(false) | ternary('--skip-dump-date','') }} \
+             {{ job.single_transaction | d(false) | ternary('--single-transaction','') }} \
+             --no-create-db \
+             {% for table in job.exclude_tables | d([]) %}--ignore-table=$db.{{ table }} {% endfor %} \
+             "$db" \
+             {% for table in job.include_tables | d([]) %}{{ table }} {% endfor %}
+
+{%         if data_migration.ssh_host is defined %}EOF{% endif %}
+
+         ) | $PIPE_COMMAND_DUMP_FILE > "$DUMPFILE"
+################################################################################################################################################################################
+         echo
+         DESTDB="$db"
+{%       for from,to in (job.rename_databases | d({})).items() %}
+           if [ "$db" == "{{ from }}" ]; then
+             echo "Search for '{{ from }} and replace with '{{ to }}' in dumpfile..."
+             # mysqldump lämnar några spår av databasnamnet, exempelvis i triggers, så byt ut dessa:
+             sed -ri "s/\`{{ from }}\`/\`{{ to }}\`/g" "$DUMPFILE"
+             DESTDB="{{ to }}"
+           fi
+{%       endfor %}
+
+{%       if job.suffix_on_emailadresses | d('', true) != '' %}
+           echo "Add '{{ job.suffix_on_emailadresses }}' on all email-address to make them useless..."
+           # -i == inplace (in och ut i samma fil)
+           sed -i -r "s/'([^@'\ ]+@[^@'\ ]+)'/'\1{{ job.suffix_on_emailadresses }}'/g" "$DUMPFILE"
+{%       endif %}
+
+{%       for replace in job.replaces | default([]) %}
+           echo "{{ replace.description }}"
+           sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" "$DUMPTFILE"
+{%       endfor %}
+
+{%       if job.dest | d('dumpfile') != 'dumpfile' %}
+### Populate dest Database ###
+{%         if job.dest.drop_database | d(true) %}
+             echo "Drop database $DESTDB if exists..."
+             mysql -NB -e "DROP DATABASE IF EXISTS \`$DESTDB\`"
+
+             echo "Create database..."
+{%           if job.default_character_set is defined %}
+               echo "  DEFAULT CHARACTER SET {{ job.default_character_set }}"
+{%             if job.default_collation is defined %}
+                 echo "  COLLATE {{ job.default_collation }}"
+{%             endif %}
+{%           endif %}
+             mysql -NB -e "CREATE DATABASE \`$DESTDB\`{% if job.default_character_set is defined %} DEFAULT CHARACTER SET {{ job.default_character_set }}{% if job.default_collation is defined %} COLLATE {{ job.default_collation }}{% endif %}{% endif %};"
+{%         endif %}
+
+{%         for table in job.dest.drop_tables | d([]) %}
+             echo "Drop table {{ table }} if exists..."
+             mysql -NB -e "DROP TABLE IF EXISTS \`$DESTDB\`.\`{{ table }}\`"
+{%         endfor %}
+
+           echo "Populate local database..."
+{%         if default_character_set_dest %}
+             echo "  Default character set: {{ default_character_set_dest }}"
+{%         endif %}
+           $PIPE_COMMAND "$DUMPFILE" \
+               | mysql \
+               {{ default_character_set_dest | ternary('--default-character-set='~default_character_set_dest,'') }} \
+               "$DESTDB"
+
+{%         if job.run_sql_after is defined %}
+             echo "Run SQL..."
+             ($PIPE_COMMAND << DataMigrationEndOfSQL
+{{ job.run_sql_after }}
 DataMigrationEndOfSQL
-  ) | mysql \
-        {{ default_character_set_to | ternary('--default-character-set='~default_character_set_to,'') }} \
-        {{ database.to.name }}
-  {% endif %}
-
-
-
-{% endfor %}
-	
+             ) | mysql \
+                 {{ default_character_set_dest | ternary('--default-character-set='~default_character_set_src,'') }} \
+                 "$DESTDB"
+{%         endif %}### End: Populate Database ###
+{%       endif %}
+       done ### End: Loop databases
+{%   endif %}### End: job.type
+{% endfor %}### End: job-loop ###
