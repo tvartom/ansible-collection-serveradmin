@@ -1,6 +1,6 @@
 ---
 
-- name: Ta reda på senaste versionen
+- name: "Get Latest version number of Sass from GitHub"
   shell: >-
     curl -s https://api.github.com/repos/sass/dart-sass/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")'
   args:
@@ -24,7 +24,7 @@
     - ""
     - "/dart-sass-{{ sass_latest_version }}"
 
-- name: Ladda ner och packa upp senaste sass
+- name: "Download and unzip latest sass"
   become: yes
   become_user: "root"
   unarchive:
@@ -35,6 +35,15 @@
     owner: "root"
     group: "root"
     creates: "/opt/sass/dart-sass-{{ sass_latest_version }}/dart-sass"
+
+- name: "Set file permissions for sass"
+  become: yes
+  file:
+    path: "/opt/sass"
+    state: directory
+    mode: "u=rwx,g=rx,o=rx"
+    recurse: true
+
 
 # Måste vara absolut path i symlink för att sass ska hitta sin dart!
 - name: "Symlink sass"
@@ -49,7 +58,7 @@
     force: yes
 
 # Orginal på ubuntu: PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
-- name: add sass path to path
+- name: "Add sass path to path (Debian)"
   become: yes
   lineinfile:
     dest: /etc/environment
@@ -59,4 +68,15 @@
     line: 'PATH=\1\2:{{ sass_path }}\3'
   vars:
     sass_path: "/opt/sass"
+  when: ansible_os_family == "Debian"
 
+
+- name: "Add sass to global path (RedHat)"
+  become: yes
+  template:
+    src: profile_sass.sh.j2
+    dest: /etc/profile.d/sass.sh
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+  when: ansible_os_family == "RedHat"
