@@ -51,7 +51,7 @@ for db in ${databases[@]}; do
     echo "No change, keep old file!"
     mv -f "lastrun/__nobackup__$db.gz" "__nobackup__$db.gz"
   fi
-  pattern=".*/$db-[0-9]{8}-[0-9]{4,6}\\.{{ 'tar' if job.encrypt | default(false) else 'gz' }}"
+  pattern=".*/$db-[0-9]{8}-[0-9]{4,6}\\.{{ job.encrypt | d(false) | ternary('tar', 'gz') }}"
   newest_file_in_output="$(find "{{ script_output_dir }}/{{ instance.name }}/prepared" -regextype posix-egrep -regex "$pattern" -exec ls -1t "{}" + | head -1)"
   if [ "$newest_file_in_output" -ot  "__nobackup__$db.gz" ]; then
     # Delete old files:
