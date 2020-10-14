@@ -11,7 +11,7 @@
   become: yes
   file:
     path: "{{application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}"
-    src: "{{ deploy_facts[deploy.repo | mandatory].source }}"
+    src: "{{ deploy_facts[deploy.repo | mandatory].source }}{{ deploy._in_repo|d('') }}"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
     state: link
