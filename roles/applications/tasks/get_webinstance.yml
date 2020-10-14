@@ -27,7 +27,7 @@
       {{- temp_webinstance.__setitem__('fullname', application.fullname+'-'+webinstance_with_key.key) -}}
       {{- temp_webinstance.__setitem__('instance', webinstance_with_key.key) -}}
       {%- if temp_webinstance.root_dir is not defined -%}
-      {{-     temp_webinstance.__setitem__('root_dir', 'public_html_'~webinstance_with_key.key) -}}
+      {{-     temp_webinstance.__setitem__('root_dir', applications_public_folder_name ~ webinstance_with_key.key) -}}
       {%- endif -%}
       {%- for di in temp_webinstance.domaininstances -%}
       {%-   if di.instance is not defined -%}
