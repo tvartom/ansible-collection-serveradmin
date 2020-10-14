@@ -7,6 +7,7 @@ packages:
   - name: unzip
   - name: bzip2
   - name: pv #progressbar for pipe
+  - name: wget
   #- name: net-tools #ifconfig finns i denna
   #- name: rsync
   - name: fuse-overlayfs
