@@ -14,3 +14,5 @@
     name: "{{ php_fpm_service }}"
     state: "restarted"
     enabled: true
+  # If there is no php-fpm-pools, this will fail... Ignore and continue
+  ignore_errors: true

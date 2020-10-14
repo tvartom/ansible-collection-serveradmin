@@ -4,6 +4,8 @@
   service:
     name: "{{ php_fpm_service }}"
     state: reloaded
+  # If there is no php-fpm-pools, this will fail... Ignore and continue
+  ignore_errors: true
 
 - name: "Reload nginx"
   become: yes

@@ -199,20 +199,6 @@ Run `<prefix>_init_devmode` (This must be run by the devmode user)
 
 #### 10. Run: `<prefix>_ansible_deploy` for every application. This will pull down your source code, and deploy it.
 
-
-#### KNown issues:
-
-If you get:
-
-```
-RUNNING HANDLER [tvartom.serveradmin.applications : Reload php-fpm] *******************************************
-fatal: [<inventory-name>]: FAILED! => {"changed": false, "msg": "Unable to start service php-fpm: Job for php-
-fpm.service failed because the control process exited with error code.\nSee \"systemctl status php-fpm.service\
-" and \"journalctl -xe\" for details.\n"}
-```
-
-Re-run your command.
-
 ### Devmode
 
 Prerequirements in Ansilbe to be installed and activated:
