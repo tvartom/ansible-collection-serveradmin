@@ -67,6 +67,7 @@
       #Populated properties:
       fullname: "{{ temp_application_fullname }}"
       any_enable_php: false
+      any_enable_php_composer: false
       any_enable_https: false
       any_letsencrypt: false
 
@@ -78,6 +79,7 @@
       enable_http2: true # No effect if enable_https == false
       listen_to_ipv6: true
       enable_php: false
+      enable_php_composer: false
       upload_max_filesize: 1M
       domains_source: {}
       fastcgi_params:
@@ -109,7 +111,7 @@
       # [permalinkhandling: true]
       # [proxy_port: 8080]
       #Populated properties, if not defined:
-      # [root_dir: "public_html"+webinstance_with_key.key]
+      # [root_dir: "public_html_"+webinstance_with_key.key]
       #Populated properties:
       # fullname: "{{ application.fullname+'-'+webinstance_with_key.key }}"
       # instance:"{{ webinstance_with_key.key }}"
@@ -135,10 +137,13 @@
   loop_control:
     loop_var: webinstance_with_key
 
-- set_fact:
+
+- name: "Clear/Init repo_return-variable"
+  set_fact:
     repo_returns: []
 
-- include_role:
+- name: "Loop over repos in application"
+  include_role:
     name: git
     tasks_from: get_repo_url
   vars:

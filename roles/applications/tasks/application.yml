@@ -145,7 +145,7 @@
     # För Java
     - { path: "/webapp",             when: false }
 
-### Letsencrypt ##############################################################
+### Letsencrypt #################################################################
 # I can be hard to determine if it is a lag DNS-updates or other problems...
 # Give some info in the response. Are we on the right server?
 - name: "Create 404 for Letsencrypt, which shows this servers inventory name"
@@ -158,7 +158,7 @@
     mode: "u=rwx,g=rx,o=r"
   when: application.any_letsencrypt
 
-### NodeJS #####################################################################
+### NodeJS ######################################################################
 # Reading: https://www.sitepoint.com/quick-tip-multiple-versions-node-nvm/
 # Ansible-role: https://github.com/morgangraphics/ansible-role-nvm
 - name: "Install Node Version Manager (NVM)"
@@ -176,6 +176,30 @@
       nvm_install: "curl"
       nvm_profile: "/home/system/{{ application.process_user }}/.bashrc"
   when: application.nodejs_version is defined
+
+### PHP Composer ################################################################
+
+- name: "Create ~/.local/bin"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  file:
+    path: "/home/system/{{ application.process_user }}/{{ item }}"
+    state: directory
+    mode: "u=rwx,g=rx,o="
+  when: application.any_enable_php_composer
+  loop:
+    - ".local"
+    - ".local/bin"
+
+- name: "Install php composer"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  script:
+    cmd: >-
+      install_composer.sh --quiet --install-dir=$(echo -n ~{{ application.process_user }})/.local/bin --filename=composer
+    chdir: "/home/system/{{ application.process_user }}"
+    creates: "/home/system/{{ application.process_user }}/.local/bin/composer"
+  when: application.any_enable_php_composer
 
 ### Redis #######################################################################
 

@@ -54,6 +54,7 @@
       {{- application.__setitem__('any_letsencrypt', application.any_letsencrypt or (temp_webinstance.enable_https and temp_webinstance.cert_handler == 'letsencrypt')) -}}
       {{- application.__setitem__('any_enable_https', application.any_enable_https or temp_webinstance.enable_https) -}}
       {{- application.__setitem__('any_enable_php', application.any_enable_php or temp_webinstance.enable_php) -}}
+      {{- application.__setitem__('any_enable_php_composer', application.any_enable_php_composer or temp_webinstance.enable_php_composer) -}}
       {%- for di in temp_webinstance.domaininstances -%}
       {%- endfor -%}
       {{- application -}}
