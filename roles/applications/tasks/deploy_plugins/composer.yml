@@ -1,0 +1,9 @@
+---
+
+- name: "Run Composer"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell: >-
+    /home/system/{{ application.process_user }}/.local/bin/composer install
+  args:
+    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}"
