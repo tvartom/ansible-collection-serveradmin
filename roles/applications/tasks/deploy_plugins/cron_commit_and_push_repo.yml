@@ -1,5 +1,5 @@
 ---
-- name: "Create dir in scripts/cron for application"
+- name: "Create dirs for cron-scripts for application"
   become: yes
   file:
     path: "{{ application.path }}{{ item.path }}"
@@ -11,9 +11,11 @@
   when: item.when | default(True)
   loop:
     - { path: "/scripts/cron" }
+    - { path: "/log/scripts" }
+    - { path: "/log/scripts/cron" }
 
 
-- name: "Skapa script för commit and push repo"
+- name: "Create script för commit and push repo"
   become: yes
   template:
     src: "deploy_plugins/cron_commit_and_push_repo/cron_commit_and_push_repo.sh.j2"
