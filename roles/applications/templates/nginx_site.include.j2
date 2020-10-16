@@ -38,6 +38,9 @@
            {% elif location.alias_dir | d(false) %}
              alias {{ path }}/{{ location.alias_dir }};
            {% endif %}
+           {% if location.try_files_index_php | d(false) %}
+           try_files $uri {{ location.root_dir |d(location.alias_dir | d(location.location)) }}/index.php$is_args$args;
+           {% endif %}
            {% if location.php | d(true) %}
              {{ php_location() }}
            {% endif %}
