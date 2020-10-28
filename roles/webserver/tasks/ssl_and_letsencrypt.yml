@@ -38,8 +38,19 @@
     creates: /opt/letsencrypt/account.key
   when: webserver_use_letsencrypt
 
+
+
 ### Generate dhparam ###
 # https://cipherli.st/
+- name: "Create dir auth"
+  become: yes
+  file:
+    path: "/etc/nginx/ssl"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+
 - name: "Check if dhparam.pem exists."
   stat:
     path: /etc/nginx/ssl/dhparam.pem
