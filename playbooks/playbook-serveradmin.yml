@@ -79,11 +79,8 @@
         name: redis
       when: redis_enable
 
-    - include_role:
-        name: bertvv_samba
-      when: applications_devmode and applications_devmode_samba
-      vars:
-        ansible_become: yes
+    - set_fact:
+      applications_devmode_samba_settings:
         samba_shares:
           - name: "workspace"
             comment: "Workspace for devmode"
@@ -103,7 +100,16 @@
         samba_users:
           - name: "{{ applications_devmode_user }}"
             password: ""
-        samba_netbios_name: "{{ inventory_hostname }}"
+      when: applications_devmode and applications_devmode_samba
+
+    - include_role:
+        name: bertvv_samba
+      vars:
+        ansible_become: yes
+        samba_shares: "{{ samba_shares|d([]) + applications_devmode_samba_settings.samba_shares|d([]) }}"
+        samba_users: "{{ samba_users|d([]) + applications_devmode_samba_settings.samba_users|d([]) }}"
+        samba_netbios_name: "{{ samba_netbios_name|d(inventory_hostname) }}"
+      when: applications_devmode_samba_settings is defined or samba_shares is defined
 
     - include_role:
         name: nfs

@@ -4,7 +4,7 @@
   group:
     name: "{{ item.group }}"
     system: "{{ item.system|default(false) }}"
-  when: item.group is defined
+  when: item.group is defined and item.group != item.name
   loop: "{{ users }}"
   tags:
     - bootstrap
@@ -14,7 +14,7 @@
   become: yes
   user:
     name: "{{ item.name }}"
-    group: "{{ item.group | default(omit) }}" #https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html#omitting-parameters
+    group: "{{ item.group if item.group is defined and item.group != item.name else omit }}" #https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html#omitting-parameters
     state: present
     append: yes
     create_home: yes
