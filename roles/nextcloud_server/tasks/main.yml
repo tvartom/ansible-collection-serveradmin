@@ -120,6 +120,15 @@
   tags:
     - nextcloud
 
+- name: Remove nextcloud if present
+  become: yes
+  file:
+    path: "{{ nextcloud_tempdir }}/{{ nextcloud_archive }}"
+    state: absent
+  when: nextcloud_install
+  tags:
+    - nextcloud
+
 - name: Download nextcloud
   become: yes
   get_url:
