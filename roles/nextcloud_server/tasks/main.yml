@@ -203,10 +203,18 @@
   tags:
     - nextcloud
 
+- name: "Make occ runnable"
+  become: yes
+  file:
+    path: "{{ nextcloud.installdir }}/nextcloud/occ"
+    mode: "u=rwx,g=r,o="
+  tags:
+    - nextcloud
+
 - name: "Kör occ upgrade"
   become: yes
   become_user: "{{ nextcloud.user }}"
-  shell: php occ upgrade 2>&1
+  shell: "occ upgrade 2>&1"
   args:
     chdir: "{{ nextcloud_installdir }}/nextcloud/"
   register: nextcloud_occ_upgrade
