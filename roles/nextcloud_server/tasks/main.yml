@@ -172,7 +172,7 @@
   become_user: "{{ nextcloud.user }}"
   copy:
     src: "{{ nextcloud.installdir }}/nextcloud/config/config.php"
-    dest: "{{ nextcloud_folder }}/nextcloud/config/config.php"
+    dest: "{{ nextcloud.installdir }}/{{ nextcloud_folder }}/nextcloud/config/config.php"
     remote_src: yes
   when:
     - nextcloud_install
