@@ -81,7 +81,7 @@
 
     - set_fact:
         applications_devmode_samba_settings:
-          samba_shares:
+          shares:
             - name: "workspace"
               comment: "Workspace for devmode"
               path: "/home/{{ applications_devmode_user }}/workspace"
@@ -97,7 +97,7 @@
               #force_create_mode: '0660'
               directory_mode: '0750'
               #force_directory_mode: '0770'
-          samba_users:
+          users:
             - name: "{{ applications_devmode_user }}"
               password: ""
       when: applications_devmode and applications_devmode_samba
@@ -106,10 +106,11 @@
         name: bertvv_samba
       vars:
         ansible_become: yes
-        samba_shares: "{{ samba_shares|d([]) + applications_devmode_samba_settings.samba_shares|d([]) }}"
-        samba_users: "{{ samba_users|d([]) + applications_devmode_samba_settings.samba_users|d([]) }}"
-        samba_netbios_name: "{{ samba_netbios_name|d(inventory_hostname) }}"
-      when: applications_devmode_samba_settings is defined or samba_shares is defined
+        samba_workgroup: "{{ samba.workgroup|d('WORKGROUP') }}"
+        samba_shares: "{{ samba.shares|d([]) + applications_devmode_samba_settings.shares|d([]) }}"
+        samba_users: "{{ samba.users|d([]) + applications_devmode_samba_settings.users|d([]) }}"
+        samba_netbios_name: "{{ samba.netbios_name|d(inventory_hostname) }}"
+      when: applications_devmode_samba_settings is defined or samba is defined
 
     - include_role:
         name: nfs

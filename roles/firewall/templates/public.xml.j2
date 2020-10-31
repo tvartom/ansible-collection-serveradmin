@@ -8,7 +8,7 @@
   {% endfor %}
 
 
-  {% if applications_devmode_samba or samba_shares|d([])|length > 0 %}
+  {% if applications_devmode_samba or samba is defined %}
   <!-- Samba is used by devmode -->
   <port protocol="tcp" port="137"/><!-- Samba: NETBIOS Name Service (netbios-ns) -->
   <port protocol="tcp" port="138"/><!-- Samba: NETBIOS Datagram Service (netbios-dgm) -->
