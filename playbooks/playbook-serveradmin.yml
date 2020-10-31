@@ -80,26 +80,26 @@
       when: redis_enable
 
     - set_fact:
-      applications_devmode_samba_settings:
-        samba_shares:
-          - name: "workspace"
-            comment: "Workspace for devmode"
-            path: "/home/{{ applications_devmode_user }}/workspace"
-            public: true
-            browseable: true
-            guest_ok: true
-            writeable: true
+        applications_devmode_samba_settings:
+          samba_shares:
+            - name: "workspace"
+              comment: "Workspace for devmode"
+              path: "/home/{{ applications_devmode_user }}/workspace"
+              public: true
+              browseable: true
+              guest_ok: true
+              writeable: true
 #            write_list: "{{ applications_devmode_user }}"
-            owner: "{{ applications_devmode_user }}"
-            group: "{{ applications_devmode_user }}"
-            setype: httpd_sys_rw_content_t
-            create_mode: '0640'
-            #force_create_mode: '0660'
-            directory_mode: '0750'
-            #force_directory_mode: '0770'
-        samba_users:
-          - name: "{{ applications_devmode_user }}"
-            password: ""
+              owner: "{{ applications_devmode_user }}"
+              group: "{{ applications_devmode_user }}"
+              setype: httpd_sys_rw_content_t
+              create_mode: '0640'
+              #force_create_mode: '0660'
+              directory_mode: '0750'
+              #force_directory_mode: '0770'
+          samba_users:
+            - name: "{{ applications_devmode_user }}"
+              password: ""
       when: applications_devmode and applications_devmode_samba
 
     - include_role:
