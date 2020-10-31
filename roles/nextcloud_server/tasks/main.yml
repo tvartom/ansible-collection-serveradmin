@@ -214,7 +214,7 @@
 - name: "Kör occ upgrade"
   become: yes
   become_user: "{{ nextcloud.user }}"
-  shell: "occ upgrade 2>&1"
+  shell: "./occ upgrade 2>&1"
   args:
     chdir: "{{ nextcloud.installdir }}/nextcloud/"
   register: nextcloud_occ_upgrade
