@@ -124,6 +124,8 @@
   get_url:
     url: "{{ nextcloud_url }}"
     dest: "{{ nextcloud_tempdir }}/{{ nextcloud_archive }}"
+    owner: "{{ nextcloud.user }}"
+    group: "{{ nextcloud.group }}"
 #    validate_certs: no
   when: nextcloud_install
   tags:
