@@ -3,35 +3,38 @@
   <!-- This file is handled by Ansible -->
   <short>Public</short>
   <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
-  {% for item in firewall_settings.services | default([]) %}
+
+{% for item in firewall_settings.services | default([]) %}
   <service name="{{ item.name }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
-  {% endfor %}
+
+{% endfor %}
 
 
-  {% if applications_devmode_samba or samba is defined %}
-  <!-- Samba is used by devmode -->
+{% if applications_devmode_samba or samba is defined %}
+  <!-- Samba -->
   <port protocol="tcp" port="137"/><!-- Samba: NETBIOS Name Service (netbios-ns) -->
   <port protocol="tcp" port="138"/><!-- Samba: NETBIOS Datagram Service (netbios-dgm) -->
   <port protocol="tcp" port="139"/><!-- Samba: NETBIOS session service (netbios-ssn) -->
   <port protocol="tcp" port="445"/><!-- Samba: if you are using Active Directory (microsoft-ds) -->
-  {% endif %}
-  
-  {% if applications_devmode %}
-  {%   if applications_devmode_nfs %}
+{% endif %}
+
+{% if applications_devmode %}
+{%   if applications_devmode_nfs %}
   <!-- NFS is used by devmode -->
   <port protocol="tcp" port="2049"/><!-- NFSv4 -->
-  {%   endif %}
+{%   endif %}
   <!-- For MariaDB in devmode if opened up by SSH-forward like:
        $ ssh -L *:3306:/var/lib/mysql/mysql.sock localhost
   -->
   <port protocol="tcp" port="3306-3330"/>
-  {% endif %}
+{% endif %}
 
-  {% for item in firewall_settings.extra_ports | default([]) %}
+{% for item in firewall_settings.extra_ports | default([]) %}
   <port protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
-  {% endfor %}
+{% endfor %}
 
-  {% for item in firewall_settings.forward_ports | default([]) %}
-    <forward-port to-port="{{ item.to_port }}" protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
-  {% endfor %}
+{% for item in firewall_settings.forward_ports | default([]) %}
+  <forward-port to-port="{{ item.to_port }}" protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
+{% endfor %}
+
 </zone>
