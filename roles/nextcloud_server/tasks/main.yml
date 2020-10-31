@@ -216,7 +216,7 @@
   become_user: "{{ nextcloud.user }}"
   shell: "occ upgrade 2>&1"
   args:
-    chdir: "{{ nextcloud_installdir }}/nextcloud/"
+    chdir: "{{ nextcloud.installdir }}/nextcloud/"
   register: nextcloud_occ_upgrade
   ignore_errors: true
   when:
