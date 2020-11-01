@@ -24,7 +24,7 @@ devmode_suffix="-devmode"
 EOF
   ) | sudo -u {{ serveradmin.process_user }} tee "$INCLUDE_DEVMODE_PATH" > /dev/null
 # With datamigrations is it possible that other users need this.
-chmod go+rx "$INCLUDE_DEVMODE_PATH"
+sudo -u {{ serveradmin.process_user }} chmod a+rx "$INCLUDE_DEVMODE_PATH"
 fi
 
 if [[ $REPLY =~ ^[Rr]$ ]]; then
