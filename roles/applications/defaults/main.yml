@@ -39,6 +39,8 @@ applications_enable_https_by_default: true
 
 
 applications_default:
+  #
+  lab: {}
   # To use this applikationen,
   # in host_vars:
   #application_instances:
