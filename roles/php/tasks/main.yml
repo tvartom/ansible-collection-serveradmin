@@ -25,6 +25,17 @@
         #- "{{ php_package }}-bcmath" # 2020-02-23 LL Behövs av CiviCRM, Add to application.linux_packages when needed
   when: ansible_os_family == "RedHat"
 
+- include_role:
+    name: dnf_module
+    tasks_from: install_package_from_module
+  vars:
+    dnf:
+      module_name: php
+      module_spec: "{{ webserver_php_version }}"
+      packages:
+        - "{{ php_package }}-opcache"
+  when: ansible_os_family == "RedHat" and not applications_devmode
+
 - name: Install extra packages for PHP FastCGI Process Manager (YUM)
   become: yes
   yum:
