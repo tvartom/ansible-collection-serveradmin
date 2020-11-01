@@ -1,0 +1,13 @@
+---
+#CentOS 8, with PHP 7.3:
+php_opache_ini: /etc/php.d/10-opcache.ini
+
+
+# Values picked from here: https://docs.nextcloud.com/server/20/admin_manual/installation/server_tuning.html#enable-php-opcache
+php_opache_default:
+  enable: 1
+  interned_strings_buffer: 8
+  max_accelerated_files: 10000
+  memory_consumption: 128
+  save_comments: 1
+  revalidate_freq: 1

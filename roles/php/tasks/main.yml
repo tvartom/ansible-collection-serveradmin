@@ -46,25 +46,25 @@
     state: present
   when: ansible_os_family == "RedHat"
 
-- name: Install PHP FastCGI Process Manager (APT)
-  become: yes
-  apt:
-    name:
-      - "{{ php_package }}-fpm"
-      - "{{ php_package }}-mysqlnd" # 2019-12-30 LL Moved from mariadb
-      # - "{{ php_package }}-mcrypt" #Deprecated, removed from 7.2, OpenSSL used instead.
-      #- "{{ php_package }}-mbstring"
-      #- "{{ php_package }}-cli"
-      #- "{{ php_package }}-json"
-      #- "{{ php_package }}-simplexml"
-      #- "{{ php_package }}-curl"
-      #- "{{ php_package }}-gd"
-      #- "{{ php_package }}-bcmath" # 2020-02-23 LL Behövs av CiviCRM
-    install_recommends: yes
-    update_cache: yes
-    cache_valid_time: 600
-    state: present
-  when: ansible_os_family == "Debian"
+#- name: Install PHP FastCGI Process Manager (APT)
+#  become: yes
+#  apt:
+#    name:
+#      - "{{ php_package }}-fpm"
+#      - "{{ php_package }}-mysqlnd" # 2019-12-30 LL Moved from mariadb
+#      # - "{{ php_package }}-mcrypt" #Deprecated, removed from 7.2, OpenSSL used instead.
+#      #- "{{ php_package }}-mbstring"
+#      #- "{{ php_package }}-cli"
+#      #- "{{ php_package }}-json"
+#      #- "{{ php_package }}-simplexml"
+#      #- "{{ php_package }}-curl"
+#      #- "{{ php_package }}-gd"
+#      #- "{{ php_package }}-bcmath" # 2020-02-23 LL Behövs av CiviCRM
+#    install_recommends: yes
+#    update_cache: yes
+#    cache_valid_time: 600
+#    state: present
+#  when: ansible_os_family == "Debian"
 
 
 - name: Remove Default www.conf
@@ -81,6 +81,25 @@
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"
+
+- name: "Combine settings with default-values for opcache"
+  set_fact:
+    php_opcache_settings: "{{ php_opcache_default | combine( php_opcache | d({}) ) }}"
+  when: not applications_devmode
+
+# To comment out a setting, set the value to: null
+# Null value: null
+# Null test: is none
+- name: "opcache php-ini"
+  become: yes
+  lineinfile:
+    path: "{{ php_opcache_ini }}"
+    regexp: |-
+      ^;?opcache\.{{ item.key }} =
+    line: "{{ ';' if item.value is none else '' }}opcache.{{ item.key }} = {{ item.value }}"
+  loop: "{{ php_opcache_settings | dict2items}}"
+  when: not applications_devmode
+  notify: "Reload php-fpm"
 
 - name: Autostart php-fpm
   become: yes

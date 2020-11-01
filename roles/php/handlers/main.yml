@@ -1,0 +1,18 @@
+---
+# funkar inte:
+# https://github.com/ansible/ansible/issues/20493
+#- name: "Reload php-fpm (bug)"
+#  include_role:
+#    name: php
+#    tasks_from: start_php
+#  vars:
+#    state: restarted
+
+- name: "Reload php-fpm"
+  become: yes
+  service:
+    name: "{{ php_fpm_service }}"
+    state: "restarted"
+    enabled: true
+  # If there is no php-fpm-pools, this will fail... Ignore and continue
+  ignore_errors: true
