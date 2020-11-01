@@ -95,7 +95,7 @@
   lineinfile:
     path: "{{ php_opcache_ini }}"
     regexp: |-
-      ^;?opcache\.{{ item.key }} ?=
+      ^;?opcache\.{{ item.key }} *=
     line: "{{ ';' if item.value is none else '' }}opcache.{{ item.key }}={{ item.value }}"
   loop: "{{ php_opcache_settings | dict2items}}"
   when: not applications_devmode

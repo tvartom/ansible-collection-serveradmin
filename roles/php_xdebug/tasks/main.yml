@@ -37,7 +37,7 @@
   lineinfile:
     path: "{{ php_xdebug_ini }}"
     regexp: |-
-      ^;?xdebug\.{{ item.key }} =
+      ^;?xdebug\.{{ item.key }} *=
     line: "{{ ';' if item.value is none else '' }}xdebug.{{ item.key }} = {{ item.value }}"
   loop: "{{ php_xdebug_settings | dict2items}}"
   notify: "Reload php-fpm"
