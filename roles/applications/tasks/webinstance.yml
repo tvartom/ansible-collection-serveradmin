@@ -38,6 +38,7 @@
     - { path: "/php-fpm/{{ webinstance.instance }}",                                             when: "{{ webinstance.enable_php }}" }
     - { path: "/php-fpm/{{ webinstance.instance }}/session",   setype: "httpd_sys_rw_content_t", when: "{{ webinstance.enable_php }}" }
     - { path: "/php-fpm/{{ webinstance.instance }}/wsdlcache", setype: "httpd_sys_rw_content_t", when: "{{ webinstance.enable_php }}" }
+    - { path: "/php-fpm/{{ webinstance.instance }}/opcache", setype: "httpd_sys_rw_content_t", when: "{{ webinstance.enable_php }}" }
 
 - name: Create php-fpm-pool-conf
   become: yes

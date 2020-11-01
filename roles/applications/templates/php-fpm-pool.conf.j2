@@ -241,8 +241,13 @@ php_value[session.save_handler] = files
 
 ;php_value[session.save_path] = /var/lib/php/session
 php_value[session.save_path] = {{ application.path }}/php-fpm/{{ webinstance.instance }}/session
+
 ; php-soap anvander troligen denna:
-;php_value[soap.wsdl_cache_dir]  = {{ application.path }}/php-fpm/{{ webinstance.instance }}/wsdlcache
+;php_value[soap.wsdl_cache_dir] = {{ application.path }}/php-fpm/{{ webinstance.instance }}/wsdlcache
+
+{% if not applications_devmode %}
+php_value[opcache.file_cache] = {{ application.path }}/php-fpm/{{ webinstance.instance }}/opcache
+{% endif %}
 
 php_value[upload_max_filesize] = {{ webinstance.upload_max_filesize }}
 php_value[post_max_size] = {{ webinstance.upload_max_filesize }}
