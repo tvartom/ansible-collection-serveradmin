@@ -19,6 +19,7 @@
       - "{{ php_package }}-intl"
       - "{{ php_package }}-pecl-zip"
       - "{{ php_package }}-mbstring"
+      - "{{ php_package }}-gmp"
 #      - "{{ php_package }}-pecl-redis" #https://pagure.io/epel/issue/75 #https://serverfault.com/questions/997028/where-is-the-redis-module-for-php-on-centos-8-php-pecl-redis
       - bzip2
     state: present
