@@ -1,0 +1,68 @@
+#
+# Created with:
+#   cd wp-content/plugins
+#   diff -Naur civicrm civicrm_patched
+#
+diff -Naur civicrm/civicrm/install/civicrm.php civicrm_patched/civicrm/install/civicrm.php
+--- civicrm/civicrm/install/civicrm.php	2020-10-08 04:39:04.000000000 +0200
++++ civicrm_patched/civicrm/install/civicrm.php	2020-11-01 21:42:00.058645195 +0100
+@@ -80,7 +80,7 @@
+   }
+ 
+   $parts = explode(':', $config['mysql']['server']);
+-  if (empty($parts[1])) {
++  if (empty($parts[1]) && preg_match('/^unix\(([^)]+)\)$/', $parts[0]) !== 1) {
+     $parts[1] = 3306;
+   }
+   $config['mysql']['server'] = implode(':', $parts);
+diff -Naur civicrm/civicrm/install/index.php civicrm_patched/civicrm/install/index.php
+--- civicrm/civicrm/install/index.php	2020-10-08 04:37:30.000000000 +0200
++++ civicrm_patched/civicrm/install/index.php	2020-11-01 21:44:49.291149583 +0100
+@@ -623,7 +623,16 @@
+     else {
+       $port = NULL;
+     }
+-    $conn = @mysqli_connect($host, $username, $password, $database, $port);
++    // Support for unix socket:
++    // I.e> $host == 'unix(/var/lib/mysql/mysql.sock)'
++    if(preg_match('/^unix\(([^)]+)\)$/', $host, $matches) === 1) {
++      $host = 'localhost';
++      $socket = $matches[1];
++    }
++    else {
++      $socket = NULL;
++    }
++    $conn = @mysqli_connect($host, $username, $password, $database, $port, $socket);
+     return $conn;
+   }
+ 
+diff -Naur civicrm/civicrm/install/template.html civicrm_patched/civicrm/install/template.html
+--- civicrm/civicrm/install/template.html	2020-10-08 10:00:26.000000000 +0200
++++ civicrm_patched/civicrm/install/template.html	2020-11-01 21:48:52.253438040 +0100
+@@ -100,7 +100,7 @@
+ <h4><?php echo ts('CiviCRM Database Settings'); ?></h4>
+ <p style="margin-left: 2em" id="mysql_credentials">
+   <label for="mysql_server"> <span><?php echo ts('MySQL server:'); ?></span> <input id="mysql_server" type="text" name="mysql[server]" value="<?php echo $databaseConfig['server']; ?>" /></label>
+-  <span class="testResults"> <?php echo ts('If your mysql server is running on other port than default 3306, provide server info as server:port (i.e. localhost:1234) ') ?> </span> </br>
++  <span class="testResults"> <?php echo ts('Port can be provided as server:port, default port is 3306. (i.e. localhost:1234) For unix socket on localhost use unix(/path/to/socket) (i.e. unix(/var/lib/mysql/mysql.sock))') ?> </span> </br>
+   <label for="mysql_username"> <span><?php echo ts('MySQL username:'); ?></span> <input id="mysql_username" type="text" name="mysql[username]" value="<?php echo $databaseConfig['username']; ?>"  /></label> <br />
+   <label for="mysql_password"> <span><?php echo ts('MySQL password:'); ?></span> <input id="mysql_password" type="password" name="mysql[password]" value="<?php echo $databaseConfig['password']; ?>" /></label> <br />
+   <label for="mysql_database"><span><?php echo ts('MySQL database:'); ?></span> <input id="mysql_database" type="text" name="mysql[database]" value="<?php echo $databaseConfig['database']; ?>" /></label> <br />
+@@ -110,7 +110,7 @@
+ <h4><?php echo ts('Drupal Database Settings'); ?></h4>
+ <p style="margin-left: 2em" id="drupal_credentials" > <!--style="display: none"-->
+   <label for="drupal_server"> <span><?php echo ts('MySQL server:'); ?></span> <input id="drupal_server" type="text" name="drupal[server]" value="<?php echo $drupalConfig['server']; ?>" /></label>
+-  <span class="testResults"> <?php echo ts('If your mysql server is running on other port than default 3306, provide server info as server:port (i.e. localhost:1234) ') ?> </span> </br>
++  <span class="testResults"> <?php echo ts('Port can be provided as server:port, default port is 3306. (i.e. localhost:1234) For unix socket on localhost use unix(/path/to/socket) (i.e. unix(/var/lib/mysql/mysql.sock))') ?> </span> </br>
+   <label for="drupal_username"> <span><?php echo ts('MySQL username:'); ?></span> <input id="drupal_username" type="text" name="drupal[username]" value="<?php echo $drupalConfig['username']; ?>"  /></label> <br />
+   <label for="drupal_password"> <span><?php echo ts('MySQL password:'); ?></span> <input id="drupal_password" type="password" name="drupal[password]" value="<?php echo $drupalConfig['password']; ?>" /></label> <br />
+   <label for="drupal_database"><span><?php echo ts('MySQL database:'); ?></span> <input id="drupal_database" type="text" name="drupal[database]" value="<?php echo $drupalConfig['database']; ?>" /></label> <br />
+@@ -121,7 +121,7 @@
+ <h4><?php echo ts('Backdrop Database Settings'); ?></h4>
+ <p style="margin-left: 2em" id="backdrop_credentials" > <!--style="display: none"-->
+   <label for="backdrop_server"> <span><?php echo ts('MySQL server:'); ?></span> <input id="backdrop_server" type="text" name="backdrop[server]" value="<?php echo $backdropConfig['server'] ?>" /></label>
+-  <span class="testResults"> <?php echo ts('If your mysql server is running on other port than default 3306, provide server info as server:port (i.e. localhost:1234) ') ?> </span> </br>
++  <span class="testResults"> <?php echo ts('Port can be provided as server:port, default port is 3306. (i.e. localhost:1234) For unix socket on localhost use unix(/path/to/socket) (i.e. unix(/var/lib/mysql/mysql.sock))') ?> </span> </br>
+   <label for="backdrop_username"> <span><?php echo ts('MySQL username:'); ?></span> <input id="backdrop_username" type="text" name="backdrop[username]" value="<?php echo $backdropConfig['username'] ?>"  /></label> <br />
+   <label for="backdrop_password"> <span><?php echo ts('MySQL password:'); ?></span> <input id="backdrop_password" type="password" name="backdrop[password]" value="<?php echo $backdropConfig['password'] ?>" /></label> <br />
+   <label for="backdrop_database"><span><?php echo ts('MySQL database:'); ?></span> <input id="backdrop_database" type="text" name="backdrop[database]" value="<?php echo $backdropConfig['database'] ?>" /></label> <br />

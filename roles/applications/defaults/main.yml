@@ -136,3 +136,5 @@ applications_default:
     deploy:
       - plugin: wordpress
         webinstance: web
+    linux_packages:
+      - "{{ php_package }}-gd"

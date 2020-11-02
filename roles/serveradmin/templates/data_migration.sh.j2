@@ -15,7 +15,7 @@ data_migration:
       - name: Name of job
         type: databases
 
-        include_databases: '%' (default)
+        include_databases: '%' #(default)
         # or
         include_databases:
           - name1
@@ -34,7 +34,9 @@ data_migration:
           user:
           password: undefined(default)|true(ask for it)|string
           default_character_set
-        dest: file/database
+        dest: dumpfile # (default)
+        # or
+        dest:
           ?host:
           default_character_set:
           drop_database: false
@@ -153,16 +155,14 @@ fi
 
 {% for job in data_migration.jobs | default([]) %}
 ###### {{ job.name | d(loop.index) }}({{ job.type }}) ######
-{%   if job.type == "databases" %}
+{%   if job.type in ['database', 'databases', 'db'] %}
 {%     set default_character_set_src = job.src.default_character_set | d(job.default_character_set | d(false)) %}
 {%     set default_character_set_dest = job.dest.default_character_set | d(job.default_character_set | d(false)) %}
 
 {%     if job.include_databases is not defined or job.include_databases is string %}
 {#       https://stackoverflow.com/questions/11426529/reading-output-of-a-command-into-an-array-in-bash #}
          mapfile -t databases < <(
-             {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} bash << EOF{% endif %}
-
-                 mysql \
+             {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} {% endif %}mysql \
                      {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
                      {{ '--host='~job.src.host if job.src.host is defined else '' }} \
                      {{ '--user='~job.src.user if job.src.user is defined else '' }} \
@@ -173,7 +173,7 @@ fi
                              {{- (job.exclude_databases | default([]) | map('regex_replace', '^(.*)$', '\'\\1\',') | join('')) if job.exclude_databases is iterable else '' -}}
                              'mysql','information_schema','performance_schema');"
 
-{%           if data_migration.ssh_host is defined %}EOF{% endif %}
+{# %           if data_migration.ssh_host is defined %}EOF{% endif % #}
 
          )
 {%     else %}
@@ -204,7 +204,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
        for db in ${databases[@]}; do
          echo "Backing up: $db..."
 
-         DUMPFILE="dump_{{ job.name | d(loop.index) }}_$db"
+         DUMPFILE="dump_{{ job.name | d(loop.index) }}_$db.sql"
 
 {%       if show_progress %}
            # Does old file exists? (for progressbar)
@@ -219,10 +219,9 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
 
          echo "Dump $db to $DUMPFILE..."
          {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
+         {# Även testat "ssh {host] bash << EOF" men då fungerar inte något interaktivt: https://unix.stackexchange.com/questions/100652/bash-interactive-remote-prompt #}
          (
-           {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} bash << EOF{% endif %}
-
-           mysqldump \
+           {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} {% endif %}mysqldump \
              {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
              {{ '--host='~job.src.host if job.src.host is defined else '' }} \
              {{ '--user='~job.src.user if job.src.user is defined else '' }} \
@@ -240,7 +239,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
              "$db" \
              {% for table in job.include_tables | d([]) %}{{ table }} {% endfor %}
 
-{%         if data_migration.ssh_host is defined %}EOF{% endif %}
+{# %         if data_migration.ssh_host is defined %}EOF{% endif % #}
 
          ) | $PIPE_COMMAND_DUMP_FILE > "$DUMPFILE"
 ################################################################################################################################################################################
@@ -249,7 +248,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
 {%       for from,to in (job.rename_databases | d({})).items() %}
            if [ "$db" == "{{ from }}" ]; then
              echo "Search for '{{ from }} and replace with '{{ to }}' in dumpfile..."
-             # mysqldump lämnar några spår av databasnamnet, exempelvis i triggers, så byt ut dessa:
+             # mysqldump kan lämna några spår av databasnamnet, exempelvis i triggers, så byt ut dessa:
              sed -ri "s/\`{{ from }}\`/\`{{ to }}\`/g" "$DUMPFILE"
              DESTDB="{{ to }}"
            fi
@@ -263,7 +262,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
 
 {%       for replace in job.replaces | default([]) %}
            echo "{{ replace.description }}"
-           sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" "$DUMPTFILE"
+           sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" "$DUMPFILE"
 {%       endfor %}
 
 {%       if job.dest | d('dumpfile') != 'dumpfile' %}
@@ -307,5 +306,53 @@ DataMigrationEndOfSQL
 {%         endif %}### End: Populate Database ###
 {%       endif %}
        done ### End: Loop databases
+{%   elif job.type in ['fileset'] %}
+################## Kopiera filer #########################
+{%     if agent_forwarding %}
+    # https://unix.stackexchange.com/questions/131596/ssh-agent-forwarding-works-but-what-about-sudo-u-username-no-shell-permission
+    # https://linux.die.net/man/1/setfacl
+    setfacl -R -m u:{{ data_migration.file_owner }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ data_migration.file_owner }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}".
+{%     endif %}
+
+{%     for fileset in job.filesets %}
+    echo "{{ fileset.description }}"
+{%       if fileset.dest_create | d(false) %}
+    sudo -u {{ data_migration.file_owner }} mkdir -p "{{ fileset.dest_dir |d(fileset.dest|d()) }}"
+{%       endif %}
+    #rsync:
+  #-a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
+  #  -r, --recursive             recurse into directories
+  #  -l, --links                 copy symlinks as symlinks
+  #  -p, --perms                 preserve permissions
+  #  -t, --times                 preserve modification times
+  #  -g, --group                 preserve group
+  #  -o, --owner                 preserve owner (super-user only)
+  #  -D                          same as --devices --specials
+  #    --devices               preserve device files (super-user only)
+  #    --specials              preserve special files
+
+  #  -H, --hard-links     This tells rsync to look for hard-linked files in the transfer and link together the corresponding files on the receiving side. Without this option, hard-linked files in the transfer are treated as though they were separate files.
+  #  -A, --acls           This option causes rsync to update the destination ACLs to be the same as the source ACLs. The option also implies --perms.
+  #  -X, --xattrs         This option causes rsync to update the remote extended attributes to be the same as the local ones.
+
+  #-v, --verbose
+  #-z, --compress              compress file data during the transfer
+    sudo -u {{ data_migration.file_owner }} -i \
+      {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK"{% endif %} \
+      rsync \
+        {% if fileset.src_sudo | d(false) %}--rsync-path="sudo rsync"{% endif %} \
+        --recursive \
+        --links \
+        --prune-empty-dirs \
+        {% for exclude in fileset.excludes | d([]) %}--exclude '{{ exclude }}' {% endfor %} \
+        "{{ data_migration.ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src | d()) ~'/') }}" "{{ fileset.dest_dir |d(fileset.dest|d()) }}{% if fileset.src_file is not defined %}/{% endif %}"
+{%     endfor %}
+
+{%     if agent_forwarding %}
+    setfacl -R -b "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}Agentforwarding borttagen för användare {{ data_migration.file_owner }}!${NC}"
+{%     endif %}
+### End: job.type == fileset
+{%   else %}
+       {{ unknown_type | mandatory('Unknown job-type ('~job.type|d('undefined')~')') }}
 {%   endif %}### End: job.type
 {% endfor %}### End: job-loop ###

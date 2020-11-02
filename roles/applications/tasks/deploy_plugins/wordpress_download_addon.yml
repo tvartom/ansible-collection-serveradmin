@@ -33,7 +33,7 @@
     mode: "u=rwX,g=rX,o="
   when: not addon.use_dir_in_archive|d(true)
 
-- name: Download and and unpack addon if not present
+- name: Download and unpack addon if not present
   become: yes
   unarchive:
     remote_src: yes
