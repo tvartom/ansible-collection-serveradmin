@@ -171,6 +171,23 @@
       setype: "httpd_sys_rw_content_t"
       when: "{{ application.metadata.wordpress.civicrm is defined }}"
 
+- name: "Install extra packages for CiviCRM (Excl php-soap)"
+  become: yes
+  dnf:
+    name:
+      # CiviCRM require: https://docs.civicrm.org/installation/en/latest/general/requirements/
+      - "{{ php_package }}-bcmath"
+      - "{{ php_package }}-curl"
+      - "{{ php_package }}-xml"
+      - "{{ php_package }}-mbstring"
+      - "{{ php_package }}-zip"
+      - "{{ php_package }}-intl"
+      # required to use the SOAP processor (required for the CiviSMTP service)
+      # Installera med applicationen om du behöver denna.
+      #- "{{ php_package }}-soap"
+    state: present
+  when: application.metadata.wordpress.civicrm is defined
+
 - name: Patch CiviCRM
   block:
     - name: "Install GNU patch (YUM)"
@@ -186,6 +203,7 @@
       patch:
         src: "civicrm-{{ application.metadata.wordpress.civicrm.version }}.patch"
         basedir: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins"
+      ignore_errors: true
   when: application.metadata.wordpress.civicrm.patch_for_unix_socket | d(false)
 
 - name: CiviCRM - Localization - Download and unpack if not present
@@ -202,7 +220,7 @@
     creates: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm/l10n"
   when: application.metadata.wordpress.civicrm.localization | default(false)
 
-- name: "Copy civicrm.settings.ph from templates to uploads/civicrm"
+- name: "Copy civicrm.settings.php from templates to uploads/civicrm"
   become: yes
   copy:
     src: "{{ application.path }}/{{ application.webinstances[deploy.webinstance].root_dir }}/wp-content/plugins/civicrm/civicrm/templates/CRM/common/civicrm.settings.php.template"
@@ -212,7 +230,7 @@
     mode: "u=rwX,g=rX,o="
     force: no
     remote_src: yes
-  when: application.metadata.wordpress.civicrm is defined
+  when: application.metadata.wordpress.civicrm is defined and application.metadata.wordpress.civicrm.set_settings | d(true)
 
 - name: "Sätt värden i civicrm.settings.php"
   become: yes
@@ -265,7 +283,8 @@
   vars:
     civicrm_database: "{{ application.databases[application.metadata.wordpress.civicrm.databaseindex | d(application.metadata.wordpress.databaseindex | d(0))] }}"
     civicrm_maindomain: "{{ application.webinstances[deploy.webinstance].domaininstances[0].domains[0] }}"
-  when: application.metadata.wordpress.civicrm is defined
+  when: application.metadata.wordpress.civicrm is defined and application.metadata.wordpress.civicrm.set_settings | d(true)
+
 
 # CiviCRM -> Administer -> System Settings -> Directories -> Custom Template Directory = "[civicrm.files]/custom_templates/"
 # (/wp-content/uploads/civicrm/custom_templates)
