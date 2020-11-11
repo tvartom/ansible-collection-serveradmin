@@ -1,0 +1,23 @@
+---
+- name: "Create dirs for cron-scripts for application"
+  become: yes
+  file:
+    path: "{{ application.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( application.process_user, true ) }}"
+    group: "{{ item.group | default( application.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "{{ item.mode | default('u=rwx,g=rx,o=') }}"
+  when: item.when | default(True)
+  loop:
+    - { path: "/log/cron_job" }
+
+- name: "Setup cron-jobb"
+  become: yes
+  template:
+    src: "deploy_plugins/cron_job/cron_job.cron.j2"
+    dest: "/etc/cron.d/cron_job-{{ application.environment }}-{{ application.name }}-{{ deploy.name }}"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  when: not applications_devmode
