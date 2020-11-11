@@ -5,7 +5,7 @@
 #
 # Environment: {{ application.environment }}
 # Aplication: {{ application.name }}
-# Repo: {{ deploy.repo }}
+# Name: {{ deploy.name }}
 
 
 {{ deploy.cron_time.minute }} {{ deploy.cron_time.hour }} {{ deploy.cron_time.day }} {{ deploy.cron_time.month }} {{ deploy.cron_time.weekday }} {{ deploy.user | d(application.process_user) }} {{ deploy.command }} >> {{ application.path }}/log/cron_job/cron_job-{{ deploy.name }}.log 2>&1
