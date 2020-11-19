@@ -110,6 +110,7 @@
       #   - file:
       # [permalinkhandling: true]
       # [proxy_port: 8080]
+      # [nginx_index_file: index.html]
       #Populated properties, if not defined:
       # [root_dir: "public_html_"+webinstance_with_key.key]
       #Populated properties:
