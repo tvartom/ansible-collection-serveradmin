@@ -6,4 +6,4 @@
   shell: >-
     /home/system/{{ application.process_user }}/.local/bin/composer install{% if not applications_devmode %} --no-dev{% endif %}
   args:
-    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}"
+    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
