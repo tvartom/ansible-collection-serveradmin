@@ -63,7 +63,7 @@
     include conf.d/{{ organisation.name }}/{{ webinstance.fullname }}_custom.include;
   {% else %}
 
-    index {% if webinstance.enable_php %}index.php {% endif %}index.html;
+    index {% if webinstance.enable_php %}index.php {% endif %}{{ webinstance.nginx_index_file | d('index.html') }};
 
     {% if webinstance.root_dir is defined %}
       root   {{ path }}/{{ webinstance.root_dir }};

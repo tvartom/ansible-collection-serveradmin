@@ -12,7 +12,7 @@ data_migration:
     databases:
     show_progress: true
     jobs:
-      - name: Name of job
+      - name: name_of_job # Används i filnamn
         type: databases
 
         include_databases: '%' #(default)
@@ -29,7 +29,6 @@ data_migration:
           name1old: name1new
           name2old: name2new
         src:
-          --name:--
           host:
           user:
           password: undefined(default)|true(ask for it)|string
@@ -51,10 +50,18 @@ data_migration:
           - [table-name 2]
           - [...]
         suffix_on_emailadresses: 'string'
+        [replaces:]
+         - description: "Byt ut utf8 till utf8mb4"
+           pattern: utf8
+           replace_with: utf8mb4
+         - [...]
         no_data: true
         include_events: false
         include_triggers: false
         include_routines: false
+        run_sql_after: |
+          # SQL:
+          # UPDATE ....
         skip_dump_date \
         single_transaction
         no_create_db \
@@ -66,13 +73,24 @@ data_migration:
         --no-create-db \
         --skip-lock-tables \
 -- force
-
-
-
-
-
-
+      - type: fileset
+        filesets:
+          - description: ""
+            dest_create: d(false)
+            dest_dir:
+            dest: @deprecated använd dest_dir
+            src_sudo: d(false)
+            excludes:
+              - file1
+              - file2
+              - ...
+            src_file
+            src_dir
+            src: @deprecated använd dest_dir
 #}
+
+
+
 #
 # Managed by Ansible!
 #

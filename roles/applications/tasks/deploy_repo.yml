@@ -8,7 +8,7 @@
   - name: "Empty upper-dir directory for repo. (Find)"
     become: yes
     find:
-      path: "{{ application.path }}/devmode/{{ repo.name }}-upper"
+      path: "{{ application.path }}/devmode/overlayfs/{{ repo.name }}-upper"
       file_type: any
       hidden: yes
     register: to_delete

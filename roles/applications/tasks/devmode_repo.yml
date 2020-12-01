@@ -7,7 +7,7 @@
 - name: "Check mount point devmode"
   become: yes
   stat:
-    path: "{{ application.path }}/devmode/{{ repo.name }}"
+    path: "{{ application.path }}/devmode/overlayfs/{{ repo.name }}"
   register: mount_point_devmode
   when: applications_devmode_use_overlayfs
 
@@ -29,9 +29,14 @@
   when: item.when | default(True)
   loop:
     - { path: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}", owner: "{{ applications_devmode_user }}", group: "{{ applications_devmode_user }}" }
-    - { path: "{{ application.path }}/devmode/{{ repo.name }}",       when: "{{ applications_devmode_use_overlayfs and not mount_point_devmode.stat.exists }}" }
-    - { path: "{{ application.path }}/devmode/{{ repo.name }}-upper", when: "{{ applications_devmode_use_overlayfs }}" }
-    - { path: "{{ application.path }}/devmode/{{ repo.name }}-work",  when: "{{ applications_devmode_use_overlayfs }}" }
+    - { path: "{{ application.path }}/devmode",       when: "{{ applications_devmode_use_overlayfs or repo.npm_root_folders | d([]) | length > 0 }}" }
+
+    - { path: "{{ application.path }}/devmode/{{ repo.name }}",       when: "{{ repo.npm_root_folders | d([]) | length > 0 }}" }
+
+    - { path: "{{ application.path }}/devmode/overlayfs",                       when: "{{ applications_devmode_use_overlayfs }}" }
+    - { path: "{{ application.path }}/devmode/overlayfs/{{ repo.name }}",       when: "{{ applications_devmode_use_overlayfs and not mount_point_devmode.stat.exists }}" }
+    - { path: "{{ application.path }}/devmode/overlayfs/{{ repo.name }}-upper", when: "{{ applications_devmode_use_overlayfs }}" }
+    - { path: "{{ application.path }}/devmode/overlayfs/{{ repo.name }}-work",  when: "{{ applications_devmode_use_overlayfs }}" }
     - { path: "{{ application.path }}/repos/{{ repo.name }}",        when: "{{ not mount_point_repos.stat.exists }}" }
 
 - name: "Mount the dev repo in the application devmode-folder (bindfs)"
@@ -51,6 +56,74 @@
       ,chgrp-ignore                                                  {#- -#}
     state: mounted
 
+# node_modules:
+# node_modules kan inte skrivas i en shared-folder med VitualBox eftersom det inte tillåts att skapa symlänkar.
+# Därför skapar vi {{ application.path }}/devmode/overlayfs/{{ repo.name }}/{{ path_in_repo }}/node_modules som vi mountar i repot (under {{ path_in_repo }}/node_modules)
+
+- name: "Force format of folder path to format '/foo/bar', '/foo' or ''"
+  set_fact:
+    pretty_npm_root_folders: "{{ repo.npm_root_folders | d([]) | map('regex_replace', '^/?(.*?)/?$', '/\\1') | map('regex_replace', '^/$', '') }}"
+  loop: "{{ repo.npm_root_folders | d([]) }}"
+
+# Kan inte clona repo om vi skapar foldrar i det, så fortsätt bara om detta är gjort.
+- name: Check if repo is empty before proceeding
+  become: yes
+  find:
+    paths: "/home/{{ applications_devmode_user }}/workspace/{{ organisation.name }}/{{ repo.path | basename }}"
+    file_type: "any"
+    hidden: true
+    pattern: "will_not_match"
+  register: filesFound
+  when: repo.npm_root_folders | d([]) | length > 0
+
+- debug:
+    var: filesFound
+
+- name: "Decide if npm_root_folders will be mounted"
+  set_fact:
+    do_npm_root_folders: "{{ repo.npm_root_folders | d([]) | length > 0 and filesFound.examined > 0 }}"
+
+- name: "Create folder for repo in devmode för node_modules"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  file:
+    path: "{{ application.path }}/devmode/{{ repo.name }}{{ item }}/node_modules"
+    state: directory
+    recurse: yes
+  when: do_npm_root_folders
+  loop: "{{ pretty_npm_root_folders | d([]) }}"
+
+- name: "Check if folder node_modules is missing"
+  become: yes
+  stat:
+    path: "{{ application.path }}/repos/{{ repo.name }}{{ item }}/node_modules"
+  register: stat_npm_root_folders
+  when: do_npm_root_folders
+  loop: "{{ pretty_npm_root_folders | d([]) }}"
+
+- name: "Create node_modules folders in repo"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  file:
+    path: "{{ application.path }}/repos/{{ repo.name }}{{ item.item }}/node_modules"
+    state: directory
+    recurse: yes
+  when: do_npm_root_folders and not item.stat.exists
+  loop: "{{ stat_npm_root_folders.results | d([]) }}"
+
+- name: "Mount node_modules from repos to devmode (bindfs)"
+  become: yes
+  mount:
+    src: "{{ application.path }}/devmode/{{ repo.name }}{{ item.item }}/node_modules"
+    path: "{{ application.path }}/repos/{{ repo.name }}{{ item.item }}/node_modules"
+    fstype: fuse.bindfs
+    # Dokumentation: man bindfs
+    opts: "rw"
+    state: mounted
+  when: do_npm_root_folders and not item.stat.exists
+  loop: "{{ stat_npm_root_folders.results | d([]) }}"
+
+
 # Overlay doen't support changes in lowerdirs, editing files works, but changing folders doesn't.
 # TODO: To use it, changes should trigger a remount in some way, or with cron-job.
 - name: "Mount the dev repo with overlay in the application repos-folder (overlay)"
@@ -61,9 +134,9 @@
     fstype: overlay
     # Dokumentation: man mount.cifs
     opts: |-
-      x-systemd.after={{ application.path }}/devmode/{{ repo.name }}  {#- Wait for the bindfs to mount Doumentation: https://www.freedesktop.org/software/systemd/man/systemd.mount.html -#}
-      ,lowerdir={{ application.path }}/devmode/{{ repo.name }}        {#- The main content of this mount -#}
-      ,upperdir={{ application.path }}/devmode/{{ repo.name }}-upper  {#- Where changes from delpoy-script, the webapp it self etc i written. Cleared by _deploy -#}
-      ,workdir={{ application.path }}/devmode/{{ repo.name }}-work    {#- Demanded by overlayfs -#}
+      x-systemd.after={{ application.path }}/devmode/overlayfs/{{ repo.name }}  {#- Wait for the bindfs to mount Doumentation: https://www.freedesktop.org/software/systemd/man/systemd.mount.html -#}
+      ,lowerdir={{ application.path }}/devmode/overlayfs/{{ repo.name }}        {#- The main content of this mount -#}
+      ,upperdir={{ application.path }}/devmode/overlayfs/{{ repo.name }}-upper  {#- Where changes from delpoy-script, the webapp it self etc i written. Cleared by _deploy -#}
+      ,workdir={{ application.path }}/devmode/overlayfs/{{ repo.name }}-work    {#- Demanded by overlayfs -#}
     state: mounted
   when: applications_devmode_use_overlayfs
