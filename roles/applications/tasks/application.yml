@@ -244,11 +244,22 @@
     application_scripts:
       - file: "mc"
         when: True
+      - file: "sudo_-i"
+        when: True
 
+# Old namingstandard
 - name: "Remove unsued script for this application"
   become: yes
   file:
     path: "{{ serveradmin.path }}/{{ organisation.command_prefix }}app_{{ application.fullname }}_{{ item.file }}"
+    state: absent
+  loop: "{{ application_scripts }}"
+  when: not item.when
+# New namingstandard, easier aautocomplete with TAB-key:
+- name: "Remove unsued script for this application"
+  become: yes
+  file:
+    path: "{{ serveradmin.path }}/{{ organisation.command_prefix }}{{ item.file }}_app_{{ application.fullname }}"
     state: absent
   loop: "{{ application_scripts }}"
   when: not item.when
@@ -257,11 +268,9 @@
   become: yes
   template:
     src: "application_{{ item.file }}.j2"
-    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}app_{{ application.fullname }}_{{ item.file }}"
+    dest: "{{ serveradmin.path }}/{{ organisation.command_prefix }}{{ item.file }}_app_{{ application.fullname }}"
     owner: "{{ serveradmin.process_user }}"
     group: "{{ serveradmin.process_group }}"
     mode: "u=rwx,g=rx,o=r"
   when: item.when
   loop: "{{ application_scripts }}"
-
-
