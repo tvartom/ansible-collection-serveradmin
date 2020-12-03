@@ -132,6 +132,9 @@
         | combine(application_instance, recursive=True)
       }}
 
+- debug:
+    var: application
+
 - name: "Loop over all webinstances for this application"
   include_tasks: get_webinstance.yml
   loop: "{{ application.webinstances | dict2items }}"

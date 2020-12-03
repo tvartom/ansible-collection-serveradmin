@@ -27,6 +27,10 @@
        $ ssh -L *:3306:/var/lib/mysql/mysql.sock localhost
   -->
   <port protocol="tcp" port="3306-3330"/>
+  <!-- npm run serve
+använder port 8080 för devserver
+  -->
+  <port protocol="tcp" port="8080"/>
 {% endif %}
 
 {% for item in firewall_settings.extra_ports | default([]) %}

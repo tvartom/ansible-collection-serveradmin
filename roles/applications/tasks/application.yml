@@ -177,6 +177,24 @@
       nvm_profile: "/home/system/{{ application.process_user }}/.bashrc"
   when: application.nodejs_version is defined
 
+# Exempel:
+# application:
+#   nodejs_version: 14
+#   npm_global_packages:
+#     - @vue/cli
+- name: "Install node.js package globally with npm for this application"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: "source ~/.bashrc && npm list -g {{ item }} || npm install -g {{ item }}"
+    chdir: "{{ application.path }}" # Denna spelar inte så stor roll...
+  #npm:
+  #  name: "{{ item }}"
+  #  global: yes
+  when: application.nodejs_version is defined
+  register: test
+  loop: "{{ application.npm_global_packages | d([]) }}"
+
 ### PHP Composer ################################################################
 
 - name: "Install php-cli and php-json for composer"
