@@ -4,6 +4,14 @@
   debug:
     msg: "Wait..."
 
+- name: "Vue: Install npm-dependencies"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm install"
+    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
+
 - name: "Vue Application Build"
   become: yes
   become_user: "{{ application.process_user }}"
