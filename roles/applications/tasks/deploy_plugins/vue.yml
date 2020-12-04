@@ -1,0 +1,13 @@
+---
+
+- name: "Building Vue..."
+  debug:
+    msg: "Wait..."
+
+- name: "Vue Application Build"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm run build"
+    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
