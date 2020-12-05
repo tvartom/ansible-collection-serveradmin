@@ -273,7 +273,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
 {%       endfor %}
 
 {%       if job.suffix_on_emailadresses | d('', true) != '' %}
-           echo "Add '{{ job.suffix_on_emailadresses }}' on all email-address to make them useless..."
+           echo "Add '{{ job.suffix_on_emailadresses }}' on all email-addresses to make them useless..."
            # -i == inplace (in och ut i samma fil)
            sed -i -r "s/'([^@'\ ]+@[^@'\ ]+)'/'\1{{ job.suffix_on_emailadresses }}'/g" "$DUMPFILE"
 {%       endif %}
