@@ -12,7 +12,6 @@
       /bin/bash -lc "npm install --no-save"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
-  
 
 - name: "Vue Application Build"
   become: yes

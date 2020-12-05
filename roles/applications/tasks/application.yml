@@ -186,13 +186,14 @@
   become: yes
   become_user: "{{ application.process_user }}"
   shell:
-    cmd: "source ~/.bashrc && npm list -g {{ item }} || npm install -g {{ item }}"
+    cmd: >-
+      /bin/bash -lc "npm list -g {{ item }} || npm install -g {{ item }}"
+    # Verkar låsa hela servern: source ~/.bashrc && npm list -g {{ item }} || npm install -g {{ item }}"
     chdir: "{{ application.path }}" # Denna spelar inte så stor roll...
   #npm:
   #  name: "{{ item }}"
   #  global: yes
   when: application.nodejs_version is defined
-  register: test
   loop: "{{ application.npm_global_packages | d([]) }}"
 
 ### PHP Composer ################################################################
