@@ -187,7 +187,7 @@
   become_user: "{{ application.process_user }}"
   shell:
     cmd: >-
-      /bin/bash -lc "npm list -g {{ item }} || npm install -g {{ item }}"
+      /bin/bash -lc "npm list --global --no-progress {{ item }} || npm install --global --no-progress {{ item }}"
     # Verkar låsa hela servern: source ~/.bashrc && npm list -g {{ item }} || npm install -g {{ item }}"
     chdir: "{{ application.path }}" # Denna spelar inte så stor roll...
   #npm:

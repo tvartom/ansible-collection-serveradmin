@@ -9,7 +9,7 @@
   become_user: "{{ application.process_user }}"
   shell:
     cmd: >-
-      /bin/bash -lc "npm install --no-save"
+      /bin/bash -lc "npm install --no-save --no-progress"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
 
