@@ -38,9 +38,7 @@ webserver_generate_dhparam: "{{ (webserver_use_ssl and not applications_devmode)
 applications_enable_https_by_default: true
 
 
-applications_default:
-  #
-  lab: {}
+application_templates:
   # To use this applikationen,
   # in host_vars:
   #application_instances:

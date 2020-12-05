@@ -7,13 +7,35 @@
 #
 # Returnerar: application
 
+- name: "Temp application"
+  set_fact:
+    temp_application: >-
+      {{
+        applications[application_instance.name | mandatory('Application must be specified for an application instance')] | d({})
+      }}
+
+
+- name: "Temp application_template"
+  set_fact:
+    temp_application_template: >-
+      {{
+        application_templates[
+          application_instance.template|d(
+            temp_application.template|d(
+              application_instance.name|d()
+            )
+          )
+        ] | d({})
+      }}
+
+
 - name: "Temp variable: environment"
   set_fact:
     temp_application_environment: >-
       {{
         application_instance.environment | d(
-          applications[application_instance.name].environment | d(
-            applications_default[application_instance.name].environment
+          temp_application.environment | d(
+            temp_application_template.environment
           )
         ) | mandatory('Environment must be specified for application '~application_instance.name)
       }}
@@ -27,8 +49,8 @@
     temp_application_organisation: >-
       {{
         application_instance.organisation | d(
-          applications[application_instance.name].organisation | d(
-            applications_default[application_instance.name].organisation | d(
+          temp_application.organisation | d(
+            temp_application_template.organisation | d(
               organisation.name
             )
           )
@@ -118,18 +140,18 @@
       # instance:"{{ webinstance_with_key.key }}"
 
 ### Samla information ################################################################
-- name: Hämta värden från applications_default, applications och sätt default-värden
+- name: Hämta värden från application_template, applications och sätt default-värden
   set_fact:
-    # temp_application_default    From above
-    # ?applications_default[name] From /applications/defaults/main.yml with predefined applications
-    # ?applications[name]         From group_vars/all.yml (Can also be declared i gorup_vars/* or host_vars)
-    # application_instance        From host_vars
+    # temp_application_default              From above
+    # ?applications_template[template/name] From /applications/defaults/main.yml with predefined application_templates
+    # ?applications[name]                   From group_vars/all.yml (Can also be declared i gorup_vars/* or host_vars)
+    # application_instance                  From host_vars
     application: >-
       {{
         temp_application_default
-        | combine(applications_default[application_instance.name] | d({}), recursive=True)
-        | combine(applications[application_instance.name] | d({}), recursive=True)
-        | combine(application_instance, recursive=True)
+        | combine(temp_application_template, recursive=True)
+        | combine(temp_application,          recursive=True)
+        | combine(application_instance,      recursive=True)
       }}
 
 - debug:
