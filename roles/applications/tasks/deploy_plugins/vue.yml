@@ -4,6 +4,15 @@
   debug:
     msg: "Wait..."
 
+- name: "Vue: Confirm @vue/cli is installed. Needs to be installed manually"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm list --global --no-progress @vue/cli"
+    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
+  ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+
 - name: "Vue: Install npm-dependencies"
   become: yes
   become_user: "{{ application.process_user }}"
