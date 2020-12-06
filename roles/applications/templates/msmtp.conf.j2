@@ -67,7 +67,7 @@ passwordeval {{ application.path }}/msmtp_oauth2token.sh {{ application.sendmail
 
 
 # Set a default account
-account default : {{ sendmail.account }}
+account default : {{ application.sendmail.account }}
 
 
 
