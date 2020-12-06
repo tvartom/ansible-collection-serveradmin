@@ -238,6 +238,19 @@
   include_tasks: redis.yml
   when: application.enable_redis
 
+### Sendmail ####################################################################
+
+# Instructions: https://github.com/google/gmail-oauth2-tools/blob/master/python/oauth2.py
+- name: "Install Google gmail-oauth2-tools"
+  become: yes
+  get_url:
+    url: https://raw.githubusercontent.com/google/gmail-oauth2-tools/master/python/oauth2.py
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_user }}"
+    dest: "{{ application.path }}/scripts/oauth2.py"
+    mode: "u=rwx,g=r,o="
+  when: application.sendmail_gmail_oauth2 and sendmail_enable
+
 ### webinstances ################################################################
 
 - name: "Loop over all webinstances for this application"
@@ -266,7 +279,7 @@
       - file: "sudo_-i"
         when: True
 
-# Old namingstandard
+# Old naming standard
 - name: "Remove unsued script for this application"
   become: yes
   file:

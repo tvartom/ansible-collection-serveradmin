@@ -7,7 +7,7 @@ sass_enable: false
 redis_enable: false
 java_and_maven_enable: false
 mariadb_enable: true
-
+sendmail_enable: false
 
 php_package: php
 php_fpm_service: php-fpm
