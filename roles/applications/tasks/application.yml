@@ -250,7 +250,7 @@
     owner: "{{ application.process_user }}"
     group: "{{ application.process_user }}"
     state: directory
-    mode: "u=rwx,g=rx,o="
+    mode: "u=rwx,g=,o="
   when: sendmail_enable
   loop:
     - "msmtp"
@@ -267,7 +267,7 @@
     owner: "{{ application.process_user }}"
     group: "{{ application.process_user }}"
     dest: "{{ application.path }}/msmtp/oauth2.py"
-    mode: "u=rwx,g=r,o="
+    mode: "u=rwx,g=,o="
   when: application.sendmail.gmail_oauth2|d(false) and sendmail_enable
 
 - name: "Create files for msmtp"
@@ -281,7 +281,7 @@
   when: application.sendmail.gmail_oauth2|d(false) and sendmail_enable
   loop:
     - { file: "msmtp.conf",           mode: "u=rw,g=,o=" }
-    - { file: "oauth2token.sh", mode: "u=rwx,g=r,o=" }
+    - { file: "oauth2token.sh",       mode: "u=rwx,g=,o=" }
 
 
 ### webinstances ################################################################
