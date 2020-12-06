@@ -6,6 +6,7 @@
 #### To activate ########################################
 # 2020-12-06 LL:
 #
+# Init:
 # 1. Create a project at: https://console.developers.google.com/
 #   Create project
 #   Add API (Gmail)
@@ -20,6 +21,9 @@
 # 4. Run:
 #    echo "<refresh>" > ./store/{{ application.sendmail.account }}/refresh.txt
 #    chmod -R "u=rwx,g=,o=" ./store
+#
+# Usage:
+# ./oauth2token.sh {{ application.sendmail.user }} {{ application.sendmail.account }}
 
 
 
@@ -50,7 +54,7 @@ tls_trust_file /etc/ssl/certs/ca-bundle.trust.crt
 
 # Log what we do
 syslog on
-
+logfile {{ application.path }}/log/msmtp.log
 
 
 # 2020-12-06 LL

@@ -144,6 +144,9 @@
     - { path: "/scripts" }
     # För Java
     - { path: "/webapp",             when: false }
+    # msmtp
+    - { path: "/log/msmtp",             when: "{{ application.sendmail is defined }}" }
+
 
 ### Letsencrypt #################################################################
 # I can be hard to determine if it is a lag DNS-updates or other problems...
