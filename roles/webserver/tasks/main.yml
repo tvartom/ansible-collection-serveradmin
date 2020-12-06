@@ -10,3 +10,4 @@
   when: webserver_use_ssl
 
 - include: sendmail.yml
+  when: sendmail_enable | d(false)
