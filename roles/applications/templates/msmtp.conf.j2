@@ -23,9 +23,12 @@
 #    chmod -R "u=rwx,g=,o=" ./store
 #
 # Usage:
-# ./oauth2token.sh {{ application.sendmail.user }} {{ application.sendmail.account }}
-
-
+#   ./oauth2token.sh {{ application.sendmail.user }} {{ application.sendmail.account }}
+#   echo "Hello world!" | /usr/bin/msmtp -C ./msmtp.conf -t test@example.com
+#   echo "Hello world!" | /usr/bin/msmtp -C ./msmtp.conf -t -a mailsender_speleo_se test@example.com
+#   msmtp --serverinfo --host={{ application.sendmail.host | d('smtp.gmail.com') }} --tls=on --port=587
+# php.ini
+#   sendmail_path = "/usr/bin/msmtp -C {{ application.path }}/msmtp/msmtp.conf -t"
 
 # Example for a user configuration file ~/.msmtprc
 #
@@ -45,7 +48,8 @@ protocol smtp
 
 # Set a list of trusted CAs for TLS. You can use a system-wide default file,
 # as in this example, or download the root certificate of your CA and use that.
-tls_trust_file /etc/ssl/certs/ca-bundle.trust.crt
+# tls_trust_file /etc/ssl/certs/ca-bundle.trust.crt
+tls_trust_file system
 
 # Additionally, you should use the tls_crl_file command to check for revoked
 # certificates, but unfortunately getting revocation lists and keeping them
