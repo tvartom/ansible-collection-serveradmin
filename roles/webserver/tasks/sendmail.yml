@@ -5,8 +5,12 @@
     name:
       #- "sendmail"
       - msmtp
+      # https://anto.online/guides/cannot-autolaunch-d-bus-without-x11-display/
+      - pass # För att secret-tool ska fungera utan X11
+      - gnupg2 # För att secret-tool ska fungera utan X11
     state: present
   when: ansible_os_family == "RedHat"
+
 
 #- name: Allow sendmail (SE-Linux)
 #  become: yes
