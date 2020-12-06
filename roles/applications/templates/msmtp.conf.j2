@@ -2,7 +2,6 @@
 # Managed by Ansible!!!
 #
 
-
 #### To activate ########################################
 # 2020-12-06 LL:
 #
@@ -20,15 +19,18 @@
 #    ./oauth2.py --user={{ application.sendmail.user }} --client_id="$(cat ./store/{{ application.sendmail.account }}/client-id.txt)" --client_secret="$(cat ./store/{{ application.sendmail.account }}/client-secret.txt)" --generate_oauth2_token
 # 4. Run:
 #    echo "<refresh>" > ./store/{{ application.sendmail.account }}/refresh.txt
-#    chmod -R "u=rwx,g=,o=" ./store
+#    chmod -R "u=rwX,g=,o=" ./store
 #
 # Usage:
 #   ./oauth2token.sh {{ application.sendmail.user }} {{ application.sendmail.account }}
 #   echo "Hello world!" | /usr/bin/msmtp -C ./msmtp.conf -t test@example.com
 #   echo "Hello world!" | /usr/bin/msmtp -C ./msmtp.conf -t -a mailsender_speleo_se test@example.com
-#   msmtp --serverinfo --host={{ application.sendmail.host | d('smtp.gmail.com') }} --tls=on --port=587
+#   msmtp --serverinfo --host={{ application.sendmail.host | d('smtp.gmail.com') }} --tls=on --port={{ application.sendmail.port | d('587') }}
 # php.ini
 #   sendmail_path = "/usr/bin/msmtp -C {{ application.path }}/msmtp/msmtp.conf -t"
+
+
+
 
 # Example for a user configuration file ~/.msmtprc
 #
@@ -70,6 +72,7 @@ from {{ application.sendmail.from }}
 auth oauthbearer
 user {{ application.sendmail.user }}
 passwordeval {{ application.path }}/msmtp/oauth2token.sh {{ application.sendmail.user }} {{ application.sendmail.account }}
+
 
 # Password method 1: Add the password to the system keyring, and let msmtp get
 # it automatically. To set the keyring password using Gnome's libsecret:
