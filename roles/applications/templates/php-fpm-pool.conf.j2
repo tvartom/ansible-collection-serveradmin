@@ -229,7 +229,7 @@ env[TMPDIR] = /tmp
 ;                specified at startup with the -d argument
 ;php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f www@my.domain.com
 {% if application.sendmail is defined %}
-php_admin_value[sendmail_path] = "/usr/bin/msmtp -C {{ application.path }}/msmtp/msmtp.conf -t
+php_admin_value[sendmail_path] = "/usr/bin/msmtp -C {{ application.path }}/msmtp/msmtp.conf -t"
 {% endif %}
 
 ;php_flag[display_errors] = off
