@@ -2,6 +2,22 @@
 # Managed by Ansible!!!
 #
 
+
+#### To activate ########################################
+# 2020-12-06 LL:
+#
+# 1. Create a project at: https://console.developers.google.com/
+# 2. Run:
+#    ./oauth2.py --user={{ application.sendmail.user }} --client_id=<the client-id> --client_secret=<the client-secret> --generate_oauth2_token
+# 3. Run:
+#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-id
+#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-secret
+#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} refresh
+#
+
+
+
+
 # Example for a user configuration file ~/.msmtprc
 #
 # This file focusses on TLS and authentication. Features not used here include
@@ -73,12 +89,3 @@ account default : {{ application.sendmail.account }}
 
 
 
-
-#### To activate ########################################333
-# 1. Create a project at: https://console.developers.google.com/
-# 2. Run:
-#    ./oauth2.py --user={{ application.sendmail.user }} --client_id=<the client-id> --client_secret=<the client-secret> --generate_oauth2_token
-# 3. Run:
-#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-id
-#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-secret
-#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} refresh
