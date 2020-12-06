@@ -270,11 +270,11 @@
 - name: "Create files for msmtp"
   become: yes
   template:
-    src: "{{ item }}.j2"
-    dest: "{{ application.path }}/msmtp/{{ item }}"
+    src: "{{ item.file }}.j2"
+    dest: "{{ application.path }}/msmtp/{{ item.file }}"
     owner: "{{ application.process_user }}"
     group: "{{ application.process_group }}"
-    mode: "u=rwx,g=rx,o=r"
+    mode: "{{ item.mode }}"
   when: application.sendmail.gmail_oauth2|d(false) and sendmail_enable
   loop:
     - { file: "msmtp.conf",           mode: "u=rw,g=,o=" }
