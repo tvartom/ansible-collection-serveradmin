@@ -14,11 +14,10 @@
 # 2. Run:
 #    ./oauth2.py --user={{ application.sendmail.user }} --client_id=<the client-id> --client_secret=<the client-secret> --generate_oauth2_token
 # 3. Run:
-#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-id
-#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-secret
-#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} refresh
+#    echo "<client-id>"     > ./store/{{ application.sendmail.account }}/client-id.txt
+#    echo "<client-secret>" > ./store/{{ application.sendmail.account }}/client-secret.txt
+#    echo "<refresh>"       > ./store/{{ application.sendmail.account }}/refresh.txt
 #
-
 
 
 
@@ -88,8 +87,3 @@ passwordeval {{ application.path }}/msmtp/oauth2token.sh {{ application.sendmail
 
 # Set a default account
 account default : {{ application.sendmail.account }}
-
-
-
-
-
