@@ -278,7 +278,7 @@
   when: application.sendmail.gmail_oauth2|d(false) and sendmail_enable
   loop:
     - { file: "msmtp.conf",           mode: "u=rw,g=,o=" }
-    - { file: "msmtp_oauth2token.sh", mode: "u=rwx,g=r,o=" }
+    - { file: "oauth2token.sh", mode: "u=rwx,g=r,o=" }
 
 
 ### webinstances ################################################################
