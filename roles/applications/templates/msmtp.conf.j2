@@ -12,12 +12,14 @@
 #   Consent screen 
 #   Credentials -> Create OAuth client ID -> Desktop App (Kräver inte webb)
 # 2. Run:
-#    ./oauth2.py --user={{ application.sendmail.user }} --client_id=<the client-id> --client_secret=<the client-secret> --generate_oauth2_token
-# 3. Run:
+#    mkdir -p ./store/{{ application.sendmail.account }}
 #    echo "<client-id>"     > ./store/{{ application.sendmail.account }}/client-id.txt
 #    echo "<client-secret>" > ./store/{{ application.sendmail.account }}/client-secret.txt
-#    echo "<refresh>"       > ./store/{{ application.sendmail.account }}/refresh.txt
-#
+# 3. Run:
+#    ./oauth2.py --user={{ application.sendmail.user }} --client_id="$(cat ./store/{{ application.sendmail.account }}/client-id.txt)" --client_secret="$(cat ./store/{{ application.sendmail.account }}/client-secret.txt)" --generate_oauth2_token
+# 4. Run:
+#    echo "<refresh>" > ./store/{{ application.sendmail.account }}/refresh.txt
+#    chmod -R "u=rwx,g=,o=" ./store
 
 
 
