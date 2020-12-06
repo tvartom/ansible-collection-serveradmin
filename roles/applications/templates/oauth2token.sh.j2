@@ -31,6 +31,8 @@
 account=$1
 att=$2
 
+umask 0077
+
 store="{{ application.path }}/msmtp/store/$att"
 
 mkdir -p $store
