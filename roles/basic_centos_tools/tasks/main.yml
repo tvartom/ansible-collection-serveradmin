@@ -79,8 +79,12 @@
   tags:
     - bootstrap
 
-
-
+### python default for python3 #################################################################
+- name: "Set python3 as default python"
+  become: yes
+  alternatives:
+    name: python
+    path: /usr/bin/python3
 
 #Source: https://serverfault.com/questions/959026/how-do-i-generate-and-set-the-locale-using-ansible
 
