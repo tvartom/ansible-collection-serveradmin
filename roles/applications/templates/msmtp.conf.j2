@@ -12,14 +12,11 @@
 # Set default values for all following accounts.
 defaults
 
-# Log what we do
-syslog on
-
-# Use the mail submission port 587 instead of the SMTP port 25.
-port 587
-
-# Always use TLS.
+host {{ application.sendmail.host | d('smtp.gmail.com') }}
+port {{ application.sendmail.port | d('587') }}
 tls on
+protocol smtp
+
 
 # Set a list of trusted CAs for TLS. You can use a system-wide default file,
 # as in this example, or download the root certificate of your CA and use that.
@@ -30,27 +27,20 @@ tls_trust_file /etc/ssl/certs/ca-bundle.trust.crt
 # up to date is not straightforward.
 #tls_crl_file ~/.tls-crls
 
+# Log what we do
+syslog on
 
-# A freemail service
-account mail_sender_test_se_fsdata
 
-# Host name of the SMTP server
-host smtp.fsdata.se
 
-# As an alternative to tls_trust_file/tls_crl_file, you can use tls_fingerprint
-# to pin a single certificate. You have to update the fingerprint when the
-# server certificate changes, but an attacker cannot trick you into accepting
-# a fraudulent certificate. Get the fingerprint with
-# $ msmtp --serverinfo --tls --tls-certcheck=off --host=smtp.freemail.example
-#tls_fingerprint 00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33
+# 2020-12-06 LL
+# Settings form:
+# https://github.com/tenllado/dotfiles/tree/master/config/msmtp
 
-# Envelope-from address
-from mail.sender@test.se
-
-# Authentication. The password is given using one of five methods, see below.
-auth on
-user mail.sender@test.se
-password cK3Bnn93xwfk1
+account {{ application.sendmail.account }}
+from {{ application.sendmail.from }}
+auth oauthbearer
+user {{ application.sendmail.user }}
+passwordeval {{ application.path }}/msmtp_oauth2token.sh {{ application.sendmail.user }} {{ application.sendmail.account }}
 
 # Password method 1: Add the password to the system keyring, and let msmtp get
 # it automatically. To set the keyring password using Gnome's libsecret:
@@ -77,4 +67,18 @@ password cK3Bnn93xwfk1
 
 
 # Set a default account
-account default : mail_sender_test_se_fsdata
+account default : {{ sendmail.account }}
+
+
+
+
+
+
+#### To activate ########################################333
+# 1. Create a project at: https://console.developers.google.com/
+# 2. Run:
+#    ./oauth2.py --user={{ application.sendmail.user }} --client_id=<the client-id> --client_secret=<the client-secret> --generate_oauth2_token
+# 3. Run:
+#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-id
+#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} client-secret
+#    secret-tool store --label=msmtp-oauth2 {{ application.sendmail.account }} refresh

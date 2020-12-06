@@ -240,6 +240,19 @@
 
 ### Sendmail ####################################################################
 
+- name: "Create /msmtp"
+  become: yes
+  file:
+    path: "{{ application.path }}/{{ item }}"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_user }}"
+    state: directory
+    mode: "u=rwx,g=rx,o="
+  when: sendmail_enable
+  loop:
+    - "msmtp"
+
+
 # Instructions: https://github.com/google/gmail-oauth2-tools/blob/master/python/oauth2.py
 - name: "Install Google gmail-oauth2-tools"
   become: yes
@@ -250,9 +263,23 @@
     url: https://raw.githubusercontent.com/micronn/gmail-oauth2-tools/daa2523aae9be3bd19b220f3b4d34262b3ab7685/python/oauth2.py
     owner: "{{ application.process_user }}"
     group: "{{ application.process_user }}"
-    dest: "{{ application.path }}/scripts/oauth2.py"
+    dest: "{{ application.path }}/msmtp/oauth2.py"
     mode: "u=rwx,g=r,o="
-  when: application.sendmail_gmail_oauth2 and sendmail_enable
+  when: application.sendmail.gmail_oauth2|d(false) and sendmail_enable
+
+- name: "Create files for msmtp"
+  become: yes
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ application.path }}/msmtp/{{ item }}"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rwx,g=rx,o=r"
+  when: application.sendmail.gmail_oauth2|d(false) and sendmail_enable
+  loop:
+    - { file: "msmtp.conf"           mode: "u=rw,g=,o=" }
+    - { file: "msmtp_oauth2token.sh" mode: "u=rwx,g=r,o=" }
+
 
 ### webinstances ################################################################
 
