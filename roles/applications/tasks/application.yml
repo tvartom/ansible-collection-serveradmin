@@ -244,7 +244,10 @@
 - name: "Install Google gmail-oauth2-tools"
   become: yes
   get_url:
-    url: https://raw.githubusercontent.com/google/gmail-oauth2-tools/master/python/oauth2.py
+    # Trots flera Pullrequest, har Google inte fixat Python3 stöd.
+    # url: https://raw.githubusercontent.com/google/gmail-oauth2-tools/master/python/oauth2.py
+    # Länkar till den specifika commit som har en PR med fix
+    url: https://raw.githubusercontent.com/micronn/gmail-oauth2-tools/daa2523aae9be3bd19b220f3b4d34262b3ab7685/python/oauth2.py
     owner: "{{ application.process_user }}"
     group: "{{ application.process_user }}"
     dest: "{{ application.path }}/scripts/oauth2.py"
