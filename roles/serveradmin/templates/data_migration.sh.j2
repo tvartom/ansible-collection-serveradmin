@@ -195,7 +195,7 @@ fi
 
          )
 {%     else %}
-databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') | join(',') }})
+databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') | join(' ') }})
 {%     endif %}
 
        echo "### Dump database from {{ job.src.host | d(data_migration.ssh_host | d('localhost')) }} ####"
