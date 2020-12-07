@@ -40,7 +40,7 @@ chmod "u=rwx,g=,o=" $store
 
 get_access_token() {
 	{ IFS= read -r tokenline && IFS= read -r expireline; } < \
-	<(./oauth2.py --user=$account \
+	<({{ application.path }}/msmtp/oauth2.py --user=$account \
 	--client_id=$(cat $store/client-id.txt) \
 	--client_secret=$(cat $store/client-secret.txt) \
 	--refresh_token=$(cat $store/refresh.txt))
@@ -54,11 +54,11 @@ expire="$(cat "$store/token-expire.txt")"
 now=$(date +%s)
 
 if [[ $token && $expire && $now -lt $((expire - 60)) ]]; then
-	echo $token
+	echo "$token"
 else
 	get_access_token
-	echo $token > $store/token.txt
-	expire=$((now + expire))
-	echo $expire > $store/token-expire.txt
-	echo $token
+	echo "$token" > $store/token.txt
+	expire="$((now + expire))"
+	echo "$expire" > $store/token-expire.txt
+	echo "$token"
 fi
