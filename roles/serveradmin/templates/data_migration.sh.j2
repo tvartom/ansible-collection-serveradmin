@@ -173,7 +173,9 @@ fi
 
 {% for job in data_migration.jobs | default([]) %}
 ###### {{ job.name | d(loop.index) }}({{ job.type }}) ######
+echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 {%   if job.type in ['database', 'databases', 'db'] %}
+################## job.type databases ########################
 {%     set default_character_set_src = job.src.default_character_set | d(job.default_character_set | d(false)) %}
 {%     set default_character_set_dest = job.dest.default_character_set | d(job.default_character_set | d(false)) %}
 
@@ -260,7 +262,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
 {# %         if data_migration.ssh_host is defined %}EOF{% endif % #}
 
          ) | $PIPE_COMMAND_DUMP_FILE > "$DUMPFILE"
-################################################################################################################################################################################
+### Process database dump-file ###
          echo
          DESTDB="$db"
 {%       for from,to in (job.rename_databases | d({})).items() %}
@@ -324,8 +326,9 @@ DataMigrationEndOfSQL
 {%         endif %}### End: Populate Database ###
 {%       endif %}
        done ### End: Loop databases
+################## End: job.type databases ###################
 {%   elif job.type in ['fileset'] %}
-################## Kopiera filer #########################
+################## job.type fileset ##########################
 {%     if agent_forwarding %}
     # https://unix.stackexchange.com/questions/131596/ssh-agent-forwarding-works-but-what-about-sudo-u-username-no-shell-permission
     # https://linux.die.net/man/1/setfacl
@@ -369,7 +372,14 @@ DataMigrationEndOfSQL
 {%     if agent_forwarding %}
     setfacl -R -b "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}Agentforwarding borttagen för användare {{ data_migration.file_owner }}!${NC}"
 {%     endif %}
-### End: job.type == fileset
+################## End: job.type fileset ##############
+{%   elif job.type in ['cmd','command'] %}
+################## job.type command ####################
+   {% if job.chdir is defined %}
+     cd job.chdir
+   {% endif %}
+   sudo -u {{ data_migration.file_owner }} -i {{ job.cmd }}
+################## End: job.type command ###############
 {%   else %}
        {{ unknown_type | mandatory('Unknown job-type ('~job.type|d('undefined')~')') }}
 {%   endif %}### End: job.type
