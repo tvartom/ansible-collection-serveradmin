@@ -178,11 +178,12 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 ################## job.type databases ########################
 {%     set default_character_set_src = job.src.default_character_set | d(job.default_character_set | d(false)) %}
 {%     set default_character_set_dest = job.dest.default_character_set | d(job.default_character_set | d(false)) %}
+{%     set ssh_command = ('ssh '~('-A ' if agent_forwarding else '')~'-C '~data_migration.ssh_host~' ') if data_migration.ssh_host is defined and not job.src.host is defined else '' %}
 
 {%     if job.include_databases is not defined or job.include_databases is string %}
 {#       https://stackoverflow.com/questions/11426529/reading-output-of-a-command-into-an-array-in-bash #}
          mapfile -t databases < <(
-             {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} {% endif %}mysql \
+             {{ ssh_command }}mysql \
                      {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
                      {{ '--host='~job.src.host if job.src.host is defined else '' }} \
                      {{ '--user='~job.src.user if job.src.user is defined else '' }} \
@@ -241,7 +242,7 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
          {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
          {# Även testat "ssh {host] bash << EOF" men då fungerar inte något interaktivt: https://unix.stackexchange.com/questions/100652/bash-interactive-remote-prompt #}
          (
-           {% if data_migration.ssh_host is defined %}ssh {% if agent_forwarding %}-A {% endif %}-C {{ data_migration.ssh_host }} {% endif %}mysqldump \
+           {{ ssh_command }}mysqldump \
              {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
              {{ '--host='~job.src.host if job.src.host is defined else '' }} \
              {{ '--user='~job.src.user if job.src.user is defined else '' }} \
