@@ -178,14 +178,32 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 ################## job.type databases ########################
 {%     set default_character_set_src = job.src.default_character_set | d(job.default_character_set | d(false)) %}
 {%     set default_character_set_dest = job.dest.default_character_set | d(job.default_character_set | d(false)) %}
-{%     set ssh_command = ('ssh '~('-A ' if agent_forwarding else '')~'-C '~data_migration.ssh_host~' ') if data_migration.ssh_host is defined and not job.src.host is defined else '' %}
+
+{%     set ssh_host = job.src.host | d(data_migration.ssh_host | d(None)) %}
+{%     set ssh_pre_command = '' %}
+{%     set ssh_command = '' %}
+
+
+{%     if job.src.mode | d('local') == 'local' %}
+{%       set host = ssh_host %}
+{%     elif job.src.mode == 'local_with_ssh_tunnel' %}
+{#       https://gist.github.com/scy/6781836 och http://www.g-loaded.eu/2006/11/24/auto-closing-ssh-tunnels/ #}
+{%       set ssh_pre_command = 'rm -f ./temp-tunnel.sock && ssh -f -o ExitOnForwardFailure=yes -L ./temp-tunnel.sock:/var/lib/mysql/mysql.sock '~ssh_host~' sleep 3' %}
+{%       set protocol = 'socket' %}
+{%       set socket = './temp-tunnel.sock' %}
+{%     elif job.src.mode == 'remote' %}
+{%       set ssh_command = 'ssh '~('-A ' if agent_forwarding else '')~'-C '~ssh_host~' ' %}
+{%     endif %}
 
 {%     if job.include_databases is not defined or job.include_databases is string %}
 {#       https://stackoverflow.com/questions/11426529/reading-output-of-a-command-into-an-array-in-bash #}
+         {{ ssh_pre_command }}
          mapfile -t databases < <(
              {{ ssh_command }}mysql \
                      {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
-                     {{ '--host='~job.src.host if job.src.host is defined else '' }} \
+                     {{ '--host='~host if host|d(false) else '' }} \
+                     {{ '--socket='~socket if socket|d(false) else '' }} \
+                     {{ '--protocol='~protocol if protocol|d(false) else '' }} \
                      {{ '--user='~job.src.user if job.src.user is defined else '' }} \
                      {% if job.src.password is defined %}--password{{ '='~job.src.password if job.src.password is string else '' }}{% endif %} \
                      -BNe "SHOW DATABASES WHERE \`Database\` LIKE '{{ job.include_databases | d('%') }}'
@@ -241,10 +259,13 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
          echo "Dump $db to $DUMPFILE..."
          {# ssh -t använt tidigare, men kan inte svara på password då. (Ctrl + d för att avbryta) #}
          {# Även testat "ssh {host] bash << EOF" men då fungerar inte något interaktivt: https://unix.stackexchange.com/questions/100652/bash-interactive-remote-prompt #}
+         {{ ssh_pre_command }}
          (
            {{ ssh_command }}mysqldump \
              {{ default_character_set_src | ternary('--default-character-set='~default_character_set_src,'') }} \
-             {{ '--host='~job.src.host if job.src.host is defined else '' }} \
+             {{ '--host='~host if host|d(false) else '' }} \
+             {{ '--socket='~socket if socket|d(false) else '' }} \
+             {{ '--protocol='~protocol if protocol|d(false) else '' }} \
              {{ '--user='~job.src.user if job.src.user is defined else '' }} \
              {% if job.src.password is defined %}--password{{ '='~job.src.password if job.src.password is string else '' }}{% endif %} \
              {{ job.no_data            | d(false) | ternary('--no-data','') }} \
