@@ -188,7 +188,7 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 {%       set host = ssh_host %}
 {%     elif job.src.mode == 'local_with_ssh_tunnel' %}
 {#       https://gist.github.com/scy/6781836 och http://www.g-loaded.eu/2006/11/24/auto-closing-ssh-tunnels/ #}
-{%       set ssh_pre_command = 'rm -f ./temp-tunnel.sock && ssh -f -o ExitOnForwardFailure=yes -L ./temp-tunnel.sock:/var/lib/mysql/mysql.sock '~ssh_host~' sleep 3' %}
+{%       set ssh_pre_command = 'rm -f ./temp-tunnel.sock && ssh -f -F /dev/null -o ExitOnForwardFailure=yes -L ./temp-tunnel.sock:/var/lib/mysql/mysql.sock '~ssh_host~' sleep 3' %}
 {%       set protocol = 'socket' %}
 {%       set socket = './temp-tunnel.sock' %}
 {%     elif job.src.mode == 'remote' %}
