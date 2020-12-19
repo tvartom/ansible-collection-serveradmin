@@ -303,6 +303,13 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
            sed -i -r "s/'([^@'\ ]+@[^@'\ ]+)'/'\1{{ job.suffix_on_emailadresses }}'/g" "$DUMPFILE"
 {%       endif %}
 
+{%       if job.remove_definer | d(true) != '' %}
+           echo "Remove  definer=xxx@yyy i Triggers and SP."
+           # -i == inplace (in och ut i samma fil)
+           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/' "$DUMPFILE"
+{%       endif %}
+
+
 {%       for replace in job.replaces | default([]) %}
            echo "{{ replace.description }}"
            sed -i -r "s/{{ replace.pattern  }}/{{ replace.replace_with }}/g" "$DUMPFILE"
