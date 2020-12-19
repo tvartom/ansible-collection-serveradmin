@@ -306,9 +306,9 @@ databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') 
 {%       if job.remove_definer | d(true) != '' %}
            echo "Remove  definer=xxx@yyy i Triggers and SP."
            # -i == inplace (in och ut i samma fil)
-           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/'
-           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*PROCEDURE/PROCEDURE/'
-           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*FUNCTION/FUNCTION/'
+           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/' "$DUMPFILE"
+           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*PROCEDURE/PROCEDURE/' "$DUMPFILE"
+           sed -i -e 's/DEFINER[ ]*=[ ]*[^*]*FUNCTION/FUNCTION/' "$DUMPFILE"
 {%       endif %}
 
 
