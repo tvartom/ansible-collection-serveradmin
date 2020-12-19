@@ -130,6 +130,7 @@ fi
     # https://linux.die.net/man/1/setfacl
     setfacl -R -m u:{{ data_migration.file_owner }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ data_migration.file_owner }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}".
   {% endif %}
+{%   set ssh_host = data_migration.ssh_host %}
 
   {% for fileset in data_migration.filesets %}
     echo "{{ fileset.description }}"
@@ -162,7 +163,7 @@ fi
         --links \
         --prune-empty-dirs \
         {% for exclude in fileset.excludes | d([]) %}--exclude '{{ exclude }}' {% endfor %} \
-        "{{ data_migration.ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src | d()) ~'/') }}" "{{ fileset.dest_dir |d(fileset.dest|d()) }}{% if fileset.src_file is not defined %}/{% endif %}"
+        "{{ ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src | d()) ~'/') }}" "{{ fileset.dest_dir |d(fileset.dest|d()) }}{% if fileset.src_file is not defined %}/{% endif %}"
   {% endfor %}
 
   {% if agent_forwarding %}
@@ -179,7 +180,7 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 {%     set default_character_set_src = job.src.default_character_set | d(job.default_character_set | d(false)) %}
 {%     set default_character_set_dest = job.dest.default_character_set | d(job.default_character_set | d(false)) %}
 
-{%     set ssh_host = job.src.host | d(data_migration.ssh_host | d(None)) %}
+{%     set ssh_host = job.src.ssh_host | d(data_migration.ssh_host | d(None)) %}
 {%     set ssh_pre_command = '' %}
 {%     set ssh_command = '' %}
 
@@ -219,7 +220,7 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 databases=({{ job.include_databases | map('regex_replace', '^(.*)$', '\"\\1\"') | join(' ') }})
 {%     endif %}
 
-       echo "### Dump database from {{ job.src.host | d(data_migration.ssh_host | d('localhost')) }} ####"
+       echo "### Dump database from {{ job.src.ssh_host | d(data_migration.ssh_host | d('localhost')) }} ####"
 {%     if default_character_set_src %}
          echo "  Default character set: {{ default_character_set_src }}"
 {%     endif %}
@@ -356,6 +357,7 @@ DataMigrationEndOfSQL
     # https://linux.die.net/man/1/setfacl
     setfacl -R -m u:{{ data_migration.file_owner }}:rwx "${SSH_AUTH_SOCK%/*}" && echo -e "${Yellow}INFO: Agentforwarding tillgänglig för användare {{ data_migration.file_owner }}.${NC}" || echo -e "${Red}VARNING: Agentforwardning måste vara påslaget för SSH till annan server.${NC}".
 {%     endif %}
+{%     set ssh_host = job.ssh_host|d(data_migration.ssh_host) %}
 
 {%     for fileset in job.filesets %}
     echo "{{ fileset.description }}"
@@ -388,7 +390,7 @@ DataMigrationEndOfSQL
         --links \
         --prune-empty-dirs \
         {% for exclude in fileset.excludes | d([]) %}--exclude '{{ exclude }}' {% endfor %} \
-        "{{ data_migration.ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src | d()) ~'/') }}" "{{ fileset.dest_dir |d(fileset.dest|d()) }}{% if fileset.src_file is not defined %}/{% endif %}"
+        "{{ ssh_host }}:{{ fileset.src_file | d(fileset.src_dir | d(fileset.src | d()) ~'/') }}" "{{ fileset.dest_dir |d(fileset.dest|d()) }}{% if fileset.src_file is not defined %}/{% endif %}"
 {%     endfor %}
 
 {%     if agent_forwarding %}
