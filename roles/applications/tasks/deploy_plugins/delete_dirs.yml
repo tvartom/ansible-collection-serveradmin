@@ -3,6 +3,6 @@
   become: yes
   file:
     state: absent
-    path: "{{ application.path }}/{{ item }}/*"
+    path: "{{ application.path }}/{{ item }}"
   when: item | length > 0
   loop: "{{ deploy.dirs }}"
