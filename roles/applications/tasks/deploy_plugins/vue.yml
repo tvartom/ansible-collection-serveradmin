@@ -4,7 +4,7 @@
   debug:
     msg: "Wait..."
 
-- name: "Vue: Confirm @vue/cli is installed. Needs to be installed manually"
+- name: "Vue: Confirm @vue/cli is installed. Needs to be installed manually: npm i -g @vue/cli"
   become: yes
   become_user: "{{ application.process_user }}"
   shell:
