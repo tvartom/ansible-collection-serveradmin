@@ -1,8 +1,8 @@
 ---
-- name: Clean path
+- name: "Deploy plugin: Delete dirs"
   become: yes
   file:
     state: absent
     path: "{{ application.path }}/{{ item }}/*"
-  when: item.length > 0
+  when: item | length > 0
   loop: "{{ deploy.dirs }}"
