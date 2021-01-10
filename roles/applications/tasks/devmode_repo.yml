@@ -118,7 +118,7 @@
     path: "{{ application.path }}/repos/{{ repo.name }}{{ item.item }}/node_modules"
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
-    opts: "rw"
+    opts: "rw,nonempty"
     state: mounted
   when: do_npm_root_folders and not item.stat.exists
   loop: "{{ stat_npm_root_folders.results | d([]) }}"
