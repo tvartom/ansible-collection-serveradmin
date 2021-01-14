@@ -70,6 +70,7 @@
   loop: "{{ repo.npm_root_folders | d([]) }}"
 
 # Kan inte clona repo om vi skapar foldrar i det, så fortsätt bara om detta är gjort.
+# Därför kollar vi först om cloningen är gjord, innan vi fortsätter.
 - name: Check if repo is empty before proceeding
   become: yes
   find:
@@ -105,6 +106,7 @@
   when: do_npm_root_folders
   loop: "{{ pretty_npm_root_folders | d([]) }}"
 
+# Must use stat_npm_root_folders-check since the folder may be mounted, which will make this task fail.
 - name: "Create node_modules folders in repo"
   become: yes
   become_user: "{{ application.process_user }}"
@@ -115,18 +117,17 @@
   when: do_npm_root_folders and not item.stat.exists
   loop: "{{ stat_npm_root_folders.results | d([]) }}"
 
-- name: "Mount node_modules from repos to devmode (bindfs)"
+- name: "Mount node_modules from repos to devmode (bindfs nonempty)"
   become: yes
   mount:
-    src: "{{ application.path }}/devmode/{{ repo.name }}{{ item.item }}/node_modules"
-    path: "{{ application.path }}/repos/{{ repo.name }}{{ item.item }}/node_modules"
+    src: "{{ application.path }}/devmode/{{ repo.name }}{{ item }}/node_modules"
+    path: "{{ application.path }}/repos/{{ repo.name }}{{ item }}/node_modules"
     fstype: fuse.bindfs
     # Dokumentation: man bindfs
     opts: "rw,nonempty"
     state: mounted
-  when: do_npm_root_folders and not item.stat.exists
-  loop: "{{ stat_npm_root_folders.results | d([]) }}"
-
+  when: do_npm_root_folders
+  loop: "{{ pretty_npm_root_folders | d([]) }}"
 
 # Overlay doen't support changes in lowerdirs, editing files works, but changing folders doesn't.
 # TODO: To use it, changes should trigger a remount in some way, or with cron-job.
