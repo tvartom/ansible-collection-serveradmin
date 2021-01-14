@@ -1,4 +1,8 @@
 ---
+# This is included from application.yml
+# It is run by <prefix>_ansible_applications
+
+
 - name: "Current application in devmode"
   debug:
     var: application
