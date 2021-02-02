@@ -12,6 +12,19 @@
       /bin/bash -lc "npm list --global --no-progress @vue/cli"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  when: false
+
+- name: "Vue: Install @vue/cli"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm list --global --no-progress @vue/cli || npm i -g @vue/cli --no-progress"
+    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
+  # ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  environment:
+    # https://github.com/npm/npm/issues/19756
+    NO_UPDATE_NOTIFIER: "1"
 
 - name: "Vue: Install npm-dependencies"
   become: yes
@@ -21,6 +34,9 @@
       /bin/bash -lc "npm install --no-save --no-progress"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  environment:
+    # https://github.com/npm/npm/issues/19756
+    NO_UPDATE_NOTIFIER: "1"
 
 - name: "Vue Application Build"
   become: yes
@@ -30,3 +46,7 @@
       /bin/bash -lc "npm run build"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  environment:
+    # https://github.com/npm/npm/issues/19756
+    NO_UPDATE_NOTIFIER: "1"
+
