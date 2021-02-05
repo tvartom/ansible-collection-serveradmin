@@ -18,3 +18,4 @@
     {{- deploy_facts[deploy.repo].path }}/{{ deploy.script }}
   args:
     chdir: "{{ application.path }}/repos/{{ deploy.repo }}/{{ deploy.chdir | d('') }}"
+  ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
