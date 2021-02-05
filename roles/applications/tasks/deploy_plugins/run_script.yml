@@ -1,6 +1,11 @@
 ---
 # Run a script in (the root of) a repo.
 
+- name: "Run script (msg)"
+  debug:
+    msg: "{{ deploy.msg }}"
+  when: deploy.msg is defined
+
 - name: "Run script"
   become: yes
   become_user: "{{ application.process_user }}"
