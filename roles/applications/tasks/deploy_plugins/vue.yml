@@ -2,14 +2,31 @@
 
 - name: "Building Vue..."
   debug:
-    msg: "Wait..."
+    msg: "If your host freezes, you probably need more memory. Add a swap-file. (~4GB needed)"
+#https://aws.amazon.com/premiumsupport/knowledge-center/ec2-memory-swap-file/
+#1. In this example dd command, the swap file is 4 GB (128 MB x 32):  
+#$ sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+#2.    Update the read and write permissions for the swap file:
+#$ sudo chmod 600 /swapfile
+#3.    Set up a Linux swap area:
+#$ sudo mkswap /swapfile
+#4.    Make the swap file available for immediate use by adding the swap file to swap space:  
+#$ sudo swapon /swapfile
+#5.    Verify that the procedure was successful:
+#$ sudo swapon -s
+#6.    Enable the swap file at boot time by editing the /etc/fstab file.
+#Open the file in the editor:
+#$ sudo mcedit /etc/fstab
+#Add the following new line at the end of the file, save the file, and then exit:
+#/swapfile swap swap defaults 0 0
 
-- name: "Vue: Confirm @vue/cli is installed. Needs to be installed manually: npm i -g @vue/cli"
+#/bin/bash -lc "... needed when npm is istalled per user.
+- name: "Vue: Install @vue/cli (user-global)"
   become: yes
   become_user: "{{ application.process_user }}"
   shell:
     cmd: >-
-      /bin/bash -lc "npm list --global --no-progress @vue/cli"
+      /bin/bash -lc "npm list --global --no-progress @vue/cli || npm i -g @vue/cli"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
 
