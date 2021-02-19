@@ -121,8 +121,19 @@ add_header  X-Robots-Tag $x_robots_tag;
 
       {{ php_location() }}
 
-      {% if webinstance.proxy_port is defined %}
-        proxy_pass http://localhost:{{ webinstance.proxy_port }};
+      {% if webinstance.proxy_pass is defined %}
+        {% if webinstance.proxy_pass.location is defined %}
+          {% set proxy_pass_end_bracket = '}' %}
+          location {{ webinstance.proxy_pass.location }} {
+        {% else %}
+          {% set proxy_pass_end_bracket = '' %}
+        {% endif %}
+        {% if webinstance.proxy_pass.upstream is defined %}
+          proxy_pass http://{{ webinstance.fullname }}_{{ webinstance.proxy_pass.upstream }};
+        {% else %}
+          proxy_pass http://{{ webinstance.proxy_pass.host | d('localhost') }}:{{ webinstance.proxy_pass.port }};
+        {% endif %}
+        {{ proxy_pass_end_bracket }}
       {% endif %}
 
       {% for location in webinstance.more_locations | d([]) if more_location.nested | d(true) %}
