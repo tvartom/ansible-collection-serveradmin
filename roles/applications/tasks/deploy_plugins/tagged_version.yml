@@ -106,7 +106,7 @@
         - name: Skapa annoterad tag
           become: yes
           become_user: "{{ application.process_user }}"
-          shell: "git tag -a \"{{ menu_result }}\" -m \"{{ texteditor_result|join('\n') }}\""
+          shell: "git tag -a \"{{ menu_result }}\" -m {{ texteditor_result|join('\n')|quote }}"
           args:
             chdir: "{{ application.path }}/repos/{{ deploy.repo }}"
 
