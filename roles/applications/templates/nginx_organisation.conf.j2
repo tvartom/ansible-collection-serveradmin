@@ -3,5 +3,20 @@
 #
 #
 
-include conf.d/{{ organisation.name }}/*.conf;
+{% for application in applications_info %}
+  {% for webinstance in application.webinstances.values()|list %}
+    {% for upstream in webinstance.upstreams | d([]) %}
+      upstream {{ webinstance.fullname }}_{{ upstream.name }} {
+        {% if upstream.unix_socket is defined %}
+          {% if upstream.unix_socket[:1] == '/' %}
+            server unix:{{ upstream.unix_socket }};
+          {% else %}
+            server unix:{{ application.path }}/{{ upstream.unix_socket }};
+          {% endif %}
+        {% endif %}
+      }
+    {% endfor %}
+  {% endfor %}
+{% endfor %}
 
+include /etc/nginx/conf.d/{{ organisation.name }}/*.conf;

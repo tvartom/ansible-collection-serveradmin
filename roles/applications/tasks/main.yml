@@ -40,13 +40,15 @@
     - { path: "/home/{{ applications_devmode_user|d() }}/workspace", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
     - { path: "/home/{{ applications_devmode_user|d() }}/workspace/{{ organisation.name }}", owner: "{{ applications_devmode_user|d() }}", group: "{{ applications_devmode_user|d() }}", when: applications_devmode | d(false) }
 
-- name: "Nginx include for organisation"
-  become: yes
-  copy:
-    content: "include /etc/nginx/conf.d/{{ organisation.name }}/*.conf;"
-    dest: "/etc/nginx/conf.d/{{ organisation.name }}.conf"
-    mode: "u=rw,g=r,o=r"
-  notify: "Reload nginx"
+#- name: "Nginx include for organisation"
+#  become: yes
+#  copy:
+#    content: "include /etc/nginx/conf.d/{{ organisation.name }}/*.conf;"
+#    dest: "/etc/nginx/conf.d/{{ organisation.name }}.conf"
+#    mode: "u=rw,g=r,o=r"
+#  notify: "Reload nginx"
+
+
 
 ### Loop over application instances ##################################################################
 - name: "Read all applications into applications_info"
@@ -55,6 +57,16 @@
   loop_control:
     loop_var: application_instance
     label: "{{ application_instance.environment|default('') }}-{{ application_instance.name }}"
+
+- name: "Nginx include for organisation"
+  become: yes
+  template:
+    src: nginx_organisation.conf.j2
+    dest: "/etc/nginx/conf.d/{{ organisation.name }}.conf"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  notify: "Reload nginx"
 
 - name: "Delete unused .conf-files in /etc/nginx/conf.d/{{ organisation.name }}"
   include_tasks: clean_nginx_conf.yml
