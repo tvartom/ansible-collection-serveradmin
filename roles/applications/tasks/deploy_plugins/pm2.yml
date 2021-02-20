@@ -1,0 +1,134 @@
+---
+
+- name: "Install pm2..."
+  debug:
+    msg: "If your host freezes, you probably need more memory. Add a swap-file. (~4GB needed)"
+#https://aws.amazon.com/premiumsupport/knowledge-center/ec2-memory-swap-file/
+#1. In this example dd command, the swap file is 4 GB (128 MB x 32):  
+#$ sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+#2.    Update the read and write permissions for the swap file:
+#$ sudo chmod 600 /swapfile
+#3.    Set up a Linux swap area:
+#$ sudo mkswap /swapfile
+#4.    Make the swap file available for immediate use by adding the swap file to swap space:  
+#$ sudo swapon /swapfile
+#5.    Verify that the procedure was successful:
+#$ sudo swapon -s
+#6.    Enable the swap file at boot time by editing the /etc/fstab file.
+#Open the file in the editor:
+#$ sudo mcedit /etc/fstab
+#Add the following new line at the end of the file, save the file, and then exit:
+#/swapfile swap swap defaults 0 0
+
+#/bin/bash -lc "... needed when npm is installed per user.
+#- name: "Pm2: Install with npm (user-global)"
+#  become: yes
+#  become_user: "{{ application.process_user }}"
+#  shell:
+#    cmd: >-
+#      /bin/bash -lc "npm list --global --no-progress pm2 || npm i -g pm2"
+#    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
+#  ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+#  when: false
+- name: "Create dir for pm2"
+  become: yes
+  file:
+    path: "{{ application.path }}{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default( application.process_user, true ) }}"
+    group: "{{ item.group | default( application.process_group, true ) }}"
+    setype: "{{ item.setype | default( '_default' ) }}"
+    mode: "u=rwx,g=rx,o=rx"
+#  when: application.enable_redis|default(False)
+  loop:
+    - { path: "/log/pm2" }
+    - { path: "/pm2" }
+
+
+
+- name: "Pm2: Install with npm (user-global)"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm list --global --no-progress pm2 || npm i -g pm2 --no-progress"
+    chdir: "{{ application.path }}"
+  # ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  environment:
+    # https://github.com/npm/npm/issues/19756
+    NO_UPDATE_NOTIFIER: "1"
+
+- name: "Pm2: Install npm-dependencies"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm install --no-save --no-progress"
+    chdir: "{{ deploy_facts[app.repo | mandatory].source }}/{{ app.path_in_repo | d('') }}"
+  ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  environment:
+    # https://github.com/npm/npm/issues/19756
+    NO_UPDATE_NOTIFIER: "1"
+  loop: "{{ deploy.apps }}"
+  loop_control:
+    loop_var: app
+
+- name: "Node: npm run build"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "npm run build"
+    chdir: "{{ deploy_facts[app.repo | mandatory].source }}/{{ app.path_in_repo | d('') }}"
+  ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
+  environment:
+    # https://github.com/npm/npm/issues/19756
+    NO_UPDATE_NOTIFIER: "1"
+  loop: "{{ deploy.apps }}"
+  loop_control:
+    loop_var: app
+
+- name: "Get path for app-user"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc 'echo "$PATH"'
+    chdir: "{{ application.path }}"
+  register: pm2_user_path
+
+- name: "Get path pm2 bin"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc 'echo "$(which pm2)"'
+    chdir: "{{ application.path }}"
+  register: pm2_bin_path
+
+  
+- name: "Create pm2 ecosystem file"
+  become: yes
+  template:
+    src: "deploy_plugins/pm2/pm2.ecosystem.yaml.j2"
+    dest: "{{ application.path }}/pm2/ecosystem.yaml"
+    owner: "{{ application.process_user }}"
+    group: "{{ application.process_group }}"
+    mode: "u=rw,g=r,o="
+
+- name: "Create service for pm2"
+  become: yes
+  template:
+    src: "deploy_plugins/pm2/pm2.service.j2"
+    dest: "/etc/systemd/system/pm2-{{ application.fullname }}.service"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  #when: not applications_devmode
+
+- name: Restart service pm2 for this application
+  become: yes
+  service:
+    name: "pm2-{{ application.fullname }}"
+    enabled: true
+    state: restarted
