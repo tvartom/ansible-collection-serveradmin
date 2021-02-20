@@ -9,7 +9,7 @@
     application_info: "{{ [] }}"
 
 ### Loop over application instances ##################################################################
-- name: "Read all applications into applications_info (Loop all applicaitons-instances)"
+- name: "Read all applications into applications_info (Loop all applications-instances)"
   include_tasks: get_application.yml
   loop: "{{ application_instances }}"
   loop_control:

@@ -20,7 +20,7 @@
 #Add the following new line at the end of the file, save the file, and then exit:
 #/swapfile swap swap defaults 0 0
 
-#/bin/bash -lc "... needed when npm is istalled per user.
+#/bin/bash -lc "... needed when npm is installed per user.
 - name: "Vue: Install @vue/cli (user-global)"
   become: yes
   become_user: "{{ application.process_user }}"
