@@ -31,6 +31,8 @@ if id -nG | egrep -cq "(^| ){{ serveradmin.process_group }}( |$)"; then
 	{%   endif %}
 	{% endfor %}
 	echo ""
+	echo -e "  ${BIYellow}Serveradmin branch:${NC} ${BWhite}$(sudo -u {{ serveradmin.process_user }} git --git-dir {{ serveradmin.path }}/repos/serveradmin/.git rev-parse --abbrev-ref HEAD)${NC} ${Yellow}Ändra med {{ organisation.command_prefix }}serveradmin_branch <branchname>${NC}"
+	echo ""
 {% if applications_devmode %}
 	{{ organisation.command_prefix }}development_of_ansible_playbook --state
 	{% if php_enable and applications_devmode_xdebug %}

@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Managed by Ansible!
+#
+
+# Exit on error:
+set -e
+source include_common.sh
+
+cd {{ serveradmin.path }}/repos/serveradmin
+
+sudo -u {{ serveradmin.process_user }} git fetch
+sudo -u {{ serveradmin.process_user }} git checkout "$1"

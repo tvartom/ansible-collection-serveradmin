@@ -23,6 +23,7 @@
   set_fact:
     serveradmin_files:
       - file: pull_serveradmin_repo
+      - file: serveradmin_branch
       - file: splash.sh
         dest: ""
         desc: "Visa denna meny"
