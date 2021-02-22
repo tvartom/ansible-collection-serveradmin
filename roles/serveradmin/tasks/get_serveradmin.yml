@@ -74,10 +74,10 @@
           ansible_playbook: "playbook-applications_deploy.yml"
         when: "{{ 'bootstrap' not in ansible_run_tags }}"
       - file: development_of_ansible_playbook
-        desc: "Switch between remote playbook and local repo for ansible playbooks."
+        # desc: "Switch between remote playbook and local repo for ansible playbooks."
         when: "{{ applications_devmode }}"
       - file: xdebug
-        desc: "Activate/disable Xdebug for php."
+        # desc: "Activate/disable Xdebug for php."
         when: "{{ applications_devmode and php_enable and applications_devmode_xdebug }}"
       - file: ansiblerunner.sh
         dest: "ansible_vboxsf"

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source include_common.sh
 
 
 INCLUDE_DEVMODE_PATH="{{ serveradmin.path }}/include_devmode.sh"
@@ -36,7 +37,7 @@ devmode_suffix=""
 test -f "$INCLUDE_DEVMODE_PATH" && source "$INCLUDE_DEVMODE_PATH"
 
 if [[ $devmode_suffix == "-devmode" ]]; then
-	echo "Ansible playbooks for serveradmin is using LOCAL repo. You need to pull and push the repo manually."
+  echo -e "  ${BIYellow}Serveradmin playbook:${NC} ${BWhite}LOCAL${NC} ${Yellow}You need to pull and push the repo manually. Switch with '{{ organisation.command_prefix }}development_of_ansible_playbook'${NC}"
 else
-	echo "Ansible playbooks for serveradmin is using REMOTE repo. Serveradmin will pull latest serveradmin repo on every run."
+  echo -e "  ${BIYellow}Serveradmin playbook:${NC} ${BWhite}REMOTE${NC} ${Yellow}Serveradmin will pull latest serveradmin repo on every run. Switch with '{{ organisation.command_prefix }}development_of_ansible_playbook'${NC}"
 fi

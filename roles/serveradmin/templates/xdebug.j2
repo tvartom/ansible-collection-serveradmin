@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source include_common.sh
+
 # ${1+x} means if $1 is defined, return x. Checking if $1 is empty or not
 if [ -z ${1+x} ]; then
   # Från: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
@@ -28,7 +30,7 @@ zend_extension=''
 source <(sed -E -e "s/;/#/g" -e "s/\.(.*=)/_\1/g" -e "s/ ?= ?/=/g" /etc/php.d/15-xdebug.ini | grep = )
 
 if [ "$zend_extension" == "xdebug.so" ]; then
-   echo "Xdebug active!"
+  echo -e "  ${BIYellow}Xdebug:${NC} ${BWhite}Active${NC} ${Yellow}Use '{{ organisation.command_prefix }}xdebug' to disable Xdebug for php.${NC}"
 else
-   echo "Xdebug disabled!"
+  echo -e "  ${BIYellow}Xdebug:${NC} ${BWhite}Disabled${NC} ${Yellow}Use '{{ organisation.command_prefix }}xdebug' to activate Xdebug for php.${NC}"
 fi
