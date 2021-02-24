@@ -125,6 +125,10 @@ add_header  X-Robots-Tag $x_robots_tag;
         {% if webinstance.proxy_pass.location is defined %}
           {% set proxy_pass_end_bracket = '}' %}
           location {{ webinstance.proxy_pass.location }} {
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-NginX-Proxy true;
         {% else %}
           {% set proxy_pass_end_bracket = '' %}
         {% endif %}
