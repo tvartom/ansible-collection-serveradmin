@@ -17,8 +17,16 @@ apps:
     error_file: "{{ application.path }}/log/pm2/{{ app.name }}-err.log"
     out_file: "{{ application.path }}/log/pm2/{{ app.name }}-out.log"
     time: true
-    env:
+  {% if app.include_env | d(false) %}
+
+    env: {{ pm2_include_env.results[loop.index0].content | b64decode }}
+  {% else %}
+    env: 
       NODE_ENV: "{{ application.environment }}"
+    {% for (key, value) in app.env | dict2items |d([]) %}
+         {{ key|quote }}: {{ value|quote }}
+    {% endfor %}
+  {% endif %}
 # Istället för denna används webpack.HotModuleReplacementPlugin vid dev
 #  {% if applications_devmode %}
 #    watch: true

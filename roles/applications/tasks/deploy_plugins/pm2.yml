@@ -108,6 +108,33 @@
         chdir: "{{ application.path }}"
       register: pm2_bin_path
 
+    # This is a workaround:
+    # 1. Create env from template
+    # 2. Read generated file into variable
+    # 3. Include variable instead of {% include app.include_env %}
+    # Coz: https://github.com/ansible/ansible/issues/14992
+    - name: "Create env-file from template for pm2 ecosystem file"
+      become: yes
+      template:
+        src: "{{ app.include_env }}"
+        dest: "{{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.env"
+        owner: "{{ application.process_user }}"
+        group: "{{ application.process_group }}"
+        mode: "u=rw,g=r,o="
+      when: app.include_env | d(false)
+      loop_control:
+        loop_var: app
+      loop: "{{ deploy.apps }}"
+
+    - name: "Store env-file as variable"
+      slurp:
+        src: "{{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.env"
+      register: pm2_include_env
+      when: app.include_env | d(false)
+      loop_control:
+        loop_var: app
+      loop: "{{ deploy.apps }}"
+
     - name: "Create pm2 ecosystem file"
       become: yes
       template:
