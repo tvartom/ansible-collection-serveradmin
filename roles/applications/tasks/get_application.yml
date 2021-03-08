@@ -155,6 +155,27 @@
         | combine(application_instance,      recursive=True)
       }}
 
+- name: "Read application config (If exists)"
+  include_vars:
+    dir: "{{ application.path }}/config"
+    name: "{{ application.fullname }}_config"
+    extensions:
+      - "yaml"
+      - "yml"
+      - "json"
+  register: temp_application_config
+  failed_when: false
+
+- name: "Attach application config"
+  set_fact:
+    application: >-
+      {{
+        application
+        | combine({
+          "config": temp_application_config.ansible_facts[application.fullname+'_config']
+        }, recursive=True)
+      }}
+
 - debug:
     var: application
 
@@ -163,7 +184,6 @@
   loop: "{{ application.webinstances | dict2items }}"
   loop_control:
     loop_var: webinstance_with_key
-
 
 - name: "Clear/Init repo_return-variable"
   set_fact:
