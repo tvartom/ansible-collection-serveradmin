@@ -32,7 +32,7 @@ mapfile -t databases < <( $MYSQL --user="{{ backup_info.source_user.name }}" -BN
 {{- job.exclude | default([]) | map('regex_replace', '^(.*)$', '\'\\1\',') | join('') -}}
 'mysql','information_schema','performance_schema');" )
 {%         else %}
-databases=({{ job.include | map('regex_replace', '^(.*)$', '\"\\1\"') | join(',') }})
+databases=({{ job.include | map('regex_replace', '^(.*)$', '\"\\1\"') | join(' ') }})
 {%         endif %}
 
 for db in ${databases[@]}; do
