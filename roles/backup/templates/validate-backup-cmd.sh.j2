@@ -14,49 +14,48 @@ LOG_ACCESS="$(echo ~)/validate-backup-cmd-access_{{ hostname }}.log"
 echo "$(date "+[%F %T]") $SSH_ORIGINAL_COMMAND" >> "$LOG_ACCESS"
 
 case "$SSH_ORIGINAL_COMMAND" in
-*\&*|*\|*|*\;*|*\>*|*\<*|*\!*)
-echo "Rejected"
-echo "$(date "+[%F %T]") Rejected level 1: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
-exit 1
-;;
+
+  *\&*|*\|*|*\;*|*\>*|*\<*|*\!*)
+    echo "Rejected"
+    echo "$(date "+[%F %T]") Rejected level 1: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+    exit 1
+    ;;
 
 # Backup:
-rsync\ --server\ --sender*)
-{# sudo $SSH_ORIGINAL_COMMAND #}
-{# $SSH_ORIGINAL_COMMAND #}
-SSH_COMMAND="$SSH_ORIGINAL_COMMAND"
-if [[ $string == *"My long"* ]]; the
-# https://stackoverflow.com/questions/13210880/replace-one-substring-for-another-string-in-shell-script
-# Ta bort kommadnot rsync, så vi kan köra det med fler argument nedan.
-SSH_COMMAND="${SSH_COMMAND/rsync /}"
-# Kör rimligtheskoll om det är i backuprooten. ingen säkerhetsfeature eftersom du kan ange __backuproot__ som en exclude eller liknande, om du vill komma runt det.
-if [[ $SSH_COMMAND != *"__backuproot__"* ]]; then
-  echo "Rejected rsync, not in __backuproot__"
-  echo "$(date "+[%F %T]") Rejected rsync, not in __backuproot__: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
-  exit 1
-fi
-if [[ $SSH_COMMAND == *".."* ]]; then
-  echo "Rejected rsync, contains '..'"
-  echo "$(date "+[%F %T]") Rejected rsync, contains '..': $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
-  exit 1
-fi
-# There must be a starting / in rsnapshot conf, so remove the first / from __backuproot__-replacement:
-BACKUP_ROOT="{{ script_output_dir[1:] }}"
-# Ersätt med backuprooten:
-SSH_COMMAND="${SSH_COMMAND//__backuproot__/$BACKUP_ROOT}"
-echo "Command to run: rsync --exclude '*__nobackup__*' --exclude '.ssh' $SSH_COMMAND" >> "$LOG_ACCESS"
-# Vi gör det här istället för i variabler: http://mywiki.wooledge.org/BashFAQ/050
-# Filer med __nobackup__ i sig ska aldrig gå att ta backup på.
-rsync --exclude '*__nobackup__*' --exclude '.ssh' $SSH_COMMAND
-exit 0
-;;
-
+  rsync\ --server\ --sender*)
+    {# sudo $SSH_ORIGINAL_COMMAND #}
+    {# $SSH_ORIGINAL_COMMAND #}
+    SSH_COMMAND="$SSH_ORIGINAL_COMMAND"
+    # https://stackoverflow.com/questions/13210880/replace-one-substring-for-another-string-in-shell-script
+    # Ta bort kommadnot rsync, så vi kan köra det med fler argument nedan.
+    SSH_COMMAND="${SSH_COMMAND/rsync /}"
+    # Kör rimligtheskoll om det är i backuprooten. ingen säkerhetsfeature eftersom du kan ange __backuproot__ som en exclude eller liknande, om du vill komma runt det.
+    if [[ $SSH_COMMAND != *"__backuproot__"* ]]; then
+      echo "Rejected rsync, not in __backuproot__"
+      echo "$(date "+[%F %T]") Rejected rsync, not in __backuproot__: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+      exit 1
+    fi
+    if [[ $SSH_COMMAND == *".."* ]]; then
+      echo "Rejected rsync, contains '..'"
+      echo "$(date "+[%F %T]") Rejected rsync, contains '..': $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+      exit 1
+    fi
+    # There must be a starting / in rsnapshot conf, so remove the first / from __backuproot__-replacement:
+    BACKUP_ROOT="{{ script_output_dir[1:] }}"
+    # Ersätt med backuprooten:
+    SSH_COMMAND="${SSH_COMMAND//__backuproot__/$BACKUP_ROOT}"
+    echo "Command to run: rsync --exclude '*__nobackup__*' --exclude '.ssh' $SSH_COMMAND" >> "$LOG_ACCESS"
+    # Vi gör det här istället för i variabler: http://mywiki.wooledge.org/BashFAQ/050
+    # Filer med __nobackup__ i sig ska aldrig gå att ta backup på.
+    rsync --exclude '*__nobackup__*' --exclude '.ssh' $SSH_COMMAND
+    exit 0
+    ;;
 
 # Rapportering av lyckad backup:
-success\ *)
-# Split by ' ' to array
-# https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash#tab-top
-SUCCESS=($SSH_ORIGINAL_COMMAND)
+  success\ *)
+    # Split by ' ' to array
+    # https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash#tab-top
+    SUCCESS=($SSH_ORIGINAL_COMMAND)
 {% for backupinstance in backup_info.instances.values() | list %}
 {%   for destinstance in backupinstance.dest_instances %}
 {%     if hostname == destinstance.host %}
@@ -69,14 +68,14 @@ SUCCESS=($SSH_ORIGINAL_COMMAND)
 {%     endif %}
 {%   endfor %}
 {% endfor %}
-echo "Rejected success report"
-echo "$(date "+[%F %T]") Rejected success report: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
-exit 1
-;;
+    echo "Rejected success report"
+    echo "$(date "+[%F %T]") Rejected success report: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+    exit 1
+    ;;
 
 #Kör scriptet preparebackup.sh
-preparebackup\ *)
-PREPARE=($SSH_ORIGINAL_COMMAND)
+  preparebackup\ *)
+    PREPARE=($SSH_ORIGINAL_COMMAND)
 {% for backupinstance in backup_info.instances.values() | list %}
 {%   for destinstance in backupinstance.dest_instances %}
 {%     if hostname == destinstance.host %}
@@ -87,15 +86,15 @@ PREPARE=($SSH_ORIGINAL_COMMAND)
 {%     endif %}
 {%   endfor %}
 {% endfor %}
-echo "Rejected prepare backup"
-echo "$(date "+[%F %T]") Rejected prepare backup: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
-exit 1
-;;
+    echo "Rejected prepare backup"
+    echo "$(date "+[%F %T]") Rejected prepare backup: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+    exit 1
+  ;;
 
-*)
-echo "Rejected"
-echo "$(date "+[%F %T]") Rejected no match: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
-exit 1
-;;
+  *)
+    echo "Rejected"
+    echo "$(date "+[%F %T]") Rejected no match: $SSH_ORIGINAL_COMMAND" >> "$LOG_ERROR"
+    exit 1
+  ;;
 
 esac

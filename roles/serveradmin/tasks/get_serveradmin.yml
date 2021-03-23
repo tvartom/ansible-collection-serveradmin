@@ -91,7 +91,7 @@
 - name: Generate data_migrations
   set_fact:
     serveradmin_files: |-
-      {%- for data_migration in data_migrations | default([]) -%}
+      {%- for data_migration in data_migrations | default([]) + data_migrations_global | default([]) -%}
       {{-   serveradmin_files.append({
               'file': 'data_migration.sh',
               'dest': 'data_migration_'+data_migration.name,
