@@ -8,8 +8,12 @@ apps:
 {% for app in deploy.apps %}
   - name: "{{ application.fullname }}-{{ app.name }}"
     # https://futurestud.io/tutorials/pm2-use-npm-to-start-your-app
+  {% if app.settings.script is not defined %}
+
     script: npm
     args: start
+  {% endif %}
+
     cwd: "{{ deploy_facts[app.repo | mandatory].source }}/{{ app.path_in_repo | d('') }}"
     # instances: 0
     #exec_mode: cluster
@@ -17,14 +21,19 @@ apps:
     error_file: "{{ application.path }}/log/pm2/{{ app.name }}-err.log"
     out_file: "{{ application.path }}/log/pm2/{{ app.name }}-out.log"
     time: true
+  {% for key, value in app.settings.items() %}
+
+    {{ key | quote }}: {{ value | quote }}
+  {% endfor %}
+
   {% if app.include_env | d(false) %}
 
     env: {{ pm2_include_env.results[loop.index0].content | b64decode }}
   {% else %}
-    env: 
+    env:
       NODE_ENV: "{{ application.environment }}"
-    {% for (key, value) in app.env | dict2items |d([]) %}
-         {{ key|quote }}: {{ value|quote }}
+    {% for key, value in app.env.items() %}
+         {{ key | quote }}: {{ value | quote }}
     {% endfor %}
   {% endif %}
 # Istället för denna används webpack.HotModuleReplacementPlugin vid dev

@@ -1,6 +1,24 @@
 ---
+- name: "Get path for app-user"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc 'echo "$PATH"'
+    chdir: "{{ application.path }}"
+  register: pm2_user_path
+
+- name: "Get path pm2 bin"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc 'echo "$(which pm2)"'
+    chdir: "{{ application.path }}"
+  register: pm2_bin_path
+
 - name: "Setup and build Typescript/Javascript application"
-  when:  deploy.build | d(true)
+  when:  deploy.build | d(false)
   block:
     - name: "Install pm2..."
       debug:
@@ -46,8 +64,6 @@
         - { path: "/log/pm2" }
         - { path: "/pm2" }
 
-
-
     - name: "Pm2: Install with npm (user-global)"
       become: yes
       become_user: "{{ application.process_user }}"
@@ -89,24 +105,6 @@
       loop: "{{ deploy.apps }}"
       loop_control:
         loop_var: app
-
-    - name: "Get path for app-user"
-      become: yes
-      become_user: "{{ application.process_user }}"
-      shell:
-        cmd: >-
-          /bin/bash -lc 'echo "$PATH"'
-        chdir: "{{ application.path }}"
-      register: pm2_user_path
-
-    - name: "Get path pm2 bin"
-      become: yes
-      become_user: "{{ application.process_user }}"
-      shell:
-        cmd: >-
-          /bin/bash -lc 'echo "$(which pm2)"'
-        chdir: "{{ application.path }}"
-      register: pm2_bin_path
 
     # This is a workaround:
     # 1. Create env from template
@@ -166,4 +164,13 @@
   service:
     name: "pm2-{{ application.fullname }}"
     state: restarted
-  when: deploy.restart | d(true)
+  when: deploy.restart | d(false)
+
+- name: "Reload pm2 for this application"
+  become: yes
+  become_user: "{{ application.process_user }}"
+  shell:
+    cmd: >-
+      /bin/bash -lc "pm2 reload all"
+    chdir: "{{ application.path }}"
+  when: deploy.reload | d(false)
