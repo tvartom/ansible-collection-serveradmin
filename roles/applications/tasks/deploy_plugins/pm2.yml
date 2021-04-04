@@ -171,6 +171,6 @@
   become_user: "{{ application.process_user }}"
   shell:
     cmd: >-
-      /bin/bash -lc "pm2 reload all"
+      /bin/bash -lc "pm2 reload all --update-env"
     chdir: "{{ application.path }}"
   when: deploy.reload | d(false)
