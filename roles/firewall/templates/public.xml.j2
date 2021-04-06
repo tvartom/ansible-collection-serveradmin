@@ -5,12 +5,13 @@
   <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
 
 {% for item in firewall_settings.services | default([]) %}
-  <service name="{{ item.name }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
 
+  <service name="{{ item.name }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
 {% endfor %}
 
 
 {% if applications_devmode_samba or samba is defined %}
+
   <!-- Samba -->
   <port protocol="tcp" port="137"/><!-- Samba: NETBIOS Name Service (netbios-ns) -->
   <port protocol="tcp" port="138"/><!-- Samba: NETBIOS Datagram Service (netbios-dgm) -->
@@ -20,6 +21,7 @@
 
 {% if applications_devmode %}
 {%   if applications_devmode_nfs %}
+
   <!-- NFS is used by devmode -->
   <port protocol="tcp" port="2049"/><!-- NFSv4 -->
 {%   endif %}
@@ -27,17 +29,19 @@
        $ ssh -L *:3306:/var/lib/mysql/mysql.sock localhost
   -->
   <port protocol="tcp" port="3306-3330"/>
-  <!-- npm run serve
-använder port 8080 för devserver
-  -->
+  <!-- npm run serve använder port 8080 för devserver -->
   <port protocol="tcp" port="8080"/>
+  <!-- debug node använder port 9229+ för devserver -->
+  <port protocol="tcp" port="9229-9239"/>
 {% endif %}
 
 {% for item in firewall_settings.extra_ports | default([]) %}
+
   <port protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
 {% endfor %}
 
 {% for item in firewall_settings.forward_ports | default([]) %}
+
   <forward-port to-port="{{ item.to_port }}" protocol="{{ item.protocol }}" port="{{ item.port }}"/>{% if item.comment is defined %}<!-- {{ item.comment }} -->{% endif %}
 {% endfor %}
 

@@ -25,6 +25,12 @@ apps:
 
     {{ key | quote }}: {{ value | quote }}
   {% endfor %}
+  {% if applications_devmode and app.settings.node_args is not defined%}
+
+    # Lyssna efter debugger som kan ansluta till denna port:
+    node_args:
+      - "--inspect={{ inventory_hostname }}:{{ 9229 + loop.index0 }}"
+  {% endif %}
 
   {% if app.include_env | d(false) %}
 
