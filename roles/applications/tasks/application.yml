@@ -141,7 +141,6 @@
     - { path: "/php-fpm",                                       when: "{{ application.any_enable_php }}" }
     # För deploy, deploy-plugins
     - { path: "/repos", when: "{{ application.repos[0] is defined }}" }
-    - { path: "/scripts" }
     # För Java
     - { path: "/webapp",             when: false }
     # msmtp
