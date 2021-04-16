@@ -179,6 +179,12 @@
 - debug:
     var: application
 
+- name: "Validate application config."
+  fail:
+    msg: "{{ item.msg | d('') }} ({{ item.key }} is missing in config for application. Create {{ application.path }}/config/{{ item.suggested_filename | d('<any filname>.yaml|.yml|.json') }} with the settings.)"
+  when: application.config[item.key] is not defined
+  loop: "{{ application.config_validate | d([]) }}"
+
 - name: "Loop over all webinstances for this application"
   include_tasks: get_webinstance.yml
   loop: "{{ application.webinstances | dict2items }}"
