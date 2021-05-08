@@ -15,7 +15,8 @@ packages:
   # bindfs missing i centos 8, To make bind-mounts as different owners, permissions etc
   - name: https://github.com/tvartom/rpms/raw/master/centos8/bindfs/bindfs-1.14.3-2.el8.x86_64.rpm
     disable_gpg_check: true
-    when: "{{ applications_devmode and not applications_devmode_use_overlayfs }}"
+    # Now also used for backup
+    #when: "{{ applications_devmode and not applications_devmode_use_overlayfs }}"
   - name: glibc-langpack-en
     when: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int == 8 }}"
   - name: glibc-langpack-sv
