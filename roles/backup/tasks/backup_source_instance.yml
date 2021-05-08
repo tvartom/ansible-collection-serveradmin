@@ -11,34 +11,10 @@
 - debug:
     var: backupinstance.key
 
-- name: "Test: Mount the folders to backup under backup_source as read only (bindfs)"
-  debug:
-    msg: "{{ backup_info.backup_script_output_dir ~  host_and_job.0 }}/{{ backupinstance.value.name }} -- {{ host_and_job.1.source }}"
-  when: host_and_job.1.type | d('files') in ['files']
+- name: "Loopa över backupinstancer"
+  include_role:
+    name: backup
+    tasks_from: backup_source_instance_host-job
   loop: "{{ backup_dest_with_public_keys.keys() | product(backupinstance.value.jobs) | list }}"
   loop_control:
      loop_var: host_and_job
-
-- fail:
-
-- name: "Mount the folders to backup under backup_source as read only (bindfs)"
-  become: yes
-  mount:
-    src: "{{ host_and_job.1.source }}"
-    path: "{{ backup_info.backup_script_output_dir ~  host_and_job.0 }}/{{ backupinstance.value.name }}"
-    fstype: fuse.bindfs
-    # Dokumentation: man bindfs
-    opts: |-
-      ro                                                             {#- -#}
-      ,force-user={{ backup_info.source_user.name }}                 {#- -#}
-      ,force-group={{ backup_info.source_user.group }}               {#- -#}
-      ,chown-ignore                                                  {#- -#}
-      ,chgrp-ignore                                                  {#- -#}
-    state: mounted
-  when: host_and_job.1.type | d('files') in ['files']
-  loop: "{{ backup_dest_with_public_keys.keys() | product(backupinstance.value.jobs) | list }}"
-  loop_control:
-     loop_var: host_and_job
-
-
-
