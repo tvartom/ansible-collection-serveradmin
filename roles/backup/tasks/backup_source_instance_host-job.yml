@@ -12,11 +12,12 @@
   set_fact:
     pretty_source: |-
       {{ host_and_job.1.source | regex_replace('^/?(.*?)/?(\./)*$', '/\\1') | regex_replace('/\./', '/') }}
+  when: host_and_job.1.type | d('files') in ['files']
 
 - debug:
     var: pretty_source
 
-    
+
 - name: "Test: Mount the folders to backup under backup_source as read only (bindfs)"
   debug:
     msg: "{{ backup_info.backup_script_output_dir ~  host_and_job.0 }}/{{ backupinstance.value.name }} -- {{ host_and_job.1.source }} -- pretty: {{ pretty_source }}"
