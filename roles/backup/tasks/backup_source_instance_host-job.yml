@@ -36,3 +36,4 @@
       ,chown-ignore                                                  {#- -#}
       ,chgrp-ignore                                                  {#- -#}
     state: mounted
+  when: host_and_job.1.type | d('files') in ['files']
