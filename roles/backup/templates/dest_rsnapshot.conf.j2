@@ -257,7 +257,7 @@ backup_exec	true ########## Backup of {{ backup_info.target }}({{ backupinstance
 
 {# Loop over backup jobs #}
 {% for job in backupinstance.jobs %}
-{%   if job.type | default('backup') == 'backup' %}
+{%   if (job.type | default('files')) in ['files'] %}
 {# / måste vara först för att rsnapshot ska ens testa att ansluta till servern #}
 {#     #}backup	{{ backup_info.source_user.name }}@{{ backup_info.ssh_host }}:/__backuproot__/{{ backupinstance.name }}/././{{ job.source }}	{{ job.dest }}
 {%   elif job.type == 'backup_database' %}
