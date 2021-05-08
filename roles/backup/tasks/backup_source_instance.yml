@@ -18,3 +18,5 @@
   loop: "{{ backup_dest_with_public_keys.keys() | product(backupinstance.value.jobs) | list }}"
   loop_control:
      loop_var: host_and_job
+
+- fail:
