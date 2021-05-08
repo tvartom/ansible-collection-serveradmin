@@ -45,6 +45,13 @@
 #    name: "{{ backup_info.source_user.name }}"
 #    groups: "{{ backup_info.instances.values() | map(attribute='jobs') | flatten | selectattr('group_to_access', 'defined') | map(attribute='group_to_access') | unique | list }}"
 #    append: true
+- name: "Loopa över backupinstancer"
+  include_role:
+    name: backup
+    tasks_from: backup_source_instance
+  loop: "{{ backup_info.instances | dict2items }}"
+  loop_control:
+     loop_var: backupinstance
 
 # https://www.shell-tips.com/2014/09/08/sudo-sorry-you-must-have-a-tty-to-run-sudo/
 #- name: Make rsync work with sudo

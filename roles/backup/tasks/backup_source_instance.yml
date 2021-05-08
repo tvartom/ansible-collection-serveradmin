@@ -1,0 +1,36 @@
+---
+- debug:
+   var: backup_info
+   
+- debug:
+    var: backupinstance
+
+- debug:
+    var: backupinstance.value
+
+- debug:
+    var: backupinstance.key
+
+- fail:
+
+- name: "Mount the folders to backup under backup_source as read only (bindfs)"
+  become: yes
+  mount:
+    src: "{{ item }}"
+    path: "{{ application.path }}/{{ applications_devmode_use_overlayfs | ternary('devmode', 'repos') }}/{{ repo.name }}"
+    fstype: fuse.bindfs
+    # Dokumentation: man bindfs
+    opts: |-
+      ro                                                             {#- -#}
+      ,force-user={{ backup_info.source_user.name }}                 {#- -#}
+      ,force-group={{ backup_info.source_user.group }}               {#- -#}
+      ,chown-ignore                                                  {#- -#}
+      ,chgrp-ignore                                                  {#- -#}
+    state: mounted
+  when: items.value.
+  loop: "{{ backupinstance.value.jobs | selectattr('type', 'eq', 'files') | map(attribute='source') | unique | list }}"
+
+#backup_info.backup_script_output_dir ~  hostname %}
+#{{ instance.name }} ####################
+#mkdir -p "{{ script_output_dir }}/{{ instance.name }}
+
