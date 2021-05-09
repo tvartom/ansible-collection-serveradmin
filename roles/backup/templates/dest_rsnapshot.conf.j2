@@ -259,7 +259,7 @@ backup_exec	true ########## Backup of {{ backup_info.target }}({{ backupinstance
 {% for job in backupinstance.jobs %}
 {%   if (job.type | default('files')) in ['files'] %}
 {# / måste vara först för att rsnapshot ska ens testa att ansluta till servern #}
-{#     #}backup	{{ backup_info.source_user.name }}@{{ backup_info.ssh_host }}:/__backuproot__/{{ backupinstance.name }}/././{{ job.source }}	{{ job.dest }}
+{#     #}backup	{{ backup_info.source_user.name }}@{{ backup_info.ssh_host }}:/__backuproot__/{{ backupinstance.name }}/{% if not '.' in job.source %}././{% endif %}{{ job.source }}	{{ job.dest }}
 {%   elif job.type == 'backup_database' %}
 {%     if loop.changed('prepare') %}{# Lite ett hack, skriver bara ut första gång, sen är den inte ändrad #}
 {#       #}backup_exec	/usr/bin/ssh {{ backup_info.source_user.name }}@{{ backup_info.ssh_host }} preparebackup "{{ backupinstance.name }}" "{{ backupinstance.dest.host }}"
