@@ -207,7 +207,7 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
                      {{ '--socket='~socket if socket|d(false) else '' }} \
                      {{ '--protocol='~protocol if protocol|d(false) else '' }} \
                      {{ '--user='~job.src.user if job.src.user is defined else '' }} \
-                     {% if job.src.password is defined %}--password{{ '='~job.src.password if job.src.password is string else '' }}{% endif %} \
+                     {% if job.src.password is defined %}--password{{ '=' ~ (job.src.password | quote) if job.src.password is string else '' }}{% endif %} \
                      -BNe "SHOW DATABASES WHERE \`Database\` LIKE '{{ job.include_databases | d('%') }}'
                          {%- if job.exclude_databases is string %} AND \`Database\` NOT LIKE '{{ job.exclude_databases }}'{% endif -%}
                          {#- #} AND \`Database\` NOT IN (
