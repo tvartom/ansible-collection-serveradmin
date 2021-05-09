@@ -3,5 +3,5 @@
 
 facts_options_default:
   var_files: []
-  host_vars_from_host: true
+  host_vars_from_host: false
   diskspace_message: false
