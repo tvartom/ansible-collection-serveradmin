@@ -52,7 +52,7 @@
   set_fact:
     diskspace_message: >-
       {%- set rows = [] -%}
-      {%- for mount in ansible_facts.mounts if not mount.mount.startswith('/snap') and not mount.mount.startswith('/boot') and mount.size_total > 0 -%}
+      {%- for mount in ansible_facts.mounts if not mount.mount.startswith('/snap') and not mount.mount.startswith('/boot') and (mount.size_total | d(0)) > 0 -%}
       {{- rows.append(mount.mount+' '+ ((1 - mount.size_available/mount.size_total) * 100)|int|string + '%' + ' (' + (mount.size_total - mount.size_available)|human_readable + '/' + mount.size_total|human_readable + ')') -}}
       {%- endfor -%}
       {{- rows|join(newline) -}}
