@@ -5,7 +5,7 @@
 
 # Exit on error:
 set -e
-source include_common.sh
+source {{ serveradmin.path }}/include_common.sh
 echo -e "${BIYellow}Applikationer på denna server:${NC}"
 {% for application in applications_info %}
 echo -e "${Green}{{ application.name }} ${White}({{ application.environment }}) ${Yellow}{{ application.desc }}${NC}"

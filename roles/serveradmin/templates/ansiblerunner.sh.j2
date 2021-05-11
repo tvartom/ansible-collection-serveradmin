@@ -13,7 +13,7 @@ set -e
 {% else %}
 	{% set devmode_suffix = '' %}
 {% endif %}
-source include_common.sh
+source {{ serveradmin.path }}/include_common.sh
 
 
 {% if applications_devmode %}

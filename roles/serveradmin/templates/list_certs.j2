@@ -5,7 +5,7 @@
 
 # Exit on error:
 set -e
-source include_common.sh
+source {{ serveradmin.path }}/include_common.sh
 
 echo -e "${BIYellow}Utgångsdatum för certifikat:${NC}"
 grep -Poh "(?<=ssl_certificate)\s+.*\s*(?=;)" /etc/nginx/conf.d/{{ organisation.name }}/* | grep -o "\S*" | sort | uniq | while read -r cert ; do
