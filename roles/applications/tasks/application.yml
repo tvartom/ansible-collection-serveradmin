@@ -122,11 +122,11 @@
   file:
     path: "{{ application.path }}{{ item.path }}"
     state: directory
-    owner: "{{ item.owner | default( application.process_user, true ) }}"
-    group: "{{ item.group | default( application.process_group, true ) }}"
-    setype: "{{ item.setype | default( '_default' ) }}"                  # httpd_sys_content_t
-    mode: "{{ item.mode | default('u=rwx,g=rx,o=') }}"
-  when: item.when | default(True)
+    owner: "{{ item.owner | d( application.process_user, true ) }}"
+    group: "{{ item.group | d( application.process_group, true ) }}"
+    setype: "{{ item.setype | d( '_default' ) }}"                  # httpd_sys_content_t
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=') }}"
+  when: item.when | d(True)
   loop:
     - { path: "" }
     # Log, ägs av app-...:app-... nginx kan kan komma åt sin log.
@@ -146,7 +146,7 @@
     # msmtp
     - { path: "/log/msmtp",             when: "{{ application.sendmail is defined }}" }
     # cron
-    - { path: "/log/cron",        when: "{{ application.cron is defined }}" }
+    - { path: "/log/cron", mode: "u=rwx,g=rwx,o=",        when: "{{ application.cron is defined }}" }
 
 
 ### Letsencrypt #################################################################
