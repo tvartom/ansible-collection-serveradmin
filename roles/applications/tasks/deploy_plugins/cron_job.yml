@@ -10,7 +10,7 @@
     mode: "{{ item.mode | default('u=rwx,g=rx,o=') }}"
   when: item.when | default(True)
   loop:
-    - { path: "/log/cron_job" }
+    - { path: "/log/cron_job", mode: "u=rwx,g=rwx,o=" }
 
 - name: "Setup cron-jobb"
   become: yes
