@@ -145,6 +145,8 @@
     - { path: "/webapp",             when: false }
     # msmtp
     - { path: "/log/msmtp",             when: "{{ application.sendmail is defined }}" }
+    # cron
+    - { path: "/log/cron",        when: "{{ application.cron is defined }}" }
 
 
 ### Letsencrypt #################################################################
