@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source include_common.sh
+source {{ serveradmin.path }}/include_common.sh
 
 # ${1+x} means if $1 is defined, return x. Checking if $1 is empty or not
 if [ -z ${1+x} ]; then
