@@ -5,6 +5,17 @@
   collections:
     - tvartom.serveradmin
   tasks:
+    # Get data from the host with sensible information, (eg password, private key)
+    # This role can also read variables from files, but is not used.
+    - name: "Collect facts"
+      include_role:
+        name: collect_facts
+        tasks_from: collect_facts
+      vars:
+        facts_options:
+          host_vars_from_host: true
+          diskspace_message: true
+
     - name: Visa info
       debug:
         var: active_webinstances

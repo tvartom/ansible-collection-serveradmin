@@ -37,7 +37,7 @@
                 {%- endfor -%}
               short: true
 
-            - title: Used discspace
+            - title: Used disk space
               value: >-
                 {{- diskspace_message -}}
               short: true

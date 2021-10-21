@@ -98,7 +98,7 @@ set -e
 #https://stackoverflow.com/a/1221870/1003172
 set -o pipefail
 
-source include_common.sh
+source {{ serveradmin.path }}/include_common.sh
 
 {% if data_migration.confirm |  d('',True) != ''  %}
   # Från: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
@@ -187,7 +187,7 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
 {%     set mode = job.src.mode | d('remote' if ssh_host else 'local') %}
 
 {%     if mode == 'local' %}
-{%       set host = ssh_host %}
+{%       set host = job.src.host | d(ssh_host) %}
 {%     elif mode == 'local_with_ssh_tunnel' %}
 {#       https://gist.github.com/scy/6781836 och http://www.g-loaded.eu/2006/11/24/auto-closing-ssh-tunnels/ #}
 {%       set ssh_pre_command = 'rm -f ./temp-tunnel.sock && ssh -f -F /dev/null -o ExitOnForwardFailure=yes -L ./temp-tunnel.sock:/var/lib/mysql/mysql.sock '~ssh_host~' sleep 3' %}
@@ -207,7 +207,7 @@ echo "{{ job.name | d(loop.index) }} ({{ job.type }})"
                      {{ '--socket='~socket if socket|d(false) else '' }} \
                      {{ '--protocol='~protocol if protocol|d(false) else '' }} \
                      {{ '--user='~job.src.user if job.src.user is defined else '' }} \
-                     {% if job.src.password is defined %}--password{{ '='~job.src.password if job.src.password is string else '' }}{% endif %} \
+                     {% if job.src.password is defined %}--password{{ '=' ~ (job.src.password | quote) if job.src.password is string else '' }}{% endif %} \
                      -BNe "SHOW DATABASES WHERE \`Database\` LIKE '{{ job.include_databases | d('%') }}'
                          {%- if job.exclude_databases is string %} AND \`Database\` NOT LIKE '{{ job.exclude_databases }}'{% endif -%}
                          {#- #} AND \`Database\` NOT IN (

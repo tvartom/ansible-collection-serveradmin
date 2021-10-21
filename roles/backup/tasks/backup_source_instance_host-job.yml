@@ -1,0 +1,39 @@
+---
+- name: "Force format of source path to format '/foo/bar', '/foo'"
+  set_fact:
+    pretty_source: |-
+      {{ host_and_job.1.source | regex_replace('^/?(.*?)/?(\./)*$', '/\1') | regex_replace('/\./', '/') }}
+  when: host_and_job.1.type | d('files') in ['files']
+
+- name: "Check mount point"
+  become: yes
+  stat:
+    path: "{{ backup_info.backup_script_output_dir ~  host_and_job.0 }}/{{ backupinstance.value.name }}{{ pretty_source }}"
+  register: mount_point
+  when: host_and_job.1.type | d('files') in ['files']
+
+- name: "Create folder for mount point"
+  become: yes
+  file:
+    state: directory
+    path: "{{ backup_info.backup_script_output_dir ~  host_and_job.0 }}/{{ backupinstance.value.name }}{{ pretty_source }}"
+    owner: "{{ backup_info.source_user.name }}"
+    group: "{{ backup_info.source_user.group }}"
+    mode: "{{ item.mode | d('u=rwx,g=rx,o=') }}"
+  when: host_and_job.1.type | d('files') in ['files'] and not mount_point.stat.exists
+
+- name: "Mount the folders to backup under backup_source as read only (bindfs)"
+  become: yes
+  mount:
+    src: "{{ pretty_source }}"
+    path: "{{ backup_info.backup_script_output_dir ~  host_and_job.0 }}/{{ backupinstance.value.name }}{{ pretty_source }}"
+    fstype: fuse.bindfs
+    # Dokumentation: man bindfs
+    opts: |-
+      ro                                                             {#- -#}
+      ,force-user={{ backup_info.source_user.name }}                 {#- -#}
+      ,force-group={{ backup_info.source_user.group }}               {#- -#}
+      ,chown-ignore                                                  {#- -#}
+      ,chgrp-ignore                                                  {#- -#}
+    state: mounted
+  when: host_and_job.1.type | d('files') in ['files']

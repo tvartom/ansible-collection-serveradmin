@@ -60,7 +60,7 @@
   become_user: "{{ application.process_user }}"
   shell:
     cmd: >-
-      /bin/bash -lc "npm run build"
+      /bin/bash -lc "npm run build{% if deploy.mode | d(false) %} -- --mode {% if deploy.mode is string %}{{ deploy.mode }}{% else %}{{ application.environment }}{% endif %}{% endif %}"
     chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
   ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
   environment:
