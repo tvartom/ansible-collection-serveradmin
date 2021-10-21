@@ -150,7 +150,14 @@
         owner: root
         group: root
         mode: "u=rw,g=r,o=r"
-      #when: not applications_devmode
+      register: pm2_service_template
+
+    - name: "Reload service daemon"
+      become: yes
+      shell:
+        cmd: >-
+          systemctl daemon-reload
+      when: pm2_service_template.changed
 
     - name: Enable and start service pm2 for this application
       become: yes
