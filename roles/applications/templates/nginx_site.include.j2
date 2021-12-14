@@ -32,6 +32,9 @@
       {% endif %}
 {%- endmacro %}
 {% macro more_location(location) -%}
+      {% if location.filter is not defined
+        or (location.filter.include_environment is defined and application.environment in location.filter.include_environment)
+        or (location.filter.exclude_environment is defined and application.environment not in location.filter.exclude_environment) %}
          location {{ location.location }} {
            {% if location.root_dir | d(false) %}
              root {{ path }}/{{ location.root_dir }};
@@ -47,6 +50,7 @@
            {{ location.raw | d('') }}
            {{ location.body | d('') }}
          }
+      {% endif %}
 {%- endmacro %}
 
 
