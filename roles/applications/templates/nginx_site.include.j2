@@ -44,7 +44,11 @@
            {% if location.php | d(true) %}
              {{ php_location() }}
            {% endif %}
+<<<<<<< Updated upstream
            {{ location.raw | d('') }}
+=======
+           {{ location.body | d('') }}
+>>>>>>> Stashed changes
          }
 {%- endmacro %}
 

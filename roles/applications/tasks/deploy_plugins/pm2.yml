@@ -152,6 +152,8 @@
         mode: "u=rw,g=r,o=r"
       register: pm2_service_template
 
+    # This is suppose to fix "Unit pm2-[env]-[app].service has a bad unit file setting"
+    # Not really effectgive though. Work around: Run this manually
     - name: "Reload service daemon"
       become: yes
       shell:
