@@ -5,7 +5,7 @@
 
 {% for application in applications_info %}
   {% for webinstance in application.webinstances.values()|list %}
-    {{ webinstance.httpinstance | d("") }}
+    {{ webinstance.nginx_includes.httpinstance | d("") }}
     {% for upstream in webinstance.upstreams | d([]) %}
       upstream {{ webinstance.fullname }}_{{ upstream.name }} {
         {% if upstream.unix_socket is defined %}
