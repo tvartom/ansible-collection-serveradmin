@@ -170,6 +170,20 @@ When asked for `### Serveradmin-repository on Github ###` you need to give detai
 
 #### 1. Log in as root or a any sudo-user
 
+#### 2. Change mirrors to `vault.centos.org`
+  1. Go to the `/etc/yum.repos.d/ directory`.
+     ```bash
+     cd /etc/yum.repos.d/
+     ```
+  1. Run the following commands
+     ```bash
+	 sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+	 sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+	 ```
+  1. Go back to home directory
+     ```bash
+	 cd ~
+	 ```
 #### 2. Run:
 ```
 curl https://raw.githubusercontent.com/tvartom/ansible-collection-serveradmin/master/tools/bootstrap.sh -o bootstrap.sh
