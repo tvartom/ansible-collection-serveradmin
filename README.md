@@ -102,7 +102,8 @@ Don't foreget to setup auto-recover [Amazon docs: UsingAlarmActions](https://doc
 
 ### As local virtual server
 
-Download CentOS Minimal ISO-image: [centos.org/download](https://www.centos.org/download/)
+~~Download CentOS Minimal ISO-image: [centos.org/download](https://www.centos.org/download/)~~
+Since 2021-12-31 CentOS 8 isn't available for download on link above. Instead, download `boot.iso` from the following location: [vault.centos.org/8.5.2111/BaseOS/x86_64/kickstart/images/](https://vault.centos.org/8.5.2111/BaseOS/x86_64/kickstart/images/)
 
 If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enterprise Linux 8.2 (rhel8.2)`
 
@@ -126,6 +127,7 @@ Choose Time Zone and Network Time: On.
 Do this after enabling network for the server. (Turn on and off Network Time will remove warning about networking if you completed step 3.)
 
 #### 5. Software Selection
+If needed, add the the following URL as _Installation Source_. Select _On the network_, then click _Closest mirror_ and change to `https://`. Enter the following: `https://vault.centos.org/8.5.2111/BaseOS/x86_64/os/` and then click _Done_.
 
 Change to `Minimal Install`
 
