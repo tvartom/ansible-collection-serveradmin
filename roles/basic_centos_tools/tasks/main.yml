@@ -36,7 +36,8 @@
 - name: Enable REMI-repo (DNF)
   become: yes
   dnf:
-    name: http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    name: https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    disable_gpg_check: true
     state: latest
   when: ansible_os_family == "RedHat"
 
