@@ -42,7 +42,7 @@
     name: php
     path: "{{ php_cli_bin }}"
     link: /usr/bin/php
-  when: php_cli_bin | d("/usr/bin/php") != /usr/bin/php
+  when: php_cli_bin | d("/usr/bin/php") != "/usr/bin/php"
 
 #- include_role:
 #    name: dnf_module
