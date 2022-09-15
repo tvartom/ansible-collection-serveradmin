@@ -35,6 +35,15 @@
     state: present
   when: ansible_os_family == "RedHat"
 
+### python default for python3 #################################################################
+- name: "Set php74/php8 etc as default php"
+  become: yes
+  alternatives:
+    name: php
+    path: "{{ php_cli_bin }}"
+    link: /usr/bin/php
+  when: php_cli_bin | d("/usr/bin/php") != /usr/bin/php
+
 #- include_role:
 #    name: dnf_module
 #    tasks_from: install_package_from_module
