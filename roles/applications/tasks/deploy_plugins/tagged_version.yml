@@ -159,6 +159,9 @@
             }
             , recursive=True) -}}
 
+    - name: Visa deploy_facts
+      debug:
+        var: deploy_facts[deploy.repo]
 
     - name: Checka ut rätt version
       become: yes
