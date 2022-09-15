@@ -17,6 +17,15 @@
     chdir: "{{ application.path }}"
   register: pm2_bin_path
 
+- name: "Show path pm2 bin"
+  debug:
+    var: pm2_bin_path
+
+- name: "Missing: path pm2 bin"
+  fail:
+    msg: "Path to pm2 not registrerd"
+  when: pm2_bin_path.stdout|length < 2 
+
 - name: "Setup and build Typescript/Javascript application"
   when:  deploy.build | d(false)
   block:
