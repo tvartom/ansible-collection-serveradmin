@@ -98,6 +98,12 @@
     state: present
   loop: "{{ applications_info | map(attribute='linux_packages') | flatten | unique | list }}"
 
+- name: "Installera alla locales"
+  become: yes
+  dnf:
+    name: glibc-all-langpacks
+    state: present
+
 # Installera locales från alla webinstances
 # https://github.com/ansible/ansible/issues/44708
 - name: "Check if locales exists"
