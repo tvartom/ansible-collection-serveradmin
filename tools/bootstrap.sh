@@ -29,6 +29,11 @@ SA_REPO="git@$SA_REPO_HOST:$SA_REPO_USER/$SA_REPO_NAME.git"
 echo $SA_REPO;
 
 echo ""
+echo "### Serveradmin branch ###"
+read -p "Repository branch [default]: " SA_BRANCH
+SA_BRANCH="${SA_BRANCH:+ -b $SA_BRANCH}"
+
+echo ""
 echo "### Serveradmin settings ###"
 SA_INVENTORY_NAME_DEFAULT="$(hostname)"
 read -p "Name of this server in inventory-file [$SA_INVENTORY_NAME_DEFAULT]: " SA_INVENTORY_NAME
@@ -146,7 +151,7 @@ if [ -d "$SA_PATH_REPO/.git" ]; then
 fi
 	echo "Cloning serveradmin-repo..."
 # git 2.10+ stödjer core.sshCommand
-sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive $SA_REPO "$SA_PATH_REPO"
+sudo -u "$SA_USER" git -c core.sshCommand="ssh -i $SA_DEPLOY_KEY" clone --recursive$SA_BRANCH $SA_REPO "$SA_PATH_REPO"
 #else
 #	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' pull --recurse-submodules"
 #	sudo -i -u "$SA_USER" -- bash -c "cd $SA_PATH_REPO && git -c core.sshCommand='ssh -i $SA_DEPLOY_KEY' submodule update --force --recursive"
