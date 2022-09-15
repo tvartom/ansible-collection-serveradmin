@@ -19,12 +19,19 @@
     - bootstrap
 
 #byobu finns i detta:
-- name: Enable EPEL-repo
+- name: Enable EPEL-repo (DNF)
   become: yes
-  yum:
+  dnf:
     name: epel-release
     state: latest
   when: ansible_os_family == "RedHat"
+
+- name: "Enable crb-repo (DNF)"
+  become: yes
+  shell:
+    cmd: >-
+      dnf config-manager --set-enabled crb
+    warn: false # Ansible is warning for using dnf
 
 - name: "Set timezone on server (Stockholm is default)"
   become: yes
