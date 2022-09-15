@@ -14,7 +14,7 @@ Environment=PM2_HOME=/home/system/{{ application.process_user }}/.pm2
 PIDFile=/home/system/{{ application.process_user }}/.pm2/pm2.pid
 Restart=on-failure
 
-ExecStart={{  pm2_bin_path.stdout }} start {{  application.path }}/pm2/ecosystem.yaml
+ExecStart={{  pm2_bin_path.stdout | mandatory('Pm2_bin_path is missing') }} start {{  application.path }}/pm2/ecosystem.yaml
 ExecReload={{ pm2_bin_path.stdout }} reload {{ application.path }}/pm2/ecosystem.yaml --update-env
 ExecStop={{   pm2_bin_path.stdout }} stop {{   application.path }}/pm2/ecosystem.yaml
 

@@ -86,7 +86,7 @@ Before running the VM, go into settings:
 > Git repositories will be cloned into `C:\mydevstuff\<organisationname>\<Repo-name>` or `/home/<user>/workspace/<organisationname>/<Repo-name>`
 
 
-Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for CentOS. See `CentOS`for next step.
+Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for AlmaLinux. See `AlmaLinux`for next step.
 
 To escape your trapped mouse-pointer in VirtualBox use **Right Ctrl**.
 
@@ -106,7 +106,7 @@ Download AlmaLinux Minimal ISO-image: [almalinux.org](https://almalinux.org/)
 
 If asked for operating system use Red Hat (64-bit).
 
-### CentOS setup
+### AlmaLinux setup
 
 #### 1. Choose English (United States) as OS language. (For Googlable error messages) Press Next.
 
