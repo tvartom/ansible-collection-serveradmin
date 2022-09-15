@@ -9,10 +9,10 @@ java_and_maven_enable: false
 mariadb_enable: true
 sendmail_enable: false
 
-php_package: php
+php_package: php74-php
 php_fpm_service: php-fpm
 php_fpm_pool_path: /etc/php-fpm.d
-webserver_php_version: 7.3
+webserver_php_version: 7.4
 
 nginx_user: nginx
 nginx_group: nginx

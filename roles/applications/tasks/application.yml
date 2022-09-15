@@ -202,17 +202,26 @@
 
 ### PHP Composer ################################################################
 
-- name: "Install php-cli and php-json for composer"
-  include_role:
-    name: dnf_module
-    tasks_from: install_package_from_module
-  vars:
-    dnf:
-      module_name: php
-      module_spec: "{{ webserver_php_version }}"
-      packages:
-        - "{{ php_package }}-cli"
-        - "{{ php_package }}-json"
+#- name: "Install php-cli and php-json for composer"
+#  include_role:
+#    name: dnf_module
+#    tasks_from: install_package_from_module
+#  vars:
+#    dnf:
+#      module_name: php
+#      module_spec: "{{ webserver_php_version }}"
+#      packages:
+#        - "{{ php_package }}-cli"
+#        - "{{ php_package }}-json"
+- name: Install php-cli and php-json for composer
+  become: yes
+  dnf:
+    name:
+      - "{{ php_package }}-cli"
+      - "{{ php_package }}-json"
+    state: present
+  when: ansible_os_family == "RedHat"
+
 
 - name: "Create ~/.local/bin"
   become: yes
