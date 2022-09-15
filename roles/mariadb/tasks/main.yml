@@ -21,7 +21,7 @@
     #baseurl: "http://yum.mariadb.org/10.2/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_version[0:3] | replace('.', '') }}-amd64"
     #baseurl: "http://yum.mariadb.org/10.2/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
     #baseurl: "http://yum.mariadb.org/10.1/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
-    baseurl: "http://yum.mariadb.org/{{ mariadb_version }}/{{ ansible_distribution | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
+    baseurl: "http://yum.mariadb.org/{{ mariadb_version }}/{{ ansible_distribution_file_variety | lower | replace('redhat', 'rhel') }}{{ ansible_distribution_major_version | replace('.', '') }}-amd64"
     gpgkey: https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
     gpgcheck: yes
     state: present
