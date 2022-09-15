@@ -96,7 +96,7 @@ Serveradmin require currently AlmaLinux 9.0 (And isn't maintained to support old
 
 ### On AWS
 
-Search for `ami-0474ce84d449ee66f` for `8.2.2004` in `eu-north-1`, or look at [wiki.centos.org/Cloud/AWS](https://wiki.centos.org/Cloud/AWS) for other regions.
+Search for `AlmaLinux OS 9 (x86_64)` from `AlmaLinux OS Foundation`.
 
 Don't foreget to setup auto-recover [Amazon docs: UsingAlarmActions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/UsingAlarmActions.html)
 

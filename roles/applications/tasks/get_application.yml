@@ -4,6 +4,7 @@
 #- include_tasks: get_application.yml
 #  vars:
 #     application_instance: "{ ett item från application_instances }"
+#     validate_config: true (Default: false)
 #
 # Returnerar: application
 
@@ -182,7 +183,7 @@
 - name: "Validate application config."
   fail:
     msg: "{{ item.msg | d('') }} ({{ item.key }} is missing in config for application. Create {{ application.path }}/config/{{ item.suggested_filename | d('<any filname>.yaml|.yml|.json') }} with the settings.)"
-  when: application.config[item.key] is not defined
+  when: validate_config | d(false) and application.config[item.key] is not defined
   loop: "{{ application.config_validate | d([]) }}"
 
 - name: "Loop over all webinstances for this application"
