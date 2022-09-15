@@ -37,6 +37,9 @@
 
 ### python default for python3 #################################################################
 - debug:
+    var: "php_cli_bin"
+
+- debug:
     msg: "{{ php_cli_bin | d('/usr/bin/php') }}"
 - name: "Set php74/php8 etc as default php"
   become: yes

@@ -14,6 +14,7 @@ php_fpm_service: php74-php-fpm
 php_etc_path: /etc/opt/remi/php74
 php_fpm_pool_path: "{{ php_etc_path }}/php-fpm.d"
 webserver_php_version: 7.4
+php_cli_bin: "/usr/bin/php74"
 
 php_xdebug_ini: "{{ php_etc_path }}/php.d/15-xdebug.ini"
 
