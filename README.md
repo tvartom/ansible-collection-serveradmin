@@ -4,7 +4,7 @@ An Ansible Collection
 
 ## What is Serveradmin?
 
-Serveradmin is an Ansible Collection for setting up a basic CentOS 8.2 web server.
+Serveradmin is an Ansible Collection for setting up a basic AlmaLinux 9.0 web server.
 The main purpose is to easily set up a server with sane security, and all in one configuration to build, deploy and host.
 A server can also be run locally (As a virtual server) in _`devmode`_, offering the exact same setup as your production server.
 
@@ -20,7 +20,7 @@ Basic components:
 * Encrypted backups with Rsnapshot
 * SSL-certificate with Letsencrypt (with updates) or Self signed
 
-* When logging in to the server, an admin user sees a splash-screen with information such as valid certificates, last backup and basic help of scripts to manage this server.
+* Splash-screen when logging in to the server. An akdmin user sees a splash-screen with information such as valid certificates, last backup and basic help of scripts to manage this server.
 * An application is running as a dedicated user, with little access to the rest of the server, and none to other applications.
 * Deploy script is generated, which pulls source from a repo, pushes back the version as an annotated git tag, builds the app and deploys it. No need for any extra build server like Jenkins or be dependent on Github Actions.
 
@@ -90,9 +90,9 @@ Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk
 
 To escape your trapped mouse-pointer in VirtualBox use **Right Ctrl**.
 
-### CentOS
+### AlmaLinux
 
-Serveradmin require currently CentOS 8.2.2004 (And isn't maintained to support older versions)
+Serveradmin require currently AlmaLinux 9.0 (And isn't maintained to support older versions)
 
 ### On AWS
 
@@ -102,10 +102,9 @@ Don't foreget to setup auto-recover [Amazon docs: UsingAlarmActions](https://doc
 
 ### As local virtual server
 
-~~Download CentOS Minimal ISO-image: [centos.org/download](https://www.centos.org/download/)~~
-Since 2021-12-31 CentOS 8 isn't available for download on link above. Instead, download `boot.iso` from the following location: [vault.centos.org/8.5.2111/BaseOS/x86_64/kickstart/images/](https://vault.centos.org/8.5.2111/BaseOS/x86_64/kickstart/images/)
+Download AlmaLinux Minimal ISO-image: [almalinux.org](https://almalinux.org/)
 
-If asked for operating system and `CentOS 8.2` is missing, choose `Red Hat Enterprise Linux 8.2 (rhel8.2)`
+If asked for operating system use Red Hat (64-bit).
 
 ### CentOS setup
 
@@ -127,9 +126,8 @@ Choose Time Zone and Network Time: On.
 Do this after enabling network for the server. (Turn on and off Network Time will remove warning about networking if you completed step 3.)
 
 #### 5. Software Selection
-If needed, add the the following URL as _Installation Source_. Select _On the network_, then click _Closest mirror_ and change to `https://`. Enter the following: `https://vault.centos.org/8.5.2111/BaseOS/x86_64/os/` and then click _Done_.
 
-Change to `Minimal Install`
+Should be: `Minimal Install`
 
 #### 6. Installation Destination
 
@@ -139,7 +137,7 @@ Leave default and confirm with `Done`.
 
 Set Root Password and user if wanted. (The user will be set up by `<prefix>_ansible_serveradmin`, so not needed.)
 
-Wait until completed. Remove CentOS installation disk and reboot.
+Wait until completed. Remove AlmaLinux installation disk and reboot.
 
 #### 8. Log in as `root` to make sure your network is set up and find your ip-address.
 
@@ -149,7 +147,7 @@ Run: `nmcli connection modify <connection-name> autoconnect yes` for every disco
 
 This will set `ONBOOT=yes` for the connection in `/etc/sysconfig/network-scripts/ifcfg-<connection-name>`. 
 
-The reason to do this is that CentOS setup seems to fail to activate all network interfaces/connections for interfaces.
+This seems only to be a problem with older CentOS which failed to activate all network interfaces/connections for interfaces.
 You can see this specific settings by: `nmcli --fields name,autoconnect connection show` 
 
 Run: `nmcli` again to make sure everything looks ok, and find your new ip-address.
@@ -160,6 +158,7 @@ Log out from the server in the console window. You can even restart the virtual 
 
 #### 9. You can from now on SSH to the machine from your host OS
 
+However `PermitRootLogin` has to be changed to `yes` in `/etc/ssh/sshd_config`.
 Use `ssh root@<ip address>` or Putty. This mean that copy paste, scroll back, and window resize will work.
 
 #### 10. Continue with `Bootstrap a server`

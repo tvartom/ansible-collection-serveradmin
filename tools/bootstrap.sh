@@ -126,9 +126,10 @@ echo -n "Install Git..."
 echo -e "Done\n"
 
 echo "Installing Python3 with pip..."
-dnf -y install python3 python3-pip
+dnf -y install python3 python3-pip python3-libselinux
 echo "Installing Ansible with pip to get latest version..."
 sudo -u $SA_USER pip3 install --user ansible
+
 
 echo -n "Creating /repos for serveradmin... "
 mkdir -p "$SA_PATH/repos"

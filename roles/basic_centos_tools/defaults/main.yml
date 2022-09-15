@@ -1,7 +1,7 @@
 ---
 # defaults file for ansible-role-basic_centos_tools
 packages:
-  - name: byobu
+  #- name: byobu
   - name: perl-Image-ExifTool
   #- name: joe #texteditor
   - name: unzip
