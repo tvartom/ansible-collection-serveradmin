@@ -33,6 +33,13 @@
       dnf config-manager --set-enabled crb
     warn: false # Ansible is warning for using dnf
 
+- name: Enable REMI-repo (DNF)
+  become: yes
+  dnf:
+    name: http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    state: latest
+  when: ansible_os_family == "RedHat"
+
 - name: "Set timezone on server (Stockholm is default)"
   become: yes
   timezone:
