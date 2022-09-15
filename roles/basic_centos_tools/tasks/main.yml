@@ -18,6 +18,13 @@
   tags:
     - bootstrap
 
+- name: "Enable crb-repo (DNF)"
+  become: yes
+  shell:
+    cmd: >-
+      dnf config-manager --set-enabled crb
+    warn: false # Ansible is warning for using dnf
+
 #byobu finns i detta:
 - name: Enable EPEL-repo (DNF)
   become: yes
@@ -25,13 +32,6 @@
     name: epel-release
     state: latest
   when: ansible_os_family == "RedHat"
-
-- name: "Enable crb-repo (DNF)"
-  become: yes
-  shell:
-    cmd: >-
-      dnf config-manager --set-enabled crb
-    warn: false # Ansible is warning for using dnf
 
 - name: Import REMI GPG key.
   become: yes

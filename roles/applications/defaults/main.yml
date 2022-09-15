@@ -10,7 +10,7 @@ mariadb_enable: true
 sendmail_enable: false
 
 php_package: php74-php
-php_fpm_service: php-fpm
+php_fpm_service: php74-php-fpm
 php_fpm_pool_path: /etc/php-fpm.d
 webserver_php_version: 7.4
 
@@ -29,7 +29,7 @@ applications_public_folder_name: 'public_'
 
 # For available versions:
 # dnf module list nginx
-webserver_nginx_version: 1.16
+#webserver_nginx_version: 1.16
 
 webserver_use_ssl: true
 webserver_use_letsencrypt: "{{ (not applications_devmode) and webserver_use_ssl }}"
