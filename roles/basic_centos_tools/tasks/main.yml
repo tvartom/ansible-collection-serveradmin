@@ -85,6 +85,7 @@
   alternatives:
     name: python
     path: /usr/bin/python3
+    link: /usr/bin/python
 
 #Source: https://serverfault.com/questions/959026/how-do-i-generate-and-set-the-locale-using-ansible
 
