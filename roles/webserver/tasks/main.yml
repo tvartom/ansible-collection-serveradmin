@@ -4,10 +4,10 @@
     tasks_from: default_values
     public: yes
 
-- include: nginx.yml
+- include_tasks: nginx.yml
 
-- include: ssl_and_letsencrypt.yml
+- include_tasks: ssl_and_letsencrypt.yml
   when: webserver_use_ssl
 
-- include: sendmail.yml
+- include_tasks: sendmail.yml
   when: sendmail_enable | d(false)

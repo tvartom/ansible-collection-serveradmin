@@ -7,21 +7,23 @@
    tasks_from: default_values
    public: yes
 
-- include_role:
-    name: dnf_module
-    tasks_from: install_package_from_module
-  vars:
-    dnf:
-      module_name: nginx
-      module_spec: "{{ webserver_nginx_version }}"
-      packages:
-        - nginx
-  when: ansible_os_family == "RedHat"
+# 2022-09-15 nginx 1.20 is included in AlmaLinux 9
+#- include_role:
+#    name: dnf_module
+#    tasks_from: install_package_from_module
+#  vars:
+#    dnf:
+#      module_name: nginx
+#      module_spec: "{{ webserver_nginx_version }}"
+#      packages:
+#        - nginx
+#  when: ansible_os_family == "RedHat"
 
-- name: Install Extra packages for Nginx (YUM)
+- name: Install Nginx (DNF)
   become: yes
-  yum:
+  dnf:
     name:
+      - nginx
       - httpd-tools  #För htpasswd
 #    update_cache: yes
     state: present
