@@ -14,20 +14,20 @@ fi
 
 if [[ $REPLY =~ ^[Aa]$ ]]; then
   #Activate:
-  sudo sed -i -E -e "s/^;(zend_extension=xdebug.so)/\1/" /etc/php.d/15-xdebug.ini
+  sudo sed -i -E -e "s/^;(zend_extension=xdebug.so)/\1/" {{ php_xdebug_ini }}
   sudo service php-fpm restart
 fi
 
 if [[ $REPLY =~ ^[Dd]$ ]]; then
   # Disable:
-  sudo sed -i -E -e "s/^(zend_extension=xdebug.so)/;\1/" /etc/php.d/15-xdebug.ini 
+  sudo sed -i -E -e "s/^(zend_extension=xdebug.so)/;\1/" {{ php_xdebug_ini }} 
   sudo service php-fpm restart
 fi
 
 
 
 zend_extension=''
-source <(sed -E -e "s/;/#/g" -e "s/\.(.*=)/_\1/g" -e "s/ ?= ?/=/g" /etc/php.d/15-xdebug.ini | grep = )
+source <(sed -E -e "s/;/#/g" -e "s/\.(.*=)/_\1/g" -e "s/ ?= ?/=/g" {{ php_xdebug_ini }} | grep = )
 
 if [ "$zend_extension" == "xdebug.so" ]; then
   echo -e "  ${BIYellow}Xdebug:${NC} ${BWhite}Active${NC} ${Yellow}Use '{{ organisation.command_prefix }}xdebug' to disable Xdebug for php.${NC}"

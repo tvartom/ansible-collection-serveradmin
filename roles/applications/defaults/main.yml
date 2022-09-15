@@ -11,7 +11,8 @@ sendmail_enable: false
 
 php_package: php74-php
 php_fpm_service: php74-php-fpm
-php_fpm_pool_path: /etc/php-fpm.d
+php_etc_path: /etc/opt/remi/php74
+php_fpm_pool_path: "{{ php_etc_path }}/php-fpm.d"
 webserver_php_version: 7.4
 
 nginx_user: nginx

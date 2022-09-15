@@ -1,6 +1,6 @@
 ---
 #CentOS 8, with PHP 7.3:
-php_opcache_ini: /etc/php.d/10-opcache.ini
+php_opcache_ini: "{{ php_etc_path }}/php.d/10-opcache.ini
 
 
 # Values picked from here: https://docs.nextcloud.com/server/20/admin_manual/installation/server_tuning.html#enable-php-opcache
