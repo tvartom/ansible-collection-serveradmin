@@ -7,7 +7,9 @@
 #php_xdebug_ini: /etc/php.d/15-xdebug.ini
 
 #AlmaLinux 9, with Remi PHP 7.4:
-php_xdebug_ini: "{{ php_etc_path }}/php.d/15-xdebug.ini"
+#php_xdebug_ini: "{{ php_etc_path }}/php.d/15-xdebug.ini"
+php_xdebug_ini: "/etc/opt/remi/php74/php.d/15-xdebug.ini"
+
 
 php_xdebug_default:
   remote_enable: 1
