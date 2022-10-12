@@ -15,4 +15,4 @@ set -e
 source {{ serveradmin.path }}/include_common.sh
 
 cd "{{ serveradmin.path }}/repos/serveradmin{{ devmode_suffix }}"
-ansible-playbook --extra-vars "target='{{ target }}' connection_type='local' ansible_started_by_user='$1' $2" "$3"
+ansible-playbook --extra-vars "target='{{ target }}' connection_type='local' ansible_started_by_user='$1' $3" "$2"
