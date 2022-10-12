@@ -5,7 +5,8 @@
 
 # --extra-vars kan skickas med till ansible som första parameter.
 # mellanslag
-# <prefix>ansible_applications "webserver_use_ssl=false nextvar='test'"
+# <prefix>ansible_applications "webserver_use_ssl=False nextvar='my string'"
+# (boolean måste skrivas som True/False)
 
 {% set agent_forwarding = item.meta.agent_forwarding | default(false) %}
 

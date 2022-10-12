@@ -194,6 +194,10 @@ Remember to have agent forward activated for your ssh-connection
 
 #### 8. Run: `<prefix>_ansible_applications` to set up all application-instances on this server. This will configure nginx, redis, php, mariadb, sign ssl-certificate etc.
 
+To skip Letsencrypt cert-signing, you can run:
+
+`<prefix>_ansible_applications "webserver_use_ssl=False"`
+
 #### 9. Only for devmode
 
 Run `<prefix>_init_devmode` (This must be run by the devmode user)
