@@ -52,7 +52,7 @@ setfacl -R -m u:{{ serveradmin.process_user }}:rwx "${SSH_AUTH_SOCK%/*}" && echo
 {% endif %}
 
 {% if item.meta.run_as_serveradmin | d(true) %}
-sudo -u {{ serveradmin.process_user }} -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) "$PLAYBOOK_TO_RUN"
+sudo -u {{ serveradmin.process_user }} -i {% if agent_forwarding %}SSH_AUTH_SOCK="$SSH_AUTH_SOCK" {% endif %}ansiblerunner_helper.sh $(whoami) "$1" "$PLAYBOOK_TO_RUN"
 {% else %}
 ansiblerunner_helper.sh $(whoami) "$1" "$PLAYBOOK_TO_RUN"
 {% endif %}
