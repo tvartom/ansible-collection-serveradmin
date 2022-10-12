@@ -39,7 +39,7 @@ webserver_use_ssl: true
 webserver_use_letsencrypt: "{{ (not applications_devmode) and webserver_use_ssl }}"
 webserver_generate_dhparam: "{{ (webserver_use_ssl and not applications_devmode) | ternary('confirm', false) }}"
 
-applications_enable_https_by_default: true
+applications_enable_https_by_default: "{{ webserver_use_ssl }}"
 
 
 application_templates:
@@ -56,7 +56,7 @@ application_templates:
         domaininstances:
           - domains: ["_"]
             default_server: true
-        enable_https: true
+        enable_https: "{{ webserver_use_ssl }}"
         enable_http2: false
         only_https: false
         cert_handler: "selfsigned"
@@ -76,7 +76,7 @@ application_templates:
         domaininstances:
           - domains: ["_"]
             default_server: true
-        enable_https: true
+        enable_https: "{{ webserver_use_ssl }}"
         enable_http2: false
         only_https: false
         cert_handler: "selfsigned"
@@ -115,7 +115,7 @@ application_templates:
       web:
         use_custom_nginx_include_file: true
         enable_php: true
-        enable_https: true
+        enable_https: "{{ webserver_use_ssl }}"
         enable_http2: true
         upload_max_filesize: 16G
     enable_redis: true
@@ -130,7 +130,7 @@ application_templates:
         root_dir: wordpress
         #use_custom_nginx_include_file: true
         enable_php: true
-        enable_https: true
+        enable_https: "{{ webserver_use_ssl }}"
         enable_http2: true
         # upload_max_filesize: 16G
         wordpress: true
