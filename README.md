@@ -86,7 +86,7 @@ Before running the VM, go into settings:
 > Git repositories will be cloned into `C:\mydevstuff\<organisationname>\<Repo-name>` or `/home/<user>/workspace/<organisationname>/<Repo-name>`
 
 
-Klick **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for AlmaLinux. See `AlmaLinux`for next step.
+Click **Start** in VirtualBox to launch. You will be asked `Select start-up disk`. Choose the ISO-image for AlmaLinux. See `AlmaLinux`for next step.
 
 To escape your trapped mouse-pointer in VirtualBox use **Right Ctrl**.
 
