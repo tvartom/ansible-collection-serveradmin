@@ -1,31 +1,4 @@
 ---
-- name: "Get path for app-user"
-  become: yes
-  become_user: "{{ application.process_user }}"
-  shell:
-    cmd: >-
-      /bin/bash -lc 'echo "$PATH"'
-    chdir: "{{ application.path }}"
-  register: pm2_user_path
-
-- name: "Get path pm2 bin"
-  become: yes
-  become_user: "{{ application.process_user }}"
-  shell:
-    cmd: >-
-      /bin/bash -lc 'echo "$(which pm2)"'
-    chdir: "{{ application.path }}"
-  register: pm2_bin_path
-
-- name: "Show path pm2 bin"
-  debug:
-    var: pm2_bin_path
-
-- name: "Missing: path pm2 bin"
-  fail:
-    msg: "Path to pm2 not registrerd"
-  when: pm2_bin_path.stdout|length < 2 
-
 - name: "Setup and build Typescript/Javascript application"
   when:  deploy.build | d(false)
   block:
@@ -114,6 +87,36 @@
       loop: "{{ deploy.apps }}"
       loop_control:
         loop_var: app
+
+    # Used in pm2.service.j2
+    - name: "Get path for app-user"
+      become: yes
+      become_user: "{{ application.process_user }}"
+      shell:
+        cmd: >-
+          /bin/bash -lc 'echo "$PATH"'
+        chdir: "{{ application.path }}"
+      register: pm2_user_path
+
+    # Used in pm2.service.j2
+    - name: "Get path pm2 bin"
+      become: yes
+      become_user: "{{ application.process_user }}"
+      shell:
+        cmd: >-
+          /bin/bash -lc 'echo "$(which pm2)"'
+        chdir: "{{ application.path }}"
+      register: pm2_bin_path
+
+    # Debug pm2_bin_path
+    - name: "Show path pm2 bin"
+      debug:
+        var: pm2_bin_path
+    # Fail if missing
+    - name: "Missing: path pm2 bin"
+      fail:
+        msg: "Path to pm2 not registrerd"
+      when: pm2_bin_path.stdout|length < 2 
 
     # This is a workaround:
     # 1. Create env from template
