@@ -162,6 +162,7 @@
   tags:
     - bootstrap
 
+# The repo is cloned, but the key for accessing github isn't present
 - include_role:
     name: git
     tasks_from: clone_repo

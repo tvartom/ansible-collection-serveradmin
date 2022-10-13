@@ -46,7 +46,6 @@
     clone_repo:
       dest: "{{ deploy_facts[repo.name].source }}"
       user: "{{ application.process_user }}"
-      update: false
   when: not applications_devmode
 
 - name: Hämta alla taggar och uppdateringar ifrån repot
