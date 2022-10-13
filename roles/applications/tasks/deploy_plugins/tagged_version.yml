@@ -162,14 +162,24 @@
     - name: Visa deploy_facts
       debug:
         var: deploy_facts[deploy.repo]
-
+    
+    
     - name: Checka ut rätt version
       become: yes
       become_user: "{{ application.process_user }}"
-      git:
-        version: "{{ deploy_facts[deploy.repo].version }}"
-        repo: "{{ deploy_facts[deploy.repo].repo.url }}"
-        dest: "{{ deploy_facts[deploy.repo].source }}"
+      shell: |
+        git reset --hard {{deploy_facts[deploy.repo].version }}
+      args:
+        chdir: "{{ deploy_facts[deploy.repo].source }}"
+
+    # Ansible git - buggig med become_user
+    # - name: Checka ut rätt version
+    #   become: yes
+    #   become_user: "{{ application.process_user }}"
+    #   git:
+    #     version: "{{ deploy_facts[deploy.repo].version }}"
+    #     repo: "{{ deploy_facts[deploy.repo].repo.url }}"
+    #     dest: "{{ deploy_facts[deploy.repo].source }}"
 
     - name: Hämta description
       become: yes
