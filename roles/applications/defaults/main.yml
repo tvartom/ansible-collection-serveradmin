@@ -122,6 +122,10 @@ application_templates:
     deploy:
       - plugin: nextcloud
         webinstance: web
+    linux_packages:
+      # ./occ kräver denna:
+      - "{{ php_package }}-process"
+
 
   wordpress:
     webinstances:
