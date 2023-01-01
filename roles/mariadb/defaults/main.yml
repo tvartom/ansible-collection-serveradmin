@@ -1,7 +1,7 @@
 ---
 # For AlmaLinux 9, minimum of 10.5 is required:
 # https://mirror.mariadb.org/yum/
-mariadb_version: 10.5
+mariadb_version: 10.6
 
 mariadb_conf_server_character_set: utf8mb4
 mariadb_conf_server_collation: utf8mb4_swedish_ci
