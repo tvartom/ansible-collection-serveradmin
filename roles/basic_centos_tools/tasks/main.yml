@@ -42,7 +42,7 @@
 - name: Enable REMI-repo (DNF)
   become: yes
   dnf:
-    name: https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    name: https://rpms.remirepo.net/enterprise/remi-release-{{  ansible_distribution_major_version }}.rpm
     state: latest
 
 - name: "Set timezone on server (Stockholm is default)"
