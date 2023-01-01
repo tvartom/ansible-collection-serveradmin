@@ -7,6 +7,7 @@
     - "os_{{ ansible_distribution }}_{{ ansible_distribution_major_version }}.yml"
     - "os_{{ ansible_distribution }}.yml"
     - "os_{{ ansible_os_family }}.yml"
+    #- "os_{{ ansible_distribution_file_variety }}.yml"
   tags: samba
 
 - name: Install Samba packages
