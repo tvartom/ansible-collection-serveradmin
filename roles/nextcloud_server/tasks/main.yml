@@ -24,7 +24,7 @@
 #      - "{{ php_package }}-pecl-redis" #https://pagure.io/epel/issue/75 #https://serverfault.com/questions/997028/where-is-the-redis-module-for-php-on-centos-8-php-pecl-redis
       - bzip2
     state: present
-  when: ansible_os_family == "RedHat"
+  when: ansible_distribution_file_variety == "RedHat"
   notify: "Restart php-fpm"
   tags:
     - nextcloud

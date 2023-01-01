@@ -22,7 +22,7 @@
     name:
       - "{{ php_package }}-xdebug"
     state: present
-  when: ansible_os_family == "RedHat"
+  when: ansible_distribution_file_variety == "RedHat"
   notify: "Reload php-fpm"
 
 - name: "Combine settings with default-values for xdebug"

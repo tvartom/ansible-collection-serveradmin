@@ -78,7 +78,7 @@
         #Example for linux_packages:
         # - pdftoppm
         # - "{{ php_package }}-bcmath"
-        # - "{{ 'redhat-package' if ansible_os_family == "RedHat" else 'debian-package' }}"
+        # - "{{ 'redhat-package' if ansible_distribution_file_variety == "RedHat" else 'debian-package' }}"
       locales: []
         #Example for locales:
         # - sv_SE # Svenska (Sverige)

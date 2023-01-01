@@ -26,7 +26,7 @@
       - cifs-utils
     update_cache: no
     state: latest
-  when: ansible_os_family == "RedHat"
+  when: ansible_distribution_file_variety == "RedHat"
   notify: "Start/Restart/enable autofs service"
   tags:
     - autofs

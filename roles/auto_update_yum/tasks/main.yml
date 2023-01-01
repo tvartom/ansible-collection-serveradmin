@@ -8,7 +8,6 @@
       - yum-cron
     update_cache: yes
     state: latest
-  when: ansible_os_family == "RedHat"
 
 
 # Notes:

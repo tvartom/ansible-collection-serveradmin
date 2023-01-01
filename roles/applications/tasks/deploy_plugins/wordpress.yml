@@ -195,8 +195,6 @@
       yum:
         name: patch
         state: present
-      when:
-        - ansible_os_family == "RedHat"
 
     - name: "CiviCRM installer patch for unix socket unix(/var/lib/mysql/mysql.sock)"
       become: yes
