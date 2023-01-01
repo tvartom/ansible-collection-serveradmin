@@ -123,8 +123,10 @@ application_templates:
       - plugin: nextcloud
         webinstance: web
     linux_packages:
-      # ./occ kräver denna:
+      # ./occ kräver dessa:
       - "{{ php_package }}-process"
+      - "{{ php_package }}-xml"
+
 
 
   wordpress:
