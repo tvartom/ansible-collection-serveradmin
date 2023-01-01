@@ -39,7 +39,7 @@
   become: yes
   unarchive:
     remote_src: yes
-    src: "https://dlcdn.apache.org//maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+    src: "https://dlcdn.apache.org/maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
     #src: "http://apache.mirrors.spacedump.net/maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
     #src: "http://mirror.vorboss.net/apache/maven/maven-{{ maven_version | first }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
     #src: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
