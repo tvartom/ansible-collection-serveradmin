@@ -220,7 +220,7 @@
       - "{{ php_package }}-cli"
       - "{{ php_package }}-json"
     state: present
-  when: ansible_os_family == "RedHat"
+  when: application.any_enable_php_composer
 
 
 - name: "Create ~/.local/bin"
