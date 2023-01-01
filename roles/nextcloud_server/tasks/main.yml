@@ -60,7 +60,7 @@
 - name: Stoppa php-fpm
   become: yes
   service:
-    name: php-fpm
+    name: "{{ php_fpm_service }}"
     state: stopped
   when: nextcloud_install
   tags:
@@ -381,7 +381,7 @@
 - name: "Modify /etc/php.ini"
   become: yes
   lineinfile:
-    dest: "/etc/php.ini"
+    dest: "{{ php_etc_path }}/php.ini"
     state: present
     backrefs: yes
     regexp: "{{ item.regexp }}"
