@@ -18,11 +18,12 @@
   tags:
     - bootstrap
 
-- name: "Enable crb-repo (DNF)"
+#https://wiki.almalinux.org/repos/AlmaLinux.html
+- name: "Enable powertools/crb-repo (DNF)"
   become: yes
   shell:
     cmd: >-
-      dnf config-manager --set-enabled crb
+      dnf config-manager --set-enabled {% if ansible_distribution_major_version > 8 %}crb{% else %}powertools{% endif %}
     warn: false # Ansible is warning for using dnf
 
 #byobu finns i detta:
@@ -31,7 +32,6 @@
   dnf:
     name: epel-release
     state: latest
-  when: ansible_os_family == "RedHat"
 
 - name: Import REMI GPG key.
   become: yes
@@ -44,7 +44,6 @@
   dnf:
     name: https://rpms.remirepo.net/enterprise/remi-release-9.rpm
     state: latest
-  when: ansible_os_family == "RedHat"
 
 - name: "Set timezone on server (Stockholm is default)"
   become: yes
@@ -58,7 +57,6 @@
   dnf:
     name: "{{ basic.package_to_install }}"
     state: present
-  when: ansible_os_family == "RedHat"
 
 - name: Install some basic tools with disabled GPG-check (DNF)
   become: yes
@@ -66,7 +64,6 @@
     name: "{{ basic.package_to_install_unsafe }}"
     state: present
     disable_gpg_check: true
-  when: ansible_os_family == "RedHat"
 
 
 
@@ -77,7 +74,6 @@
     # CentOS 8: python3-libsemanage
     name: "{{ 'python3-libsemanage' if ansible_distribution_major_version | int > 7 else 'libsemanage-python' }}"
     state: present
-  when: ansible_os_family == "RedHat"
 
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   become: yes
