@@ -9,12 +9,12 @@ java_and_maven_enable: false
 mariadb_enable: true
 sendmail_enable: false
 
-php_package: "php74-php"
-php_fpm_service: "php74-php-fpm"
-php_etc_path: "/etc/opt/remi/php74"
+php_package: "php81-php"
+php_fpm_service: "php81-php-fpm"
+php_etc_path: "/etc/opt/remi/php81"
 php_fpm_pool_path: "{{ php_etc_path }}/php-fpm.d"
-webserver_php_version: 7.4
-php_cli_bin: "/usr/bin/php74"
+webserver_php_version: 8.1
+php_cli_bin: "/usr/bin/php81"
 
 php_xdebug_ini: "{{ php_etc_path }}/php.d/15-xdebug.ini"
 
