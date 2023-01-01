@@ -114,7 +114,7 @@
     umask 027;
     git{{
       ' -c core.sshCommand="ssh -i ' ~ user_home.stdout ~ '/.ssh/' ~ repo.unique_deploy_key ~ '"' if repo.use_unique_deploy_key else ''
-    }} clone --recursive {{ ' --branch ' ~ repo.branch if repo.branch else '' }} {{ repo.url }} "{{ clone_repo.dest }}"
+    }} clone --recursive {{ ' --branch ' ~ repo.branch if repo.branch | d(false) else '' }} {{ repo.url }} "{{ clone_repo.dest }}"
   args:
     chdir: "{{ clone_repo.dest | dirname }}"
     creates: "{{ clone_repo.dest }}/.git"
