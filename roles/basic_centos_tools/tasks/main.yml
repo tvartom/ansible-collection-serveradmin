@@ -23,7 +23,7 @@
   become: yes
   shell:
     cmd: >-
-      dnf config-manager --set-enabled {% if ansible_distribution_major_version == 8 %}powertools{% else %}crb{% endif %}
+      dnf config-manager --set-enabled {% if ansible_distribution_major_version | int > 8 %}crb{% else %}powertools{% endif %}
     warn: false # Ansible is warning for using dnf
 
 #byobu finns i detta:
