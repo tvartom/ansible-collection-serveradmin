@@ -93,7 +93,6 @@
       any_enable_php_composer: false
       any_enable_https: false
       any_letsencrypt: false
-      sendmail_gmail_oauth2: false
 
 - name: "Generate default values for webinstance"
   set_fact:
