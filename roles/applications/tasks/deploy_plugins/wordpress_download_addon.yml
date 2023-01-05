@@ -15,6 +15,12 @@
 #      use_dir_in_archive: |d(true)
 #      force: |d(false)
 ### Install Wordpress AddOn #########################################################################################
+- name: "deploy_plugins/wordpress_download_addon"
+  debug:
+    msg: "Installing Wordpress {{ addon_type }} {{ addon.name }}"
+
+- debug:
+    var: addon
 
 - name: "Check if addon dir exists"
   become: yes
