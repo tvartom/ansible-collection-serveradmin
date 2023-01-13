@@ -165,6 +165,9 @@ lockfile	{{ backupinstance.dest.root }}/run/rsnapshot-{{ backupinstance.name }}.
 #Ändra filrättigheter, (Annars kan inte filerna tas bort):
 rsync_long_args	--delete --numeric-ids --relative --delete-excluded --no-p --chmod=u=rwX,g=rX,o=
 
+#Bugg från hösten 2022, lägger till --old-args:
+rsync_long_args	--delete --numeric-ids --relative --delete-excluded --no-p --chmod=u=rwX,g=rX,o= --old-args
+
 # ssh has no args passed by default, but you can specify some here.
 #
 #ssh_args	-p 22
