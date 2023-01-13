@@ -2,6 +2,8 @@
 #- include_role:
 #    name: serveradmin
 #    tasks_from: get_serveradmin
+#  vars:
+#     skip_data_migrations: true (Default: false)
 #
 # Returns: serveradmin
 
@@ -100,6 +102,7 @@
               'show_on_splash': data_migration.show_on_splash | default(true) }) -}}
       {%- endfor -%}
       {{- serveradmin_files -}}
+  when: not skip_data_migrations | d(false)
 
 # 2020-08-29 LL Ersatt av serveradmin_files[].when
 #- name: "Filtrera alternativ för bootstrap"

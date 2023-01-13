@@ -158,6 +158,8 @@
 - include_role:
     name: serveradmin
     tasks_from: get_serveradmin
+  vars:
+    skip_data_migrations: true
 # Returns: serveradmin
 
 - name: "Create directories for backup status"
