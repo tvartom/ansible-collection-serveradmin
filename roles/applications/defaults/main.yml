@@ -118,6 +118,14 @@ application_templates:
         enable_https: "{{ webserver_use_ssl }}"
         enable_http2: true
         upload_max_filesize: 16G
+        nginx_includes:
+          httpinstance: |
+            # Source: https://docs.nextcloud.com/server/27/admin_manual/installation/nginx.html
+            # Set the `immutable` cache control options only for assets with a cache busting `v` argument
+            map $arg_v $asset_immutable {
+                "" "";
+                default "immutable";
+            }
     enable_redis: true
     deploy:
       - plugin: nextcloud
