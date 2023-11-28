@@ -7,6 +7,10 @@
     # Path to the root of your installation
     root {{ nextcloud.installdir }}/nextcloud;
 
+    # Efter foljande fel i loggen: "client exceeded http2_max_field_size limit while processing HTTP/2 connection"
+    http2_max_field_size 16k; #4K är default
+    http2_max_header_size 64k; #16K är default
+
     location = /robots.txt {
         allow all;
         log_not_found off;
@@ -33,11 +37,6 @@
         client_max_body_size 16G;
         client_body_timeout 300s;
         fastcgi_buffers 64 4K;
-
-        # Efter foljande fel i loggen: "client exceeded http2_max_field_size limit while processing HTTP/2 connection"
-        http2_max_field_size 16k; #4K är default
-        http2_max_header_size 64k; #16K är default
-
 
         # Enable gzip but do not remove ETag headers
         gzip on;
