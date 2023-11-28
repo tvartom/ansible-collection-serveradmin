@@ -24,8 +24,8 @@
       - "{{ php_package }}-bcmath"
       - "{{ php_package }}-sodium"
       - "{{ php_package }}-pecl-redis"
+      - "{{ php_package }}-pecl-apcu"
       - bzip2
- # php-pecl-apcu # Använder Redis
  # php-opcache # Installed by PHP-role
  # php-mysqlnd  # Installed by PHP-role
  # php-imagick # Säkerhetsrisk...
