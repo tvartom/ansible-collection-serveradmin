@@ -403,3 +403,18 @@
   notify: Restart php-fpm
   tags:
     - nextcloud
+
+- name: "Enable apc for php-cli"
+  become: yes
+  lineinfile:
+    dest: "{{ php_etc_path }}/php.d/40-apcu.ini"
+    state: present
+    backrefs: yes
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backup: yes
+  loop:
+    - regexp: '^;?\s*apc.enable_cli'
+      line: "apc.enable_cli = 1"
+  tags:
+    - nextcloud
