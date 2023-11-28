@@ -9,6 +9,7 @@
     tasks_from: default_values
     public: yes
 
+# https://docs.nextcloud.com/server/27/admin_manual/installation/source_installation.html?highlight=sodium#prerequisites-for-manual-installation
 - name: Install php-dependencis (YUM)
   become: yes
   yum:
@@ -21,8 +22,13 @@
       - "{{ php_package }}-mbstring"
       - "{{ php_package }}-gmp"
       - "{{ php_package }}-bcmath"
-#      - "{{ php_package }}-pecl-redis" #https://pagure.io/epel/issue/75 #https://serverfault.com/questions/997028/where-is-the-redis-module-for-php-on-centos-8-php-pecl-redis
+      - "{{ php_package }}-sodium"
+      - "{{ php_package }}-pecl-redis"
       - bzip2
+ # php-pecl-apcu # Använder Redis
+ # php-opcache # Installed by PHP-role
+ # php-mysqlnd  # Installed by PHP-role
+ # php-imagick # Säkerhetsrisk...
     state: present
   when: ansible_distribution_file_variety == "RedHat"
   notify: "Restart php-fpm"
