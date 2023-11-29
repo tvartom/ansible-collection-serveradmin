@@ -8,7 +8,7 @@ php_opcache_default:
   enable: 1
   interned_strings_buffer: 8
   max_accelerated_files: 10000
-  memory_consumption: 256
+  memory_consumption: 128
   save_comments: 1
   revalidate_freq: 1
   # Nextcloud vill ha lite mer än standard 8.
