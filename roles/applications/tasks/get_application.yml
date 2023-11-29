@@ -101,6 +101,15 @@
       only_https: "{{ webserver_use_letsencrypt }}" # No effect if enable_https == false, false if we don't have real certs.
       enable_http2: true # No effect if enable_https == false
       listen_to_ipv6: true
+      # HTTP Strict Transport Security (HSTS)
+      # https://hstspreload.org/
+      # includeSubDomains och preload är default false.
+      # Även max_age måste ökas för registreras.
+      hsts: 
+        enable: true
+        max_age: 15768000
+        includeSubDomains: false
+        preload: false
       enable_php: false
       enable_php_composer: false
       upload_max_filesize: 1M
@@ -111,13 +120,14 @@
         application: {}
       nginx_includes: {}
       #  [rootlocation:]
+      #  [httpinstance:] # Includes in nginx
       domaininstances: []
       # - domains:
       #     - "primary domain"
       #     [- "secondary domain 1"]
       #     [- "secondary domain 2"]
       #     [- ...]
-      #   [deafult_server: false]
+      #   [default_server: false]
       #   [instance: "default"]
       #   [group: "default"]
       use_custom_nginx_include_file: false

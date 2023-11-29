@@ -45,7 +45,7 @@
     {% endif %}
 
     location / {
-      return 302 http{%- if only_https -%}s{%- endif -%}://{{- domains[0] -}}$request_uri;
+      return 301 http{%- if only_https -%}s{%- endif -%}://{{- domains[0] -}}$request_uri;
     }
   }
 {% endif %}
@@ -87,7 +87,7 @@
         listen    {{ port }}{{ default_server }};
         {% if listen_to_ipv6 %}
           listen    [::]:{{ port }}{{ default_server }};
-        {%-   endif -%}
+        {%- endif -%}
       {% endfor %}
     {% endif %}
 
@@ -102,6 +102,13 @@
       #ssl on; #ssl is defined in listen
       ssl_certificate     /etc/nginx/ssl/{{ domaininstance_group_fullname }}-signed_chain.crt;
       ssl_certificate_key /etc/nginx/ssl/{{ domaininstance_group_fullname }}-domain.key;
+
+      {% if webinstance.hsts.enable %}
+      
+        add_header Strict-Transport-Security "max-age={{ webinstance.hsts.max_age }}{{ '; includeSubDomains' if webinstance.hsts.includeSubDomains else '' }}{{ '; preload' if webinstance.hsts.preload else '' }}" always;
+
+      {% endif %}
+
     {% endif %}
 
     {% for name, value in webinstance.fastcgi_params.domaininstance.items() %}
