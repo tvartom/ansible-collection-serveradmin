@@ -165,7 +165,7 @@
       register: pm2_service_template
 
     # This is suppose to fix "Unit pm2-[env]-[app].service has a bad unit file setting"
-    # Not really effectgive though. Work around: Run this manually
+    # Not really effective though. Work around: Run this manually
     - name: "Reload service daemon"
       become: yes
       shell:
@@ -180,7 +180,16 @@
         enabled: true
         state: started
 
-- name: Restart service pm2 for this application
+- name: Stop pm2-service for this application
+  become: yes
+  service:
+    name: "pm2-{{ application.fullname }}"
+    state: stopped
+  when: deploy.stop | d(false)
+  # If the service i not created yet:
+  ignore_errors: true
+
+- name: Restart pm2-service for this application
   become: yes
   service:
     name: "pm2-{{ application.fullname }}"
