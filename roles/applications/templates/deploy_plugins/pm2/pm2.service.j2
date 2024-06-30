@@ -11,12 +11,12 @@ LimitNPROC=infinity
 LimitCORE=infinity
 Environment=PATH={{ pm2_user_path.stdout }}
 Environment=PM2_HOME=/home/system/{{ application.process_user }}/.pm2
-PIDFile=/home/system/{{ application.process_user }}/.pm2/pm2.pid
+PIDFile{{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.pid
 Restart=on-failure
 
 ExecStart={{  pm2_bin_path.stdout | mandatory('Pm2_bin_path is missing') }} start {{  application.path }}/pm2/ecosystem.yaml
 ExecReload={{ pm2_bin_path.stdout }} reload {{ application.path }}/pm2/ecosystem.yaml --update-env
-ExecStop={{   pm2_bin_path.stdout }} stop {{   application.path }}/pm2/ecosystem.yaml
+ExecStop={{ pm2_bin_path.stdout }} kill
 
 [Install]
 WantedBy=multi-user.target

@@ -15,6 +15,7 @@ apps:
   {% endif %}
 
     cwd: "{{ deploy_facts[app.repo | mandatory].source }}/{{ app.path_in_repo | d('') }}"
+    pid_file: "{{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.pid"
     # instances: 0
     #exec_mode: cluster
     # Logs:
