@@ -11,7 +11,9 @@ LimitNPROC=infinity
 LimitCORE=infinity
 Environment=PATH={{ pm2_user_path.stdout }}
 Environment=PM2_HOME=/home/system/{{ application.process_user }}/.pm2
-PIDFile{{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.pid
+{% for app in deploy.apps %}
+{% if not loop.first %}# {% endif %}PIDFile={{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.pid
+{% endfor %}
 Restart=on-failure
 
 ExecStart={{  pm2_bin_path.stdout | mandatory('Pm2_bin_path is missing') }} start {{  application.path }}/pm2/ecosystem.yaml
