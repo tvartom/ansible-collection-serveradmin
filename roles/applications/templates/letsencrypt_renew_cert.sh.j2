@@ -12,7 +12,8 @@ set -e
 # ägs då även av root och ska kunna läsas av {{ nginx_user }} (alltså som other)
 umask 022
 
-echo "Letsencrypt renew {{ domaininstance_group.fullname }}" $(date -u)
+echo ""
+echo "Starting Letsencrypt renew {{ domaininstance_group.fullname }}" $(date -u)
 python3 /opt/letsencrypt/acme-tiny/acme_tiny.py \
 	--account-key /opt/letsencrypt/account.key \
 	--csr {{ application.path }}/letsencrypt/{{ domaininstance_group.fullname }}-domain.csr \
