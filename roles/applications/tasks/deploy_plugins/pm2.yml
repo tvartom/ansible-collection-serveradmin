@@ -2,7 +2,7 @@
 - name: "Setup and build Typescript/Javascript application"
   when:  deploy.build | d(false)
   block:
-    - name: "Install pm2..."
+    - name: "Pm2: Install pm2..."
       debug:
         msg: "If your host freezes, you probably need more memory. Add a swap-file. (~4GB needed)"
     #https://aws.amazon.com/premiumsupport/knowledge-center/ec2-memory-swap-file/
@@ -32,7 +32,7 @@
     #    chdir: "{{ deploy_facts[deploy.repo | mandatory].source }}/{{ deploy.path_in_repo | d('') }}"
     #  ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
     #  when: false
-    - name: "Create dir for pm2"
+    - name: "Pm2: Create dir for pm2"
       become: yes
       file:
         path: "{{ application.path }}{{ item.path }}"
@@ -58,7 +58,7 @@
         # https://github.com/npm/npm/issues/19756
         NO_UPDATE_NOTIFIER: "1"
 
-    - name: "Node: Install npm-dependencies"
+    - name: "Pm2: Node: Install npm-dependencies"
       become: yes
       become_user: "{{ application.process_user }}"
       shell:
@@ -73,7 +73,7 @@
       loop_control:
         loop_var: app
 
-    - name: "Node: npm run build"
+    - name: "Pm2: Node: npm run build"
       become: yes
       become_user: "{{ application.process_user }}"
       shell:
@@ -84,12 +84,14 @@
       environment:
         # https://github.com/npm/npm/issues/19756
         NO_UPDATE_NOTIFIER: "1"
+        # JavaScript heap out of memory: https://stackoverflow.com/questions/38558989/node-js-heap-out-of-memory
+        NODE_OPTIONS: "--max_old_space_size=4096"
       loop: "{{ deploy.apps }}"
       loop_control:
         loop_var: app
 
     # Used in pm2.service.j2
-    - name: "Get path for app-user"
+    - name: "Pm2: Get path for app-user"
       become: yes
       become_user: "{{ application.process_user }}"
       shell:
@@ -99,7 +101,7 @@
       register: pm2_user_path
 
     # Used in pm2.service.j2
-    - name: "Get path pm2 bin"
+    - name: "Pm2: Get path pm2 bin"
       become: yes
       become_user: "{{ application.process_user }}"
       shell:
@@ -109,13 +111,13 @@
       register: pm2_bin_path
 
     # Debug pm2_bin_path
-    - name: "Show path pm2 bin"
+    - name: "Pm2: Show path pm2 bin"
       debug:
         var: pm2_bin_path
     # Fail if missing
     - name: "Missing: path pm2 bin"
       fail:
-        msg: "Path to pm2 not registrerd"
+        msg: "Path to pm2 not registred"
       when: pm2_bin_path.stdout|length < 2 
 
     # This is a workaround:
@@ -123,7 +125,7 @@
     # 2. Read generated file into variable
     # 3. Include variable instead of {% include app.include_env %}
     # Coz: https://github.com/ansible/ansible/issues/14992
-    - name: "Create env-file from template for pm2 ecosystem file"
+    - name: "Pm2: Create env-file from template for pm2 ecosystem file"
       become: yes
       template:
         src: "{{ app.include_env }}"
@@ -136,7 +138,7 @@
         loop_var: app
       loop: "{{ deploy.apps }}"
 
-    - name: "Store env-file as variable"
+    - name: "Pm2: Store env-file as variable"
       slurp:
         src: "{{ application.path }}/pm2/{{ application.fullname }}-{{ app.name }}.env"
       register: pm2_include_env
@@ -145,7 +147,7 @@
         loop_var: app
       loop: "{{ deploy.apps }}"
 
-    - name: "Create pm2 ecosystem file"
+    - name: "Pm2: Create pm2 ecosystem file"
       become: yes
       template:
         src: "deploy_plugins/pm2/pm2.ecosystem.yaml.j2"
@@ -154,7 +156,7 @@
         group: "{{ application.process_group }}"
         mode: "u=rw,g=r,o="
 
-    - name: "Create service for pm2"
+    - name: "Pm2: Create service for pm2"
       become: yes
       template:
         src: "deploy_plugins/pm2/pm2.service.j2"
@@ -166,21 +168,21 @@
 
     # This is suppose to fix "Unit pm2-[env]-[app].service has a bad unit file setting"
     # Not really effective though. Work around: Run this manually
-    - name: "Reload service daemon"
+    - name: "Pm2: Reload service daemon"
       become: yes
       shell:
         cmd: >-
           systemctl daemon-reload
       when: pm2_service_template.changed
 
-    - name: Enable and start service pm2 for this application
+    - name: "Pm2: Enable and start service pm2 for this application"
       become: yes
       service:
         name: "pm2-{{ application.fullname }}"
         enabled: true
         state: started
 
-- name: Stop pm2-service for this application
+- name: "Pm2: Stop pm2-service for this application"
   become: yes
   service:
     name: "pm2-{{ application.fullname }}"
@@ -189,14 +191,14 @@
   # If the service i not created yet:
   ignore_errors: true
 
-- name: Restart pm2-service for this application
+- name: "Pm2: Restart pm2-service for this application"
   become: yes
   service:
     name: "pm2-{{ application.fullname }}"
     state: restarted
   when: deploy.restart | d(false)
 
-- name: "Reload pm2 for this application"
+- name: "Pm2: Reload pm2 for this application"
   become: yes
   become_user: "{{ application.process_user }}"
   shell:
