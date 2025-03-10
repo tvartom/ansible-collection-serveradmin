@@ -105,13 +105,16 @@
 
 ### Directories #########################################################################################################
 
+# Bug 2025-03-10 This can't be owned by serveradmin, since systemd will give the error
+# "Refusing to accept PID outside of service control group, acquired through unsafe symlink chain: /opt/.../..."
+# Fix by change to root, as /opt is owned by root anyway.
 - name: "Create dir in /opt for organisation"
   become: yes
   file:
     path: "{{ temp_organisation_path }}"
     state: directory
-    owner: "{{ serveradmin.process_user }}"
-    group: "{{ serveradmin.process_group }}"
+    owner: "root"
+    group: "root"
     mode: "u=rwx,g=rx,o=rx"
   when: (temp_organisation_path in application.path)
   vars:
