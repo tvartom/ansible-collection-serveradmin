@@ -63,7 +63,7 @@
       become_user: "{{ application.process_user }}"
       shell:
         cmd: >-
-          /bin/bash -lc "npm ci --no-save --no-progress --also=dev"
+          /bin/bash -lc "npm ci --no-save --no-progress --include=dev {% if app.workspace_in_repo | d(false) %} -w app.workspace_in_repo{% endif %}"
         chdir: "{{ deploy_facts[app.repo | mandatory].source }}/{{ app.path_in_repo | d('') }}"
       ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
       environment:
@@ -78,7 +78,7 @@
       become_user: "{{ application.process_user }}"
       shell:
         cmd: >-
-          /bin/bash -lc "npm run build"
+          /bin/bash -lc "npm run build {% if app.workspace_in_repo | d(false) %} -w app.workspace_in_repo{% endif %}"
         chdir: "{{ deploy_facts[app.repo | mandatory].source }}/{{ app.path_in_repo | d('') }}"
       ignore_errors: "{{ deploy.ignore_errors | d(false) }}"
       environment:
