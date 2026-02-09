@@ -7,11 +7,11 @@
 
 REPORT_FILE="{{ backupinstance.dest.root }}/log/disk_usage_report-{{ backupinstance.name }}.txt"
 
-PATH="{{ backupinstance.dest.root }}/{{ backupinstance.name }}"
+BACKUP_PATH="{{ backupinstance.dest.root }}/{{ backupinstance.name }}"
 
 echo "Report" $(date -Iseconds | sed -e "s/T/ /") > $REPORT_FILE
 
-echo "$PATH" >> $REPORT_FILE
+echo "$BACKUP_PATH" >> $REPORT_FILE
 echo "Growing report:" >> $REPORT_FILE
 #du:
 # -s, --summarize: display only a total for each argument
@@ -21,11 +21,11 @@ echo "Growing report:" >> $REPORT_FILE
 # -d, --directory: list directories themselves, not their contents
 # -v, --sort=version: natural sort of (version) numbers within text (Not 0,1,10,11,2,3...)
 # -r, --reverse: reverse order while sorting
-du -sch $(ls -dvr "$PATH/*/") >> $REPORT_FILE
+du -sch $(ls -dvr $BACKUP_PATH/*/) >> $REPORT_FILE
 
 echo >> $REPORT_FILE
 echo "Disk usage:" >> $REPORT_FILE
-du -sch $(ls -dv "$PATH/*/") >> $REPORT_FILE
+du -sch $(ls -dv $BACKUP_PATH/*/) >> $REPORT_FILE
 
 echo >> $REPORT_FILE
 echo "Snapshot-dates:" >> $REPORT_FILE
@@ -37,4 +37,6 @@ echo "Snapshot-dates:" >> $REPORT_FILE
 # echo
 # -e                  Kan använda \t och \n
 # -n                  Ingen ny rad
-(cd "$PATH" && ls -1dv */ | sed -e "s-/--" | xargs -n1 -I @ sh -c 'printf '%-25s' "@"; stat "@" | grep "Modify";')
+# stat
+# LC_ALL=C            Tvinga engelska
+(cd "$BACKUP_PATH" && ls -1dv */ | sed -e "s-/--" | xargs -n1 -I @ sh -c 'printf %-25s "@"; LC_ALL=C stat "@" | grep "Modify";') >> $REPORT_FILE
