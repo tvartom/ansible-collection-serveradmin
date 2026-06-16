@@ -182,7 +182,7 @@
       {{
         application
         | combine({
-          "config": temp_application_config.ansible_facts[application.fullname+'_config']
+          "config": (temp_application_config.ansible_facts | default({}))[application.fullname+'_config'] | default({})
         }, recursive=True)
       }}
 
