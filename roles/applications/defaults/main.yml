@@ -134,6 +134,17 @@ application_templates:
       # ./occ kräver dessa:
       - "{{ php_package }}-process"
       - "{{ php_package }}-xml"
+      # 2026-09-28: required by Nextcloud's config.php memcache settings. These were
+      # installed by hand for php81 and never declared here, so the php81 -> php82 switch
+      # dropped them and Nextcloud failed to boot with
+      # "Memcache OC\Memcache\APCu not available for local cache".
+      - "{{ php_package }}-pecl-apcu"     # memcache.local
+      - "{{ php_package }}-pecl-redis5"   # memcache.distributed + memcache.locking (see enable_redis above)
+      - "{{ php_package }}-pecl-igbinary" # serializer used by apcu/redis
+      - "{{ php_package }}-pecl-msgpack"  # serializer used by redis
+      # Recommended by Nextcloud, and present on php81 before the switch:
+      - "{{ php_package }}-gmp"
+      - "{{ php_package }}-sodium"
 
 
 
